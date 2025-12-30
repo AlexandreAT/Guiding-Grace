@@ -1,14 +1,7 @@
 import styled from "styled-components";
-import { THEME } from "@shared/const";
-import { useState } from "react";
+import { THEME } from "../../../shared/const";
 
-/**
- * RegionContent Component
- * Componente para exibir conteúdo detalhado de uma região com seções expansíveis.
- * Tema: Gótico Minimalista - cards com bordas douradas, revelação progressiva de conteúdo.
- */
-
-const ContentContainerStyled = styled.div`
+export const ContentContainerStyled = styled.div`
   flex: 1;
   padding: ${THEME.spacing.lg};
   overflow-y: auto;
@@ -37,7 +30,7 @@ const ContentContainerStyled = styled.div`
   }
 `;
 
-const RegionTitle = styled.h1`
+export const RegionTitle = styled.h1`
   font-family: ${THEME.fonts.title};
   font-size: 2.5rem;
   font-weight: 700;
@@ -46,7 +39,7 @@ const RegionTitle = styled.h1`
   letter-spacing: 2px;
 `;
 
-const RegionDescription = styled.p`
+export const RegionDescription = styled.p`
   font-family: ${THEME.fonts.body};
   font-size: 1rem;
   color: ${THEME.colors.foreground};
@@ -54,7 +47,7 @@ const RegionDescription = styled.p`
   margin: 0 0 ${THEME.spacing.lg} 0;
 `;
 
-const SectionCard = styled.div`
+export const SectionCard = styled.div`
   background-color: rgba(10, 10, 10, 0.6);
   border: 2px solid ${THEME.colors.brown};
   border-radius: 4px;
@@ -68,7 +61,7 @@ const SectionCard = styled.div`
   }
 `;
 
-const SectionHeader = styled.button`
+export const SectionHeader = styled.button`
   width: 100%;
   padding: ${THEME.spacing.md};
   background-color: transparent;
@@ -86,7 +79,7 @@ const SectionHeader = styled.button`
   }
 `;
 
-const SectionTitle = styled.h2`
+export const SectionTitle = styled.h2`
   font-family: ${THEME.fonts.title};
   font-size: 1.5rem;
   font-weight: 600;
@@ -95,14 +88,14 @@ const SectionTitle = styled.h2`
   text-align: left;
 `;
 
-const ExpandIcon = styled.span<{ isExpanded: boolean }>`
+export const ExpandIcon = styled.span<{ isExpanded: boolean }>`
   font-size: 1.25rem;
   color: ${THEME.colors.gold};
   transition: transform ${THEME.transitions.fast};
   transform: ${(props) => (props.isExpanded ? "rotate(180deg)" : "rotate(0deg)")};
 `;
 
-const SectionContent = styled.div<{ isExpanded: boolean }>`
+export const SectionContent = styled.div<{ isExpanded: boolean }>`
   max-height: ${(props) => (props.isExpanded ? "1000px" : "0")};
   overflow: hidden;
   transition: max-height ${THEME.transitions.normal};
@@ -110,58 +103,10 @@ const SectionContent = styled.div<{ isExpanded: boolean }>`
   border-top: ${(props) => (props.isExpanded ? `1px solid ${THEME.colors.brown}` : "none")};
 `;
 
-const SectionText = styled.p`
+export const SectionText = styled.p`
   font-family: ${THEME.fonts.body};
   font-size: 0.95rem;
   color: ${THEME.colors.foreground};
   line-height: 1.6;
   margin: 0;
 `;
-
-interface RegionSection {
-  title: string;
-  content: string;
-}
-
-interface RegionContentProps {
-  regionName: string;
-  regionDescription: string;
-  sections: RegionSection[];
-}
-
-export default function RegionContent({
-  regionName,
-  regionDescription,
-  sections,
-}: RegionContentProps) {
-  const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set());
-
-  const toggleSection = (index: number) => {
-    const newExpanded = new Set(expandedSections);
-    if (newExpanded.has(index)) {
-      newExpanded.delete(index);
-    } else {
-      newExpanded.add(index);
-    }
-    setExpandedSections(newExpanded);
-  };
-
-  return (
-    <ContentContainerStyled>
-      <RegionTitle>{regionName}</RegionTitle>
-      <RegionDescription>{regionDescription}</RegionDescription>
-
-      {sections.map((section, index) => (
-        <SectionCard key={index}>
-          <SectionHeader onClick={() => toggleSection(index)}>
-            <SectionTitle>{section.title}</SectionTitle>
-            <ExpandIcon isExpanded={expandedSections.has(index)}>▼</ExpandIcon>
-          </SectionHeader>
-          <SectionContent isExpanded={expandedSections.has(index)}>
-            <SectionText>{section.content}</SectionText>
-          </SectionContent>
-        </SectionCard>
-      ))}
-    </ContentContainerStyled>
-  );
-}

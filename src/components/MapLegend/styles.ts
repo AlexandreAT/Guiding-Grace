@@ -1,13 +1,7 @@
 import styled from "styled-components";
-import { THEME, MAP_LEGEND } from "@shared/const";
+import { THEME } from "../../../shared/const";
 
-/**
- * MapLegend Component
- * Componente para exibir a legenda de marcações do mapa.
- * Tema: Gótico Minimalista - layout limpo com ícones temáticos.
- */
-
-const LegendContainerStyled = styled.div`
+export const LegendContainerStyled = styled.div`
   background-color: rgba(10, 10, 10, 0.9);
   border: 2px solid ${THEME.colors.gold};
   border-radius: 4px;
@@ -15,7 +9,7 @@ const LegendContainerStyled = styled.div`
   margin-top: ${THEME.spacing.lg};
 `;
 
-const LegendTitle = styled.h3`
+export const LegendTitle = styled.h3`
   font-family: ${THEME.fonts.title};
   font-size: 1.25rem;
   font-weight: 600;
@@ -25,13 +19,13 @@ const LegendTitle = styled.h3`
   letter-spacing: 2px;
 `;
 
-const LegendGrid = styled.div`
+export const LegendGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: ${THEME.spacing.md};
 `;
 
-const LegendItem = styled.div`
+export const LegendItem = styled.div`
   display: flex;
   align-items: center;
   gap: ${THEME.spacing.sm};
@@ -44,31 +38,14 @@ const LegendItem = styled.div`
   }
 `;
 
-const LegendIcon = styled.span<{ color: string }>`
+export const LegendIcon = styled.span<{ color: string }>`
   font-size: 1.5rem;
   color: ${(props) => props.color};
-  font-family: "RPG Awesome";
   min-width: 24px;
 `;
 
-const LegendLabel = styled.span`
+export const LegendLabel = styled.span`
   font-family: ${THEME.fonts.body};
   font-size: 0.875rem;
   color: ${THEME.colors.foreground};
 `;
-
-export default function MapLegend() {
-  return (
-    <LegendContainerStyled>
-      <LegendTitle>Legenda do Mapa</LegendTitle>
-      <LegendGrid>
-        {Object.entries(MAP_LEGEND).map(([key, item]) => (
-          <LegendItem key={key} color={item.color}>
-            <LegendIcon color={item.color} className={`ra ${item.icon}`} />
-            <LegendLabel>{item.label}</LegendLabel>
-          </LegendItem>
-        ))}
-      </LegendGrid>
-    </LegendContainerStyled>
-  );
-}

@@ -1,9 +1,24 @@
 import { useState } from "react";
 import { REGIONS } from "../../../shared/const";
 import { ContentWrapper, MainContent, MapSection, MapTitle, PageContainer } from "./styles";
+import { Header } from "../../components/Header";
+import Sidebar from "../../components/Sidebar";
+import MapViewer from "../../components/MapViewer";
+import { useCallback } from "react";
+import RegionContent from "../../components/RegionContent";
+import MapLegend from "../../components/MapLegend";
 
 export default function Home() {
   const [activeRegionId, setActiveRegionId] = useState<string>(REGIONS[0].id);
+  const [pinMode, setPinMode] = useState<boolean>(false);
+  const [pins] = useState(() => [
+    // hardcoded pin de Limgrave (relativa)
+    { id: "limgrave-grace-1", x: 0.469, y: 0.4992, type: "GRACE", label: "Grace" },
+  ]);
+
+  const handleMapClick = useCallback((coords: { x: number; y: number }) => {
+    console.log('Map click coords (from Home):', coords);
+  }, []);
 
   const activeRegion = REGIONS.find((r) => r.id === activeRegionId) || REGIONS[0];
 
@@ -36,7 +51,7 @@ export default function Home() {
 
   return (
     <PageContainer>
-      {/* <Header onLogoClick={() => setActiveRegionId(REGIONS[0].id)} />
+      <Header onLogoClick={() => setActiveRegionId(REGIONS[0].id)} />
 
       <MainContent>
         <Sidebar activeRegionId={activeRegionId} onRegionSelect={setActiveRegionId} />
@@ -44,13 +59,19 @@ export default function Home() {
         <ContentWrapper>
           <MapSection>
             <MapTitle>Mapa de {activeRegion.displayName}</MapTitle>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 8 }}>
+              <button onClick={() => setPinMode((s) => !s)}>{pinMode ? 'Desativar modo pin' : 'Ativar modo pin (copiar coords)'}</button>
+              {pinMode && <span style={{ fontSize: 12, color: '#ccc' }}>Clique no mapa para copiar coords</span>}
+            </div>
             <MapViewer
               mapImageUrl={`/maps/${activeRegionId}.jpg`}
               regionName={activeRegion.displayName}
+              pins={pins}
+              pinMode={pinMode}
+              onMapClick={handleMapClick}
             />
             <MapLegend />
           </MapSection>
-
 
           <RegionContent
             regionName={activeRegion.displayName}
@@ -58,7 +79,7 @@ export default function Home() {
             sections={regionSections}
           />
         </ContentWrapper>
-      </MainContent> */}
+      </MainContent>
     </PageContainer>
   );
 }

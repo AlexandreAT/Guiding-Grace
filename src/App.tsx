@@ -1,11 +1,11 @@
-import { Outlet, useLocation } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { Outlet } from 'react-router-dom'
+import 'rpg-awesome/css/rpg-awesome.min.css';
 
 function App() {
-  const location = useLocation();
-
   return (
-    <></>
+    <>
+      <Outlet />
+    </>
   );
 }
 
