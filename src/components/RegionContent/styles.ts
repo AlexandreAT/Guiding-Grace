@@ -31,7 +31,7 @@ export const ContentContainerStyled = styled.div`
 `;
 
 export const RegionTitle = styled.h1`
-  font-family: ${THEME.fonts.title};
+  font-family: ${THEME.fonts.rpg};
   font-size: 2.5rem;
   font-weight: 700;
   color: ${THEME.colors.gold};
@@ -80,7 +80,7 @@ export const SectionHeader = styled.button`
 `;
 
 export const SectionTitle = styled.h2`
-  font-family: ${THEME.fonts.title};
+  font-family: ${THEME.fonts.rpgOld};
   font-size: 1.5rem;
   font-weight: 600;
   color: ${THEME.colors.gold};

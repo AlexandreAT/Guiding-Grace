@@ -20,21 +20,6 @@ export const regionSections: Record<string, RegionSection[]> = {
       content:
         "Aqui você encontrará informações sobre os pontos principais a explorar. Use a legenda do mapa para identificar locais importantes. Comece na Graça de Erdtree mais próxima e avance gradualmente.",
     },
-    {
-      title: "Objetivos Principais",
-      content:
-        "Os objetivos principais desta região incluem explorar as áreas recomendadas, conversar com NPCs importantes e coletar itens essenciais. Procure pelas primeiras ruínas e desafie o Godrick, o Soldado.",
-    },
-    {
-      title: "NPCs e Lore",
-      content:
-        "Esta região apresenta NPCs interessantes com histórias que se conectam ao universo maior de Elden Ring. Converse com todos os NPCs que encontrar. Aprenda sobre o Reino Intersticial e a jornada que te aguarda.",
-    },
-    {
-      title: "Encerramento da Região",
-      content:
-        "Após completar os objetivos principais, você pode explorar livremente ou seguir para a próxima região recomendada. Prepare-se para Limgrave - Parte Inferior.",
-    },
   ],
   "limgrave-top": [
     {

@@ -27,9 +27,9 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
   const imageRef = useRef<HTMLImageElement | null>(null);
 
   const MIN_SCALE = 1;
-  const MAX_SCALE = 4;
-  const ZOOM_STEP = 0.2;
-  const MAX_OFFSET = 150;
+  const MAX_SCALE = 8;
+  const ZOOM_STEP = 0.1;
+  const MAX_OFFSET = 800;
 
   const handleZoomIn = () => {
     setScale((prev) => Math.min(prev + ZOOM_STEP, MAX_SCALE));
@@ -142,8 +142,7 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
               style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%` }}
               onClick={(ev) => {
                 ev.stopPropagation();
-                // placeholder click handler for future functionality
-                console.log('Pin clicked', p);
+                console.log('Pin clicado', p);
               }}
               title={p.label}
             >

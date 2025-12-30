@@ -29,8 +29,8 @@ export const ContentWrapper = styled.div`
   }
 `;
 
-export const MapSection = styled.div`
-  margin-bottom: ${THEME.spacing.xl};
+export const MapSection = styled.div<{ marginBottom?: string }>`
+  margin-bottom: ${({ marginBottom }) => marginBottom || THEME.spacing.xl};
 `;
 
 export const ButtonPin = styled.button`
@@ -52,8 +52,15 @@ export const ButtonPin = styled.button`
   transition: all ${THEME.transitions.normal};
 `;
 
+export const ImgController = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+`;
+
 export const MapTitle = styled.h2`
-  font-family: ${THEME.fonts.title};
+  font-family: ${THEME.fonts.rpg};
   font-size: 1.75rem;
   font-weight: 600;
   color: ${THEME.colors.gold};
@@ -70,7 +77,7 @@ export const PlaceholderMap = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: ${THEME.fonts.body};
+  font-family: ${THEME.fonts.rpgOld};
   color: ${THEME.colors.gold};
   font-size: 1rem;
   text-align: center;
