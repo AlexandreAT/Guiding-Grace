@@ -58,7 +58,7 @@ export const MapImage = styled.img`
   pointer-events: none;
 `;
 
-export const Pin = styled.button`
+export const Pin = styled.button<{ pinColor?: string }>`
   position: absolute;
   display: flex;
   flex-direction: column;
@@ -67,27 +67,53 @@ export const Pin = styled.button`
   background: transparent;
   border: none;
   padding: 0;
-  transform: translate(-50%, -100%);
+  transform: translate(-50%, -50%);
   cursor: pointer;
 
-  & > .pin-dot {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: ${THEME.colors.gold};
-    border: 2px solid ${THEME.colors.background};
-    box-shadow: ${THEME.shadows.sm};
-  }
-
   & > .pin-label {
-    margin-top: 2px;
     font-family: ${THEME.fonts.body};
-    font-size: 0.75rem;
+    font-size: 6px;
     color: ${THEME.colors.foreground};
     background: rgba(0,0,0,0.5);
-    padding: 2px 6px;
+    padding: 1px 2px;
     border-radius: 4px;
-    border: 1px solid ${THEME.colors.gold};
+    border: 1px solid ${(p) => p.pinColor || THEME.colors.gold};
+    white-space: nowrap;
+  }
+`;
+
+export const PinIconWrapper = styled.div<{ pinColor?: string }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid ${(p) => p.pinColor || THEME.colors.gold};
+  border-radius: 50%;
+  box-shadow: ${THEME.shadows.sm};
+`;
+
+export const PinIcon = styled.div<{ pinColor?: string }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 10px;
+  height: 100%;
+  font-size: 1.25rem;
+  color: ${(p) => p.pinColor || THEME.colors.gold};
+  
+  &.ra {
+    font-family: 'Remixicon';
+    &::before {
+      content: attr(class);
+    }
+  }
+  
+  svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
   }
 `;
 

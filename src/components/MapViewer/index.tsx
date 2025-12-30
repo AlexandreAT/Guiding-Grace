@@ -1,13 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { ControlButton, ControlsContainer, MapContainerStyled, MapImage, MapImageContainer, ZoomLevel, MapInner, Pin } from "./styles";
+import { ControlButton, ControlsContainer, MapContainerStyled, MapImage, MapImageContainer, ZoomLevel, MapInner, Pin, PinIconWrapper, PinIcon } from "./styles";
 
-/**
- * MapViewer Component
- * Visualizador de mapa interativo com zoom e pan.
- * Tema: Gótico Minimalista - fundo escuro, controles dourados.
- */
-
-type PinData = { id: string; x: number; y: number; type?: string; label?: string };
+type PinData = { id: string; x: number; y: number; type?: string; label?: string; icon?: string | React.ComponentType<any>; color?: string; labelAbove?: boolean };
 
 interface MapViewerProps {
   mapImageUrl: string;
@@ -69,7 +63,7 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
       await navigator.clipboard.writeText(JSON.stringify(coords, null, 2));
       alert(`Coordenadas copiadas para a área de transferência:\n${JSON.stringify(coords, null, 2)}`);
     } catch (err) {
-      console.log("Clipboard write failed", err);
+      console.log("Coordenadas não copiadas", err);
     }
 
     if (onMapClick) onMapClick(coords);
@@ -145,9 +139,25 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
                 console.log('Pin clicado', p);
               }}
               title={p.label}
+              pinColor={p.color}
             >
-              <span className="pin-dot" />
-              {p.label && <span className="pin-label">{p.label}</span>}
+              {/* Se `labelAbove` for true, renderiza label antes do ícone */}
+              {p.label && p.labelAbove && <span className="pin-label">{p.label}</span>}
+
+              <PinIconWrapper pinColor={p.color}>
+                {p.icon ? (
+                  typeof p.icon === 'string' ? (
+                    <PinIcon className={p.icon} pinColor={p.color} />
+                  ) : (
+                    <PinIcon as={p.icon} pinColor={p.color} />
+                  )
+                ) : (
+                  <span className="pin-dot" style={{ width: 10, height: 10, borderRadius: '50%', background: p.color || '#d4af37' }} />
+                )}
+              </PinIconWrapper>
+
+              {/* Caso contrário, mostra abaixo (com o mesmo espaçamento) */}
+              {p.label && !p.labelAbove && <span className="pin-label">{p.label}</span>}
             </Pin>
           ))}
         </MapInner>

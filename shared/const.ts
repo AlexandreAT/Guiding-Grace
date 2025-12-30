@@ -1,8 +1,10 @@
 import { FaQuestion, FaWater, FaMapMarkedAlt } from "react-icons/fa";
 import { BsSnow, BsTools, BsStars  } from "react-icons/bs";
 import { LiaMountainSolid } from "react-icons/lia";
+import { GiCrownedSkull, GiDaemonSkull, GiDeathSkull, GiHorizonRoad } from "react-icons/gi";
 import { IoIosPerson } from "react-icons/io";
 import { GiCastle } from "react-icons/gi";
+import { IoEllipsisHorizontalOutline } from "react-icons/io5";
 
 export const COOKIE_NAME = "app_session_id";
 export const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365;
@@ -146,14 +148,26 @@ export const REGIONS = [
   },
 ] as const;
 
+// Cores centralizadas para pins e legendas
+export const PIN_COLORS = {
+  DG: "#e74d3cab",
+  BOSS: "#c0392bab",
+  OP: "#36c94aab",
+  NPC: "#3498dbab",
+  ITEM: "#08fcf0ab",
+  GRACE: "#f1ee26ab",
+  PATH: "#7bff00ab",
+} as const;
+
 // Legendas para marcações no mapa
 export const MAP_LEGEND = {
-  DG: { label: "Desafiador Geral", color: "#e74c3c", icon: "ra-sword" },
-  OP: { label: "Opcional", color: "#f39c12", icon: FaQuestion },
-  NPC: { label: "NPC Importante", color: "#3498db", icon: IoIosPerson },
-  BOSS: { label: "Chefe", color: "#c0392b", icon: "ra-skull" },
-  ITEM: { label: "Item Importante", color: "#d4af37", icon: BsTools },
-  GRACE: { label: "Graça de Erdtree", color: "#2ecc71", icon: BsStars },
+  DG: { label: "Desafio", color: PIN_COLORS.DG, icon: GiDeathSkull },
+  BOSS: { label: "Chefe", color: PIN_COLORS.BOSS, icon: GiCrownedSkull },
+  OP: { label: "Opcional", color: PIN_COLORS.OP, icon: IoEllipsisHorizontalOutline },
+  NPC: { label: "NPC Importante", color: PIN_COLORS.NPC, icon: IoIosPerson },
+  ITEM: { label: "Item Importante", color: PIN_COLORS.ITEM, icon: BsTools },
+  GRACE: { label: "Graça de Erdtree", color: PIN_COLORS.GRACE, icon: BsStars },
+  PATH: { label: "Caminho a Seguir", color: PIN_COLORS.PATH, icon: GiHorizonRoad },
 } as const;
 
 // Temas disponíveis

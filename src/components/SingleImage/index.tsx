@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Wrapper, Thumb, Overlay, OverlayContent, LargeImage, CloseButton, Caption, CaptionBox } from './styles';
 
 interface SingleImageProps {
-  imageName: string; // filename inside public/maps, e.g. 'limgrave-top.jpg' or 'pin.png'
-  width?: string; // css width (e.g. '300px' or '100%')
-  height?: string; // css height
+  imageName: string;
+  width?: string;
+  height?: string;
   alt?: string;
   caption?: string;
 }
