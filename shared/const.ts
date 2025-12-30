@@ -1,10 +1,8 @@
-import { IconMountain, IconTree, IconPlant2 } from '@tabler/icons-react'
 import { BsSnow, BsTools, BsStars  } from "react-icons/bs";
 import { FaQuestion, FaWater } from "react-icons/fa";
 import { LiaMountainSolid } from "react-icons/lia";
 import { IoIosPerson } from "react-icons/io";
 import { GiCastle } from "react-icons/gi";
-import React from 'react';
 
 export const COOKIE_NAME = "app_session_id";
 export const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365;
