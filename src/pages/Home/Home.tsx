@@ -1,53 +1,22 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { REGIONS } from "../../../shared/const";
-import { ContentWrapper, MainContent, MapSection, MapTitle, PageContainer } from "./styles";
+import { ButtonPin, ContentWrapper, MainContent, MapSection, MapTitle, PageContainer } from "./styles";
 import { Header } from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
 import MapViewer from "../../components/MapViewer";
-import { useCallback } from "react";
 import RegionContent from "../../components/RegionContent";
 import MapLegend from "../../components/MapLegend";
+import { getPinsForRegion } from "../../data/regionPins";
+import { getSectionsForRegion } from "../../data/regionSections";
 
 export default function Home() {
   const [activeRegionId, setActiveRegionId] = useState<string>(REGIONS[0].id);
   const [pinMode, setPinMode] = useState<boolean>(false);
-  const [pins] = useState(() => [
-    // hardcoded pin de Limgrave (relativa)
-    { id: "limgrave-grace-1", x: 0.469, y: 0.4992, type: "GRACE", label: "Grace" },
-  ]);
-
-  const handleMapClick = useCallback((coords: { x: number; y: number }) => {
-    console.log('Map click coords (from Home):', coords);
-  }, []);
 
   const activeRegion = REGIONS.find((r) => r.id === activeRegionId) || REGIONS[0];
 
-  const regionSections = [
-    {
-      title: "Contexto e Propósito",
-      content: `${activeRegion.displayName} é uma região importante em sua jornada. ${activeRegion.description}`,
-    },
-    {
-      title: "Roteiro de Exploração",
-      content:
-        "Aqui você encontrará informações sobre os pontos principais a explorar. Use a legenda do mapa para identificar locais importantes.",
-    },
-    {
-      title: "Objetivos Principais",
-      content:
-        "Os objetivos principais desta região incluem explorar as áreas recomendadas, conversar com NPCs importantes e coletar itens essenciais.",
-    },
-    {
-      title: "NPCs e Lore",
-      content:
-        "Esta região apresenta NPCs interessantes com histórias que se conectam ao universo maior de Elden Ring. Converse com todos os NPCs que encontrar.",
-    },
-    {
-      title: "Encerramento da Região",
-      content:
-        "Após completar os objetivos principais, você pode explorar livremente ou seguir para a próxima região recomendada.",
-    },
-  ];
+  const pins = useMemo(() => getPinsForRegion(activeRegionId), [activeRegionId]);
+  const regionSections = useMemo(() => getSectionsForRegion(activeRegionId), [activeRegionId]);
 
   return (
     <PageContainer>
@@ -60,7 +29,7 @@ export default function Home() {
           <MapSection>
             <MapTitle>Mapa de {activeRegion.displayName}</MapTitle>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 8 }}>
-              <button onClick={() => setPinMode((s) => !s)}>{pinMode ? 'Desativar modo pin' : 'Ativar modo pin (copiar coords)'}</button>
+              <ButtonPin onClick={() => setPinMode((s) => !s)}>{pinMode ? 'Desativar modo pin' : 'Ativar modo pin'}</ButtonPin>
               {pinMode && <span style={{ fontSize: 12, color: '#ccc' }}>Clique no mapa para copiar coords</span>}
             </div>
             <MapViewer
@@ -68,7 +37,7 @@ export default function Home() {
               regionName={activeRegion.displayName}
               pins={pins}
               pinMode={pinMode}
-              onMapClick={handleMapClick}
+              onMapClick={(coords) => console.log('Map click coords:', coords)}
             />
             <MapLegend />
           </MapSection>

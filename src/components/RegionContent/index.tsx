@@ -1,11 +1,6 @@
 import { useState } from "react";
+import { IoIosArrowDown } from "react-icons/io";
 import { ContentContainerStyled, ExpandIcon, RegionDescription, RegionTitle, SectionCard, SectionContent, SectionHeader, SectionText, SectionTitle } from "./styles";
-
-/**
- * RegionContent Component
- * Componente para exibir conteúdo detalhado de uma região com seções expansíveis.
- * Tema: Gótico Minimalista - cards com bordas douradas, revelação progressiva de conteúdo.
- */
 
 interface RegionSection {
   title: string;
@@ -44,7 +39,7 @@ export default function RegionContent({
         <SectionCard key={index}>
           <SectionHeader onClick={() => toggleSection(index)}>
             <SectionTitle>{section.title}</SectionTitle>
-            <ExpandIcon isExpanded={expandedSections.has(index)}>▼</ExpandIcon>
+            <ExpandIcon isExpanded={expandedSections.has(index)}><IoIosArrowDown /></ExpandIcon>
           </SectionHeader>
           <SectionContent isExpanded={expandedSections.has(index)}>
             <SectionText>{section.content}</SectionText>

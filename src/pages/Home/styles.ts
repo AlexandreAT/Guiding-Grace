@@ -33,6 +33,25 @@ export const MapSection = styled.div`
   margin-bottom: ${THEME.spacing.xl};
 `;
 
+export const ButtonPin = styled.button`
+  padding: ${THEME.spacing.xs} ${THEME.spacing.xs};
+  background-color: ${THEME.colors.shadowDark};
+  color: ${THEME.colors.foreground};
+  border: 1px solid ${THEME.colors.gold};
+  border-radius: 4px;
+  font-family: ${THEME.fonts.rpg};
+  font-size: 1rem;
+  cursor: pointer;
+
+  &:hover {
+    background-color: ${THEME.colors.gold};
+    color: ${THEME.colors.background};
+    box-shadow: ${THEME.shadows.goldLg};
+  }
+
+  transition: all ${THEME.transitions.normal};
+`;
+
 export const MapTitle = styled.h2`
   font-family: ${THEME.fonts.title};
   font-size: 1.75rem;

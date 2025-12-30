@@ -1,12 +1,6 @@
 import { MAP_LEGEND } from "../../../shared/const";
 import { LegendContainerStyled, LegendGrid, LegendIcon, LegendItem, LegendLabel, LegendTitle } from "./styles";
 
-/**
- * MapLegend Component
- * Componente para exibir a legenda de marcações do mapa.
- * Tema: Gótico Minimalista - layout limpo com ícones temáticos.
- */
-
 export default function MapLegend() {
   const renderIcon = (icon: string | React.ComponentType<any>, color: string) => {
     const isStringIcon = typeof icon === "string";
