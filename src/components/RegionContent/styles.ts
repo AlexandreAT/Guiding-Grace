@@ -96,7 +96,7 @@ export const ExpandIcon = styled.span<{ isExpanded: boolean }>`
 `;
 
 export const SectionContent = styled.div<{ isExpanded: boolean }>`
-  max-height: ${(props) => (props.isExpanded ? "1000px" : "0")};
+  max-height: ${(props) => (props.isExpanded ? "none" : "0")};
   overflow: hidden;
   transition: max-height ${THEME.transitions.normal};
   padding: ${(props) => (props.isExpanded ? THEME.spacing.md : "0")};
@@ -107,6 +107,61 @@ export const SectionText = styled.p`
   font-family: ${THEME.fonts.body};
   font-size: 0.95rem;
   color: ${THEME.colors.foreground};
+  line-height: 1.6;
+  margin: 0;
+`;
+
+export const ContentBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${THEME.spacing.sm};
+`;
+
+export const ContentItemStyled = styled.div<{ contentStyle: string }>`
+  font-family: ${(props) => {
+    switch (props.contentStyle) {
+      case 'title':
+        return THEME.fonts.rpgOld;
+      case 'topic':
+        return THEME.fonts.rpg;
+      default:
+        return THEME.fonts.body;
+    }
+  }};
+  font-size: ${(props) => {
+    switch (props.contentStyle) {
+      case 'title':
+        return '1.3rem';
+      case 'topic':
+        return '1.1rem';
+      case 'highlight':
+        return '0.95rem';
+      default:
+        return '0.95rem';
+    }
+  }};
+  color: ${(props) => {
+    switch (props.contentStyle) {
+      case 'title':
+      case 'topic':
+        return THEME.colors.gold;
+      case 'highlight':
+        return THEME.colors.goldLight;
+      default:
+        return THEME.colors.foreground;
+    }
+  }};
+  font-weight: ${(props) => {
+    switch (props.contentStyle) {
+      case 'title':
+      case 'topic':
+        return '600';
+      case 'highlight':
+        return '500';
+      default:
+        return '400';
+    }
+  }};
   line-height: 1.6;
   margin: 0;
 `;

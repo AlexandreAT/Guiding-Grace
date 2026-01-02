@@ -1,7 +1,7 @@
-import { FaQuestion, FaWater, FaMapMarkedAlt } from "react-icons/fa";
+import { FaWater, FaMapMarkedAlt } from "react-icons/fa";
 import { BsSnow, BsTools, BsStars  } from "react-icons/bs";
 import { LiaMountainSolid } from "react-icons/lia";
-import { GiCrownedSkull, GiDaemonSkull, GiDeathSkull, GiHorizonRoad } from "react-icons/gi";
+import { GiCrownedSkull, GiDeathSkull, GiHorizonRoad } from "react-icons/gi";
 import { IoIosPerson } from "react-icons/io";
 import { GiCastle } from "react-icons/gi";
 import { IoEllipsisHorizontalOutline } from "react-icons/io5";
@@ -26,7 +26,7 @@ export const REGIONS = [
     displayName: "Limgrave - Parte Superior",
     order: 2,
     description: "A região inicial onde começa a jornada.",
-    recommendedLevel: "1-30",
+    recommendedLevel: "1-40",
     icon: "ra-grass",
   },
   {
@@ -35,7 +35,7 @@ export const REGIONS = [
     displayName: "Limgrave - Parte Inferior",
     order: 3,
     description: "Continuação de Limgrave com áreas secretas.",
-    recommendedLevel: "20-30",
+    recommendedLevel: "15-30",
     icon: "ra-grass",
   },
   {
@@ -53,7 +53,7 @@ export const REGIONS = [
     displayName: "Liurnia dos Lagos",
     order: 5,
     description: "Uma região gigante com lago, castelos e magias.",
-    recommendedLevel: "30-50",
+    recommendedLevel: "40-60",
     icon: FaWater,
   },
   {
@@ -62,7 +62,7 @@ export const REGIONS = [
     displayName: "Caelid - Primeira Parte",
     order: 6,
     description: "Uma região desolada e perigosa.",
-    recommendedLevel: "40-60",
+    recommendedLevel: "50-70",
     icon: "ra-skull",
   },
   {
@@ -71,7 +71,7 @@ export const REGIONS = [
     displayName: "Caelid - Segunda Parte",
     order: 7,
     description: "Continuação da região desolada de Caelid com desafios maiores.",
-    recommendedLevel: "70-90",
+    recommendedLevel: "80-110",
     icon: "ra-skull",
   },
   {
@@ -80,7 +80,7 @@ export const REGIONS = [
     displayName: "Monte Gelmir & Mansão Vulcânica",
     order: 8,
     description: "Uma montanha vulcânica.",
-    recommendedLevel: "50-70",
+    recommendedLevel: "70-90",
     icon: "ra-acid",
   },
   {
@@ -107,7 +107,7 @@ export const REGIONS = [
     displayName: "Montanha dos Gigantes - Parte Superior",
     order: 11,
     description: "As montanhas geladas dos gigantes.",
-    recommendedLevel: "80-100",
+    recommendedLevel: "100-120",
     icon: LiaMountainSolid,
   },
   {
@@ -134,7 +134,7 @@ export const REGIONS = [
     displayName: "Farum Azula",
     order: 14,
     description: "Uma fortaleza flutuante nos céus.",
-    recommendedLevel: "110-130",
+    recommendedLevel: "110-140",
     icon: "ra-capitol",
   },
   {
@@ -143,7 +143,7 @@ export const REGIONS = [
     displayName: "Árvore Sacra",
     order: 15,
     description: "O coração do mundo, o destino final da jornada.",
-    recommendedLevel: "130+",
+    recommendedLevel: "140+",
     icon: "ra-dead-tree",
   },
 ] as const;

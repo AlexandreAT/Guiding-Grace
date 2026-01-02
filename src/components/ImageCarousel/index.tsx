@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import SingleImage from '../SingleImage';
 import { CarouselWrapper, Track, Item, Prev, Next } from './styles';
 
@@ -8,7 +8,7 @@ interface CarouselItem {
 }
 
 interface ImageCarouselProps {
-  images: CarouselItem[]; // list of images with optional caption
+  images: CarouselItem[];
   itemWidth?: string;
   itemHeight?: string;
 }

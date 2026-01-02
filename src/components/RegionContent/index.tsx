@@ -1,11 +1,7 @@
 import { useState } from "react";
 import { IoIosArrowDown } from "react-icons/io";
-import { ContentContainerStyled, ExpandIcon, RegionDescription, RegionTitle, SectionCard, SectionContent, SectionHeader, SectionText, SectionTitle } from "./styles";
-
-interface RegionSection {
-  title: string;
-  content: string;
-}
+import { ContentContainerStyled, ExpandIcon, RegionDescription, RegionTitle, SectionCard, SectionContent, SectionHeader, SectionTitle, ContentBlock, ContentItemStyled } from "./styles";
+import type { RegionSection } from "../../data/regionSections";
 
 interface RegionContentProps {
   regionName: string;
@@ -42,7 +38,13 @@ export default function RegionContent({
             <ExpandIcon isExpanded={expandedSections.has(index)}><IoIosArrowDown /></ExpandIcon>
           </SectionHeader>
           <SectionContent isExpanded={expandedSections.has(index)}>
-            <SectionText>{section.content}</SectionText>
+            <ContentBlock>
+              {section.content.map((item, itemIndex) => (
+                <ContentItemStyled key={itemIndex} contentStyle={item.style}>
+                  {item.text}
+                </ContentItemStyled>
+              ))}
+            </ContentBlock>
           </SectionContent>
         </SectionCard>
       ))}
