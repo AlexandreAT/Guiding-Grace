@@ -62,7 +62,7 @@ export const RegionText = styled.p<{color?: string, size?: string}>`
   margin: 0;
 
   @media (max-width: 768px) {
-    font-size: ${({ size }) => "0.8rem"};
+    font-size: 0.8rem;
   }
 `;
 
