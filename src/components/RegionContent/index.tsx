@@ -86,6 +86,15 @@ export default function RegionContent({
     };
   }, [scrollToLabel, sections, onScrolled]);
 
+  // Clear any active highlight when the sections or region change
+  useEffect(() => {
+    if (highlightTimerRef.current) {
+      window.clearTimeout(highlightTimerRef.current);
+      highlightTimerRef.current = null;
+    }
+    setHighlighted(null);
+  }, [sections, regionName]);
+
   return (
     <ContentContainerStyled>
       <RegionTitle>{regionName}</RegionTitle>

@@ -23,6 +23,11 @@ export const CardStyled = styled.button<{ isActive?: boolean }>`
     background-color: rgba(212, 175, 55, 0.1);
     box-shadow: ${THEME.shadows.goldLg};
   `}
+  
+  @media (max-width: 768px) {
+    padding: ${THEME.spacing.xs};
+    border-width: 1px;
+  }
 `;
 
 export const RegionNumber = styled.span`
@@ -31,6 +36,10 @@ export const RegionNumber = styled.span`
   color: ${THEME.colors.gold};
   font-weight: 700;
   margin-right: ${THEME.spacing.xs};
+
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+  }
 `;
 
 export const RegionName = styled.h3`
@@ -40,6 +49,10 @@ export const RegionName = styled.h3`
   color: ${THEME.colors.foreground};
   margin: 0;
   margin-bottom: ${THEME.spacing.xs};
+
+  @media (max-width: 480px) {
+    font-size: 1rem;
+  }
 `;
 
 export const RegionText = styled.p<{color?: string, size?: string}>`
@@ -47,10 +60,19 @@ export const RegionText = styled.p<{color?: string, size?: string}>`
   font-size: ${({ size }) => size || "1rem"};
   color: ${({ color }) => color === "white" ? THEME.colors.foreground : THEME.colors.gold};
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: ${({ size }) => "0.8rem"};
+  }
 `;
 
 export const RegionIcon = styled.span`
   font-size: 1.5rem;
   color: ${THEME.colors.gold};
   margin-right: ${THEME.spacing.sm};
+
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+    margin-right: ${THEME.spacing.xs};
+  }
 `;

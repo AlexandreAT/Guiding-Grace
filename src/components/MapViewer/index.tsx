@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { ControlButton, ControlsContainer, MapContainerStyled, MapImage, MapImageContainer, ZoomLevel, MapInner, Pin, PinIconWrapper, PinIcon, MapWrapper } from "./styles";
 
 type PinData = { id: string; x: number; y: number; type?: string; label?: string; icon?: string | React.ComponentType<any>; color?: string; labelAbove?: boolean };
@@ -22,18 +22,21 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const touchState = useRef<any>({ isDragging: false, lastX: 0, lastY: 0, pinch: false, pinchDist: 0, pinchStartScale: 1 });
+  const [isMobile, setIsMobile] = useState(false);
 
   const MIN_SCALE = 1;
   const MAX_SCALE = 8;
-  const ZOOM_STEP = 0.1;
   const MAX_OFFSET = 800;
 
   const handleZoomIn = () => {
-    setScale((prev) => Math.min(prev + ZOOM_STEP, MAX_SCALE));
+    const step = isMobile ? 0.25 : 0.1;
+    setScale((prev) => Math.min(prev + step, MAX_SCALE));
   };
 
   const handleZoomOut = () => {
-    setScale((prev) => Math.max(prev - ZOOM_STEP, MIN_SCALE));
+    const step = isMobile ? 0.25 : 0.1;
+    setScale((prev) => Math.max(prev - step, MIN_SCALE));
   };
 
   const handleResetZoom = () => {
@@ -47,6 +50,67 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
     if (scale > 1) {
       setIsDragging(true);
       setDragStart({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const getTouchDistance = (t1: React.Touch, t2: React.Touch) => {
+    return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!e.touches) return;
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const d = getTouchDistance(e.touches[0], e.touches[1]);
+      touchState.current.pinch = true;
+      touchState.current.pinchDist = d;
+      touchState.current.pinchStartScale = scale;
+    } else if (e.touches.length === 1) {
+      if (scale > 1) {
+        e.preventDefault();
+        touchState.current.isDragging = true;
+        touchState.current.lastX = e.touches[0].clientX;
+        touchState.current.lastY = e.touches[0].clientY;
+      }
+    }
+  };
+
+  const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!e.touches) return;
+    if (e.touches.length === 2 && touchState.current.pinch) {
+      e.preventDefault();
+      const newDist = getTouchDistance(e.touches[0], e.touches[1]);
+      if (touchState.current.pinchDist > 0) {
+        const scaleFactor = newDist / touchState.current.pinchDist;
+        const newScale = clamp(touchState.current.pinchStartScale * scaleFactor, MIN_SCALE, MAX_SCALE);
+        setScale(newScale);
+      }
+    } else if (e.touches.length === 1 && touchState.current.isDragging) {
+      e.preventDefault();
+      const t = e.touches[0];
+      const deltaX = t.clientX - touchState.current.lastX;
+      const deltaY = t.clientY - touchState.current.lastY;
+      setOffsetX((prev) => clamp(prev + deltaX * 0.5, -MAX_OFFSET, MAX_OFFSET));
+      setOffsetY((prev) => clamp(prev + deltaY * 0.5, -MAX_OFFSET, MAX_OFFSET));
+      touchState.current.lastX = t.clientX;
+      touchState.current.lastY = t.clientY;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!e.touches || e.touches.length === 0) {
+      touchState.current.isDragging = false;
+      touchState.current.pinch = false;
+    } else if (e.touches.length === 1) {
+      // if one remains, cancel pinch
+      touchState.current.pinch = false;
+      touchState.current.isDragging = scale > 1;
+      if (touchState.current.isDragging) {
+        touchState.current.lastX = e.touches[0].clientX;
+        touchState.current.lastY = e.touches[0].clientY;
+      }
     }
   };
 
@@ -90,10 +154,11 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
+    const step = isMobile ? 0.25 : 0.1;
     if (e.deltaY < 0) {
-      handleZoomIn();
+      setScale((prev) => Math.min(prev + step, MAX_SCALE));
     } else {
-      handleZoomOut();
+      setScale((prev) => Math.max(prev - step, MIN_SCALE));
     }
   };
 
@@ -101,13 +166,14 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
   const el = containerRef.current;
   if (!el) return;
 
-  const onWheel = (e: WheelEvent) => {
+    const onWheel = (e: WheelEvent) => {
       e.preventDefault();
+      const step = (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) ? 0.25 : 0.1;
 
       if (e.deltaY < 0) {
-        setScale((prev) => Math.min(prev + ZOOM_STEP, MAX_SCALE));
+        setScale((prev) => Math.min(prev + step, MAX_SCALE));
       } else {
-        setScale((prev) => Math.max(prev - ZOOM_STEP, MIN_SCALE));
+        setScale((prev) => Math.max(prev - step, MIN_SCALE));
       }
     };
 
@@ -115,6 +181,20 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
 
     return () => {
       el.removeEventListener("wheel", onWheel);
+    };
+  }, []);
+
+  useEffect(() => {
+    // detect mobile to adjust zoom step and behavior
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(max-width: 768px)');
+    setIsMobile(mq.matches);
+    const handler = (ev: MediaQueryListEvent) => setIsMobile(ev.matches);
+    if (mq.addEventListener) mq.addEventListener('change', handler);
+    else mq.addListener(handler as any);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', handler);
+      else mq.removeListener(handler as any);
     };
   }, []);
 
@@ -130,6 +210,9 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
           onClick={handleMapClick}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
         <MapInner scale={scale} offsetX={offsetX} offsetY={offsetY}>
           <MapImage ref={imageRef} src={mapImageUrl} alt={`Mapa de ${regionName}`} draggable={false} />

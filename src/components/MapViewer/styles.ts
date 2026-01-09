@@ -8,6 +8,11 @@ export const MapWrapper = styled.div<{ width?: string; height?: string }>`
   flex-direction: row;
   align-items: center;
   justify-content: center;
+
+  /* On very small viewports, center the map wrapper */
+  @media (max-width: 480px) {
+    justify-content: center;
+  }
 `;
 
 export const MapContainerStyled = styled.div`
@@ -27,6 +32,13 @@ export const MapContainerStyled = styled.div`
 
   @media (max-width: 768px) {
     height: 100%;
+  }
+
+  @media (max-width: 480px) {
+    width: 460px;
+    height: 460px;
+    margin-left: auto;
+    margin-right: auto;
   }
 `;
 
@@ -61,13 +73,21 @@ export const MapInner = styled.div<{ scale: number; offsetX: number; offsetY: nu
 export const MapImage = styled.img`
   display: block;
   max-width: 100%;
-  height: 650px;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;
+
+  /* For large desktop default keep a practical max-height so it doesn't
+     blow up visually when its container is very tall */
+  @media (min-width: 769px) {
+    max-height: 650px;
+  }
 `;
 
 export const Pin = styled.button<{ pinColor?: string }>`
@@ -92,6 +112,16 @@ export const Pin = styled.button<{ pinColor?: string }>`
     border: 1px solid ${(p) => p.pinColor || THEME.colors.gold};
     white-space: nowrap;
   }
+
+  /* Reduce pin size and label on small screens */
+  @media (max-width: 480px) {
+    gap: 1px;
+    & > .pin-label {
+      font-size: 2.5px;
+      padding: 0 1px;
+    border: 1px solid ${(p) => p.pinColor || THEME.colors.gold}ff !important;
+    }
+  }
 `;
 
 export const PinIconWrapper = styled.div<{ pinColor?: string }>`
@@ -104,6 +134,12 @@ export const PinIconWrapper = styled.div<{ pinColor?: string }>`
   border: 1px solid ${(p) => p.pinColor || THEME.colors.gold};
   border-radius: 50%;
   box-shadow: ${THEME.shadows.sm};
+
+  @media (max-width: 480px) {
+    width: 8px !important;
+    height: 8px !important;
+    font-size: 0.9rem;
+  }
 `;
 
 export const PinIcon = styled.div<{ pinColor?: string }>`
@@ -126,6 +162,12 @@ export const PinIcon = styled.div<{ pinColor?: string }>`
     width: 100%;
     height: 100%;
     fill: currentColor;
+  }
+
+  @media (max-width: 480px) {
+    width: 4px !important;
+    height: 4px !important;
+    font-size: 0.9rem;
   }
 `;
 
@@ -163,6 +205,12 @@ export const ControlButton = styled.button`
     opacity: 0.5;
     cursor: not-allowed;
   }
+
+  @media (max-width: 480px) {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
 `;
 
 export const ZoomLevel = styled.div`
@@ -176,4 +224,9 @@ export const ZoomLevel = styled.div`
   padding: ${THEME.spacing.xs} ${THEME.spacing.sm};
   border: 1px solid ${THEME.colors.gold};
   border-radius: 4px;
+  
+  @media (max-width: 480px) {
+    font-size: 0.75rem !important;
+    padding: ${THEME.spacing.xs} ${THEME.spacing.xs} !important;
+  }
 `;

@@ -37,6 +37,10 @@ export const RegionTitle = styled.h1`
   color: ${THEME.colors.gold};
   margin: 0 0 ${THEME.spacing.sm} 0;
   letter-spacing: 2px;
+
+  @media (max-width: 480px) {
+    font-size: 1.4rem;
+  }
 `;
 
 export const RegionDescription = styled.p`
@@ -86,6 +90,10 @@ export const SectionTitle = styled.h2`
   color: ${THEME.colors.gold};
   margin: 0;
   text-align: left;
+
+  @media (max-width: 480px) {
+    font-size: 1.2rem;
+  }
 `;
 
 export const ExpandIcon = styled.span<{ isExpanded: boolean }>`
