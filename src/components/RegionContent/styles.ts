@@ -109,6 +109,17 @@ export const SectionText = styled.p`
   color: ${THEME.colors.foreground};
   line-height: 1.6;
   margin: 0;
+  
+  a {
+    color: ${THEME.colors.goldLight};
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color ${THEME.transitions.fast};
+  }
+
+  a:hover {
+    color: ${THEME.colors.gold};
+  }
 `;
 
 export const ContentBlock = styled.div`
@@ -118,6 +129,17 @@ export const ContentBlock = styled.div`
 `;
 
 export const ContentItemStyled = styled.div<{ contentStyle: string }>`
+  --item-color: ${(props) => {
+    switch (props.contentStyle) {
+      case 'title':
+      case 'topic':
+        return THEME.colors.gold;
+      case 'highlight':
+        return THEME.colors.goldLight;
+      default:
+        return THEME.colors.foreground;
+    }
+  }};
   font-family: ${(props) => {
     switch (props.contentStyle) {
       case 'title':
@@ -140,17 +162,7 @@ export const ContentItemStyled = styled.div<{ contentStyle: string }>`
         return '0.95rem';
     }
   }};
-  color: ${(props) => {
-    switch (props.contentStyle) {
-      case 'title':
-      case 'topic':
-        return THEME.colors.gold;
-      case 'highlight':
-        return THEME.colors.goldLight;
-      default:
-        return THEME.colors.foreground;
-    }
-  }};
+  color: var(--item-color);
   font-weight: ${(props) => {
     switch (props.contentStyle) {
       case 'title':
@@ -164,4 +176,9 @@ export const ContentItemStyled = styled.div<{ contentStyle: string }>`
   }};
   line-height: 1.6;
   margin: 0;
+  transition: color ${THEME.transitions.fast};
+  
+  &[data-highlighted="true"] {
+    --item-color: ${THEME.colors.royalRed};
+  }
 `;

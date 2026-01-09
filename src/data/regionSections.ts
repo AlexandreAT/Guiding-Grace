@@ -7,7 +7,9 @@ export type ContentStyle = 'normal' | 'title' | 'topic' | 'highlight';
 
 export interface ContentItem {
   style: ContentStyle;
-  text: string;
+  text?: string;
+  id?: string;
+  parts?: Array<{ type: 'text' | 'link'; text: string; href?: string }>;
 }
 
 export interface RegionSection {
@@ -16,13 +18,17 @@ export interface RegionSection {
 }
 
 export const regionSections: Record<string, RegionSection[]> = {
-    "geral": [
+  "geral": [
     {
       title: "Propósito do Guia",
       content: [
         {
           style: "normal",
-          text: "Esse é um mapa feito pelo site FextraLife, ele mostra a rota de Progresso do jogo e ajuda propondo um caminho de progressão para a campanha principal do jogo."
+          parts: [
+            { type: 'text', text: 'Esse é um mapa feito pelo site ' },
+            { type: 'link', text: 'FextraLife', href: 'https://eldenring.wiki.fextralife.com/Elden+Ring+Wiki' },
+            { type: 'text', text: ', ele mostra a rota de Progresso do jogo e ajuda propondo um caminho de progressão para a campanha principal do jogo.' },
+          ]
         },
         {
           style: "normal",
@@ -154,6 +160,7 @@ export const regionSections: Record<string, RegionSection[]> = {
       title: "Roteiro de Exploração",
       content: [
         {
+          id: "limgrave-npc-1",
           style: "topic",
           text: "Varre"
         },
@@ -171,6 +178,7 @@ export const regionSections: Record<string, RegionSection[]> = {
         },
 
         {
+          id: "limgrave-npc-2",
           style: "topic",
           text: "Mercador Kale"
         },
@@ -187,6 +195,7 @@ export const regionSections: Record<string, RegionSection[]> = {
           text: "Esgote todos os diálogos do Kale até receber um gesto (estalar de dedos). Gestos podem ser equipados no menu de status do personagem e são usados tanto para interação quanto para eventos específicos, como fazer um gesto em algum local para ativar um evento."
         },
         {
+          id: "limgrave-grace-1",
           style: "topic",
           text: "Graça da Erdtree"
         },
@@ -207,6 +216,7 @@ export const regionSections: Record<string, RegionSection[]> = {
           text: "Limpe o acampamento e entre no subterrâneo para encontrar a Pedra de Amolar, esse item é essencial para alterar artes de guerra (Ashes of War), elas são as habilidades especiais das armas."
         },
         {
+          id: "limgrave-enemi-2",
           style: "topic",
           text: "Homem-Besta de Farum Azula"
         },
@@ -215,6 +225,7 @@ export const regionSections: Record<string, RegionSection[]> = {
           text: "Recomendo esse boss como o primeiro boss do jogo, ele introduz padrões básicos de combate, leitura de movimentos e punição de erros, etc."
         },
         {
+          id: "limgrave-npc-3",
           style: "topic",
           text: "Roderika"
         },
@@ -231,6 +242,7 @@ export const regionSections: Record<string, RegionSection[]> = {
           text: "Como eu disse antes, ela introduz o conceito de invocações espirituais, para invocar, um ícone de lápide deve aparecer no lado esquerdo da tela, indicando que a área permite invocações. Nesse ponto, você já deve ter duas invocações disponíveis, os lobos e a agua viva, os espiritos também podem ser melhorados, quando você for parar na mesa redonda vai ter a opção de falar novamente com Roderika, lá você pode esgotar os dialogos com ela e com o ferreiro para conseguir melhorar os espiritos."
         },
         {
+          id: "limgrave-npc-4",
           style: "topic",
           text: "Bernahl"
         },
@@ -243,6 +255,7 @@ export const regionSections: Record<string, RegionSection[]> = {
           text: "Ao aplicar uma Arte de Guerra, você pode alterar a afinidade da arma, modificando sua escala com atributos como Força, Destreza, Qualidade ou inteligência."
         },
         {
+          id: "limgrave-item-1",
           style: "topic",
           text: "Talismã da Tartaruga"
         },
@@ -285,6 +298,7 @@ export const regionSections: Record<string, RegionSection[]> = {
       title: "Outros Objetivos",
       content: [
         {
+          id: "limgrave-dg-1",
           style: "topic",
           text: "Mina"
         },
@@ -294,6 +308,7 @@ export const regionSections: Record<string, RegionSection[]> = {
         },
 
         {
+          id: "limgrave-op-1",
           style: "topic",
           text: "Atalho para Liurnia"
         },
@@ -303,6 +318,7 @@ export const regionSections: Record<string, RegionSection[]> = {
         },
 
         {
+          id: "limgrave-enemi-1",
           style: "topic",
           text: "Darriwil"
         },
@@ -312,6 +328,7 @@ export const regionSections: Record<string, RegionSection[]> = {
         },
 
         {
+          id: "limgrave-boss-1",
           style: "topic",
           text: "Godrick, o Enxertado"
         },
@@ -366,6 +383,7 @@ export const regionSections: Record<string, RegionSection[]> = {
         },
 
         {
+          id: "limgrave-bottom-op-1",
           style: "topic",
           text: "Terceira Igreja de Marika"
         },
@@ -383,6 +401,7 @@ export const regionSections: Record<string, RegionSection[]> = {
         },
 
         {
+          id: "limgrave-bottom-npc-1",
           style: "topic",
           text: "Blaidd"
         },
@@ -429,6 +448,7 @@ export const regionSections: Record<string, RegionSection[]> = {
       title: "Outros Objetivos",
       content: [
         {
+          id: "limgrave-bottom-enemi-1",
           style: "topic",
           text: "Forte Haight"
         },

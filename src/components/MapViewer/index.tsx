@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ControlButton, ControlsContainer, MapContainerStyled, MapImage, MapImageContainer, ZoomLevel, MapInner, Pin, PinIconWrapper, PinIcon } from "./styles";
+import { ControlButton, ControlsContainer, MapContainerStyled, MapImage, MapImageContainer, ZoomLevel, MapInner, Pin, PinIconWrapper, PinIcon, MapWrapper } from "./styles";
 
 type PinData = { id: string; x: number; y: number; type?: string; label?: string; icon?: string | React.ComponentType<any>; color?: string; labelAbove?: boolean };
 
@@ -9,9 +9,12 @@ interface MapViewerProps {
   pins?: PinData[];
   pinMode?: boolean;
   onMapClick?: (coords: { x: number; y: number }) => void;
+  onPinClick?: (pinId: string) => void;
+  mapWidth?: string;
+  mapHeight?: string;
 }
 
-export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode = false, onMapClick }: MapViewerProps) {
+export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode = false, onMapClick, onPinClick, mapWidth = "100%", mapHeight = "auto" }: MapViewerProps) {
   const [scale, setScale] = useState(1);
   const [offsetX, setOffsetX] = useState(0);
   const [offsetY, setOffsetY] = useState(0);
@@ -116,17 +119,18 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
   }, []);
 
   return (
-    <MapContainerStyled
-      ref={containerRef}
-      onWheel={handleWheel}
-    >
-      <MapImageContainer
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onClick={handleMapClick}
+    <MapWrapper width={mapWidth} height={mapHeight}>
+      <MapContainerStyled
+        ref={containerRef}
+        onWheel={handleWheel}
       >
+        <MapImageContainer
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onClick={handleMapClick}
+        >
         <MapInner scale={scale} offsetX={offsetX} offsetY={offsetY}>
           <MapImage ref={imageRef} src={mapImageUrl} alt={`Mapa de ${regionName}`} draggable={false} />
 
@@ -136,12 +140,15 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
               style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%` }}
               onClick={(ev) => {
                 ev.stopPropagation();
-                console.log('Pin clicado', p);
+                if (typeof p.id === 'string' && typeof onPinClick === 'function') {
+                  onPinClick(p.id);
+                } else {
+                  console.log('Pin clicado', p);
+                }
               }}
               title={p.label}
               pinColor={p.color}
             >
-              {/* Se `labelAbove` for true, renderiza label antes do ícone */}
               {p.label && p.labelAbove && <span className="pin-label">{p.label}</span>}
 
               <PinIconWrapper pinColor={p.color}>
@@ -156,7 +163,6 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
                 )}
               </PinIconWrapper>
 
-              {/* Caso contrário, mostra abaixo (com o mesmo espaçamento) */}
               {p.label && !p.labelAbove && <span className="pin-label">{p.label}</span>}
             </Pin>
           ))}
@@ -177,5 +183,6 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
 
       <ZoomLevel>{Math.round(scale * 100)}%</ZoomLevel>
     </MapContainerStyled>
+    </MapWrapper>
   );
 }

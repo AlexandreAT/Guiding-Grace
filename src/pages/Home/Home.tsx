@@ -19,6 +19,10 @@ export default function Home() {
 
   const pins = useMemo(() => getPinsForRegion(activeRegionId), [activeRegionId]);
   const regionSections = useMemo(() => getSectionsForRegion(activeRegionId), [activeRegionId]);
+  const [scrollToLabel, setScrollToLabel] = useState<string | undefined>(undefined);
+
+  const mapWidth = "100%";
+  const mapHeight = "650px";
 
   return (
     <PageContainer>
@@ -55,7 +59,12 @@ export default function Home() {
                 regionName={activeRegion.displayName}
                 pins={pins}
                 pinMode={pinMode}
+                mapWidth={mapWidth}
+                mapHeight={mapHeight}
                 onMapClick={(coords) => console.log('Map click coords:', coords)}
+                onPinClick={(pinId) => {
+                  setScrollToLabel(pinId);
+                }}
               />
             )}
             {activeRegionId !== 'erdtree' && activeRegionId !== 'leyndell-sewers' &&
@@ -67,6 +76,8 @@ export default function Home() {
             regionName={activeRegion.displayName}
             regionDescription={activeRegion.description}
             sections={regionSections}
+            scrollToLabel={scrollToLabel}
+            onScrolled={() => setScrollToLabel(undefined)}
           />
         </ContentWrapper>
       </MainContent>

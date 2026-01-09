@@ -189,6 +189,7 @@ const THEMES = {
       border: "#d4af37",
       shadow: "rgba(212, 175, 55, 0.3)",
       shadowDark: "rgba(0, 0, 0, 0.8)",
+      royalRed: "#9b1c31"
     },
     fonts: {
       rpg: "'Cinzel', serif",

@@ -1,9 +1,18 @@
 import styled from "styled-components";
 import { THEME } from "../../../shared/const";
 
+export const MapWrapper = styled.div<{ width?: string; height?: string }>`
+  width: ${(props) => props.width || '100%'};
+  height: ${(props) => props.height || 'auto'};
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+`;
+
 export const MapContainerStyled = styled.div`
-  width: 100%;
-  height: auto;
+  width: 80%;
+  height: 100%;
   background-color: ${THEME.colors.brownDark};
   border: 2px solid ${THEME.colors.gold};
   border-radius: 4px;
@@ -13,16 +22,17 @@ export const MapContainerStyled = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  touch-action: none;
+  -webkit-touch-callout: none;
 
   @media (max-width: 768px) {
-    /* allow responsive height based on image */
-    height: auto;
+    height: 100%;
   }
 `;
 
 export const MapImageContainer = styled.div`
   width: 100%;
-  height: auto;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -32,6 +42,8 @@ export const MapImageContainer = styled.div`
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+  touch-action: none;
+  -webkit-touch-callout: none;
 
   &:active {
     cursor: grabbing;

@@ -17,7 +17,7 @@ export type PinData = {
 
 export const regionPins: Record<string, PinData[]> = {
   "limgrave-top": [
-    { id: "limgrave-grace-2", x: 0.6389, y: 0.4622, type: "GRACE", label: "Graça de Erdtree", icon: BsStars, color: PIN_COLORS.GRACE },
+    { id: "limgrave-grace-1", x: 0.6389, y: 0.4622, type: "GRACE", label: "Graça de Erdtree", icon: BsStars, color: PIN_COLORS.GRACE },
     { id: "limgrave-item-2", x: 0.65, y: 0.44, type: "ITEM", label: "Espada do Lorde", icon: BsTools, color: PIN_COLORS.ITEM, labelAbove: true },
     { id: "limgrave-boss-1", x: 0.3152, y: 0.1731, type: "BOSS", label: "Godrick, o Enxertado", icon: GiCrownedSkull, color: PIN_COLORS.BOSS },
     
