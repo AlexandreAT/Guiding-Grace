@@ -175,7 +175,7 @@ export const regionSections: Record<string, RegionSection[]> = {
         {
           style: "normal",
           parts: [
-            { type: 'image', text: 'Varre ', src: 'src/data/Image/Varre 1.jpg' },
+            { type: 'image', text: 'Varre ', src: '/images/Varre 1.jpg' },
             { type: 'text', text: ' é o primeiro NPC que você encontra ao sair do local inicial, ele apresenta o conceito dos Maculados e da Graça, além de provocar o personagem principal ao comentar sobre a ausência de uma Donzela dos Dedos.' },
           ]
         },
@@ -196,7 +196,7 @@ export const regionSections: Record<string, RegionSection[]> = {
         {
           style: "normal",
           parts: [
-            { type: 'image', text: 'Kale ', src: 'src/data/Image/Kale.jpg' },
+            { type: 'image', text: 'Kale ', src: '/images/Kale.jpg' },
             { type: 'text', text: ' é o primeiro mercador do jogo e introduz o sistema de comércio, aqui você pode comprar itens básicos, como a Pedra de Forja (1), usada para aprimorar armas iniciais.' },
           ]
         },
@@ -215,7 +215,11 @@ export const regionSections: Record<string, RegionSection[]> = {
         },
         {
           style: "normal",
-          text: "Ao descansar nessa Graça, Melina aparece pela primeira vez, ela oferece um acordo ao Maculado, permitindo que você suba de nível e concedendo acesso ao Torrent, sua montaria."
+          parts: [
+            { type: 'text', text: 'Ao descansar nessa ' },
+            { type: 'image', text: 'Graça', src: '/images/Graça.jpg' },
+            { type: 'text', text: ', Melina aparece pela primeira vez, ela oferece um acordo ao Maculado, permitindo que você suba de nível e concedendo acesso ao Torrent, sua montaria.' },
+          ]
         },
         {
           style: "normal",
@@ -227,7 +231,11 @@ export const regionSections: Record<string, RegionSection[]> = {
         },
         {
           style: "normal",
-          text: "Limpe o acampamento e entre no subterrâneo para encontrar a Pedra de Amolar, esse item é essencial para alterar artes de guerra (Ashes of War), elas são as habilidades especiais das armas."
+          parts: [
+            { type: 'text', text: 'Limpe o acampamento e entre no subterrâneo para encontrar a ' },
+            { type: 'image', text: 'Pedra de Amolar', src: '/images/Faca de Pedra de Amolar.jpg' },
+            { type: 'text', text: ', esse item é essencial para alterar artes de guerra (Ashes of War), elas são as habilidades especiais das armas.' },
+          ]
         },
         {
           id: "limgrave-enemi-2",
