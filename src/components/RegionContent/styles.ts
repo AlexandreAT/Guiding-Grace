@@ -185,8 +185,70 @@ export const ContentItemStyled = styled.div<{ contentStyle: string }>`
   line-height: 1.6;
   margin: 0;
   transition: color ${THEME.transitions.fast};
+  position: relative;
   
   &[data-highlighted="true"] {
     --item-color: ${THEME.colors.royalRed};
+  }
+
+  a {
+    color: ${THEME.colors.goldLight};
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color ${THEME.transitions.fast};
+
+    &:hover {
+      color: ${THEME.colors.gold};
+    }
+  }
+`;
+
+export const ImageLink = styled.button`
+  position: relative;
+  background: none;
+  border: none;
+  padding: 0;
+  color: ${THEME.colors.goldLight};
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  transition: color ${THEME.transitions.fast};
+  display: inline-block;
+
+  &:hover {
+    color: ${THEME.colors.gold};
+  }
+`;
+
+export const ImagePreview = styled.img`
+  position: fixed;
+  max-width: 300px;
+  max-height: 300px;
+  padding: ${THEME.spacing.sm};
+  background-color: rgba(10, 10, 10, 0.95);
+  border: 2px solid ${THEME.colors.gold};
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 15px rgba(212, 175, 55, 0.3);
+  object-fit: cover;
+  z-index: 999;
+  animation: slideUp 0.3s ease-out;
+  pointer-events: none;
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 768px) {
+    max-width: 200px;
+    max-height: 200px;
   }
 `;

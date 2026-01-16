@@ -1,86 +1,104 @@
-import { useState, useMemo } from "react";
-import { REGIONS } from "../../../shared/const";
-import { ButtonPin, ContentWrapper, ImgController, MainContent, MapSection, MapTitle, PageContainer } from "./styles";
+import { useNavigate } from "react-router-dom";
 import { Header } from "../../components/Header";
-import Sidebar from "../../components/Sidebar";
-import MapViewer from "../../components/MapViewer";
-import RegionContent from "../../components/RegionContent";
-import MapLegend from "../../components/MapLegend";
-import SingleImage from "../../components/SingleImage";
-import ImageCarousel from "../../components/ImageCarousel";
-import { getPinsForRegion } from "../../data/regionPins";
-import { getSectionsForRegion } from "../../data/regionSections";
+import {
+  HomePageContainer,
+  HomeHeaderSection,
+  HomeTitle,
+  HomeSubtitle,
+  HomeContent,
+  CardsContainer,
+  CardButton,
+  CardContent,
+  CardTitle,
+  CardDescription,
+  DisabledCardButton,
+  DisabledCardContent,
+} from "./styles";
+
+interface MainCategory {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  disabled?: boolean;
+}
 
 export default function Home() {
-  const [activeRegionId, setActiveRegionId] = useState<string>(REGIONS[0].id);
-  const [pinMode, setPinMode] = useState<boolean>(false);
+  const navigate = useNavigate();
 
-  const activeRegion = REGIONS.find((r) => r.id === activeRegionId) || REGIONS[0];
+  const mainCategories: MainCategory[] = [
+    {
+      id: "basic-guide",
+      title: "Guia Básico",
+      description: "Escolha uma build e comece sua jornada",
+      icon: "⚔️",
+    },
+    {
+      id: "mechanics-guide",
+      title: "Guia de Mecânicas",
+      description: "Entenda os sistemas do jogo",
+      icon: "⚙️",
+    },
+    {
+      id: "platinum-guide",
+      title: "Guia Platina",
+      description: "Roteiro completo para a platina/1000G",
+      icon: "👑",
+      disabled: true,
+    },
+  ];
 
-  const pins = useMemo(() => getPinsForRegion(activeRegionId), [activeRegionId]);
-  const regionSections = useMemo(() => getSectionsForRegion(activeRegionId), [activeRegionId]);
-  const [scrollToLabel, setScrollToLabel] = useState<string | undefined>(undefined);
-
-  const mapWidth = "100%";
-  const mapHeight = "650px";
+  const handleCardClick = (categoryId: string, disabled?: boolean) => {
+    if (!disabled) {
+      navigate(`/select/${categoryId}`);
+    }
+  };
 
   return (
-    <PageContainer>
-      <Header onLogoClick={() => setActiveRegionId(REGIONS[0].id)} />
+    <HomePageContainer>
+      <Header onLogoClick={() => navigate("/")} />
 
-      <MainContent>
-        <Sidebar activeRegionId={activeRegionId} onRegionSelect={setActiveRegionId} />
+      <HomeHeaderSection>
+        <HomeTitle>Guiding Grace</HomeTitle>
+        <HomeSubtitle>
+          Guia completo para a jornada em Elden Ring
+        </HomeSubtitle>
+      </HomeHeaderSection>
 
-        <ContentWrapper>
-          <MapSection marginBottom={`${activeRegionId === 'erdtree' || activeRegionId === 'leyndell-sewers' && '5px'}`}>
-            <MapTitle>{activeRegionId !== 'erdtree' && activeRegionId !== 'leyndell-sewers' && "Mapa de " }{activeRegion.displayName}</MapTitle>
-            {activeRegionId !== 'erdtree' && activeRegionId !== 'leyndell-sewers' &&
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 8 }}>
-                <ButtonPin onClick={() => setPinMode((s) => !s)}>{pinMode ? 'Desativar modo pin' : 'Ativar modo pin'}</ButtonPin>
-                {pinMode && <span style={{ fontSize: 12, color: '#ccc' }}>Clique no mapa para copiar coords</span>}
-              </div>
-            }
-            {activeRegionId === 'erdtree' ? (
-              <ImgController>
-                <SingleImage imageName={`leyndell-ashen-capital.jpg`} width="80%" height="640px" caption="Leyndell - Ashen Capital" />
-              </ImgController>
-            ) : activeRegionId === 'leyndell-sewers' ? (
-              <ImageCarousel
-                images={[
-                  { name: 'leyndell-sewers-entrance1.jpg', caption: 'Esgoto - Entrada 1' },
-                  { name: 'leyndell-sewers-entrance2.jpg', caption: 'Esgoto - Entrada 2' },
-                ]}
-                itemWidth="320px"
-                itemHeight="220px"
-              />
+      <HomeContent>
+        <CardsContainer>
+          {mainCategories.map((category) =>
+            category.disabled ? (
+              <DisabledCardButton key={category.id} type="button" disabled>
+                <DisabledCardContent>
+                  <div style={{ fontSize: "3rem", marginBottom: "8px" }}>
+                    {category.icon}
+                  </div>
+                  <CardTitle>{category.title}</CardTitle>
+                  <CardDescription>{category.description}</CardDescription>
+                  <div style={{ fontSize: "0.8rem", marginTop: "8px", color: "#999" }}>
+                    Em Breve
+                  </div>
+                </DisabledCardContent>
+              </DisabledCardButton>
             ) : (
-              <MapViewer
-                mapImageUrl={`/maps/${activeRegionId}.jpg`}
-                regionName={activeRegion.displayName}
-                pins={pins}
-                pinMode={pinMode}
-                mapWidth={mapWidth}
-                mapHeight={mapHeight}
-                onMapClick={(coords) => console.log('Map click coords:', coords)}
-                onPinClick={(pinId) => {
-                  setScrollToLabel(pinId);
-                }}
-              />
-            )}
-            {activeRegionId !== 'erdtree' && activeRegionId !== 'leyndell-sewers' &&
-              <MapLegend />
-            }
-          </MapSection>
-
-          <RegionContent
-            regionName={activeRegion.displayName}
-            regionDescription={activeRegion.description}
-            sections={regionSections}
-            scrollToLabel={scrollToLabel}
-            onScrolled={() => setScrollToLabel(undefined)}
-          />
-        </ContentWrapper>
-      </MainContent>
-    </PageContainer>
+              <CardButton
+                key={category.id}
+                onClick={() => handleCardClick(category.id, category.disabled)}
+                type="button"
+              >
+                <CardContent>
+                  <div style={{ fontSize: "3rem", marginBottom: "8px" }}>
+                    {category.icon}
+                  </div>
+                  <CardTitle>{category.title}</CardTitle>
+                  <CardDescription>{category.description}</CardDescription>
+                </CardContent>
+              </CardButton>
+            )
+          )}
+        </CardsContainer>
+      </HomeContent>
+    </HomePageContainer>
   );
 }

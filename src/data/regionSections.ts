@@ -9,7 +9,7 @@ export interface ContentItem {
   style: ContentStyle;
   text?: string;
   id?: string;
-  parts?: Array<{ type: 'text' | 'link'; text: string; href?: string }>;
+  parts?: Array<{ type: 'text' | 'link' | 'image' | 'spoiler'; text: string; href?: string; src?: string }>;
 }
 
 export interface RegionSection {
@@ -36,7 +36,15 @@ export const regionSections: Record<string, RegionSection[]> = {
         },
         {
           style: "highlight",
-          text: "Importante: Não será colocado spoilers nos mapas, porém, nas abas de Contexto e Lore podem ter spoilers explicando um pouco da história."
+          text: "Importante: Não será colocado spoilers diretamente nos mapas ou texto, porém, nas abas de Contexto e Lore podem ter spoilers explicando um pouco da história, nesse caso, deixarei uma tarja no texto."
+        },
+        {
+          style: "normal",
+          parts: [
+            { type: 'text', text: 'Exemplo de spoiler: ' },
+            { type: 'spoiler', text: 'Clique aqui para revelar informações importantes' },
+            { type: 'text', text: '.' },
+          ]
         },
         {
           style: "normal",
@@ -166,7 +174,10 @@ export const regionSections: Record<string, RegionSection[]> = {
         },
         {
           style: "normal",
-          text: "Varre é o primeiro NPC que você encontra ao sair do local inicial, ele apresenta o conceito dos Maculados e da Graça, além de provocar o personagem principal ao comentar sobre a ausência de uma Donzela dos Dedos."
+          parts: [
+            { type: 'image', text: 'Varre ', src: 'src/data/Image/Varre 1.jpg' },
+            { type: 'text', text: ' é o primeiro NPC que você encontra ao sair do local inicial, ele apresenta o conceito dos Maculados e da Graça, além de provocar o personagem principal ao comentar sobre a ausência de uma Donzela dos Dedos.' },
+          ]
         },
         {
           style: "normal",
@@ -184,7 +195,10 @@ export const regionSections: Record<string, RegionSection[]> = {
         },
         {
           style: "normal",
-          text: "Kale é o primeiro mercador do jogo e introduz o sistema de comércio, aqui você pode comprar itens básicos, como a Pedra de Forja (1), usada para aprimorar armas iniciais."
+          parts: [
+            { type: 'image', text: 'Kale ', src: 'src/data/Image/Kale.jpg' },
+            { type: 'text', text: ' é o primeiro mercador do jogo e introduz o sistema de comércio, aqui você pode comprar itens básicos, como a Pedra de Forja (1), usada para aprimorar armas iniciais.' },
+          ]
         },
         {
           style: "normal",
