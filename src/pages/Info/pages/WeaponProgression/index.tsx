@@ -15,136 +15,176 @@ export default function WeaponProgression() {
   return (
     <WeaponProgressionContainer>
       <Section>
-        <SectionTitle>O Sistema de Progressão de Armas</SectionTitle>
+        <SectionTitle>Como Funcionam as Armas em Elden Ring</SectionTitle>
         <SectionContent>
           <Paragraph>
-            A progressão de armas em Elden Ring é um dos sistemas mais importantes do jogo. Diferentemente de muitos RPGs, 
-            você não encontra armas melhores simplesmente explorando - você <HighlightText>aprimora</HighlightText> as armas que já tem, 
-            tornando-as mais poderosas.
+            Em Elden Ring, as armas não são só "mais fortes ou mais fracas", elas melhoram junto com o seu personagem 
+            e com as escolhas que você faz. <HighlightText>Duas pessoas podem usar as mesmas armas, mas elas funcionam de formas 
+            bem diferentes para cada um,</HighlightText> dependendo dos atributos, das melhorias e das habilidades aplicadas nela.
+          </Paragraph>
+        </SectionContent>
+      </Section>
+
+      <Section>
+        <SectionTitle>Atributos e Escala das Armas</SectionTitle>
+        <SectionContent>
+          <Paragraph>
+            Cada arma escala com um ou mais atributos, como <HighlightText>Força, Destreza, Inteligência, Fé ou Arcano</HighlightText>. 
+            Essa escala define o quanto de dano extra a arma recebe conforme você investe pontos nesses atributos.
+          </Paragraph>
+          <Paragraph>
+            Essa escala aparece por letras, indo de E até S, quanto melhor a letra, mais aquela arma se beneficia 
+            do atributo em que a letra esta, ima arma com boa escala em Força, por exemplo, vai ficar muito mais forte se você investir nesse atributo.
           </Paragraph>
           <InfoBox>
             <p>
-              <strong>Dica Importante:</strong> Não tenha medo de aprimorar armas cedo. Você pode aprimorar múltiplas armas 
-              e depois escolher qual usar. As Pedras de Forja são recursos renováveis encontrados em minas.
+              <strong>Importante:</strong> Não adianta só upar o personagem se a arma não escala bem com o atributo que você 
+              está investindo, o ganho vai ser pequeno se não houver alinhamento entre sua build e a escala da arma.
             </p>
           </InfoBox>
         </SectionContent>
       </Section>
 
       <Section>
-        <SectionTitle>Tipos de Pedras de Forja</SectionTitle>
+        <SectionTitle>Upando Armas (Reforçar)</SectionTitle>
         <SectionContent>
           <Paragraph>
-            Existem dois tipos principais de caminhos de aprimoramento em Elden Ring, cada um com suas pedras específicas:
+            Além de upar o personagem, você pode upar as armas usando <HighlightText>Pedras de Forja</HighlightText>. Isso aumenta 
+            o dano base da arma e, indiretamente, melhora o impacto da escala com atributos.
           </Paragraph>
-
-          <TwoColumnLayout>
-            <Card>
-              <h3>Pedras Normais</h3>
-              <p>
-                Usadas para aprimorar armas pelo caminho padrão. Requerem mais pedras por nível, mas são mais abundantes. 
-                O aprimoramento vai até +25 para a maioria das armas.
-              </p>
-            </Card>
-            <Card>
-              <h3>Pedras Sombrias</h3>
-              <p>
-                Usadas para aprimorar armas com escalam com inteligência ou fé. Requerem apenas uma pedra por nível, mas são 
-                mais raras. O aprimoramento vai até +10.
-              </p>
-            </Card>
-          </TwoColumnLayout>
-        </SectionContent>
-      </Section>
-
-      <Section>
-        <SectionTitle>Artes de Guerra (Ashes of War)</SectionTitle>
-        <SectionContent>
           <Paragraph>
-            As Artes de Guerra são habilidades especiais que você pode aplicar às suas armas. Elas definem:
+            Existem dois grandes tipos de armas no jogo, e cada uma usa um tipo diferente de pedra:
           </Paragraph>
-          <List>
-            <li><HighlightText>Ataque Especial:</HighlightText> A habilidade única ativada com o botão de magia</li>
-            <li><HighlightText>Afinidade:</HighlightText> Como a arma escala com seus atributos (Força, Destreza, Inteligência, etc)</li>
-            <li><HighlightText>Tipo de Dano:</HighlightText> Pode adicionar dano de elemento (fogo, gelo, raio, etc)</li>
-          </List>
-          <InfoBox>
-            <p>
-              <strong>Mudando de Classe:</strong> Você pode aplicar diferentes Artes de Guerra para mudar completamente como uma arma funciona. 
-              Use a Pedra de Amolar para aplicar ou alterar Artes de Guerra.
-            </p>
-          </InfoBox>
-        </SectionContent>
-      </Section>
 
-      <Section>
-        <SectionTitle>Estratégia de Progressão Recomendada</SectionTitle>
-        <SectionContent>
-          <Paragraph>
-            Para uma progressão balanceada e eficiente no jogo:
-          </Paragraph>
-          <List>
-            <li>
-              <HighlightText>Fase Inicial (Limgrave):</HighlightText> Aprimore uma ou duas armas até +3 ou +5. Experimente diferentes tipos para encontrar seu estilo.
-            </li>
-            <li>
-              <HighlightText>Fase Média (Liurnia):</HighlightText> Aprimore suas armas favoritas até +10 ou +15. Comece a focar em artes de guerra que combinam com sua build.
-            </li>
-            <li>
-              <HighlightText>Fase Tardia (Caelid/Capital):</HighlightText> Aprimore suas armas até o máximo (+25). Considere manter 2-3 armas diferentes para situações específicas.
-            </li>
-            <li>
-              <HighlightText>Endgame:</HighlightText> Experimente com armas especiais e criativas. Você tem recursos suficientes para testar múltiplas configurações.
-            </li>
-          </List>
-        </SectionContent>
-      </Section>
-
-      <Section>
-        <SectionTitle>Encontrando Pedras de Forja</SectionTitle>
-        <SectionContent>
-          <Paragraph>
-            As Pedras de Forja são encontradas principalmente em:
-          </Paragraph>
-          <List>
-            <li><HighlightText>Minas:</HighlightText> A principal fonte de pedras. Procure por "minas" no seu mapa.</li>
-            <li><HighlightText>NPCs Mercadores:</HighlightText> Após encontrar um certo número de pedras, os mercadores começam a vender.</li>
-            <li><HighlightText>Inimigos Especiais:</HighlightText> Alguns inimigos únicos e chefes menores dropar pedras raras.</li>
-            <li><HighlightText>Catacumbas e Dungeons:</HighlightText> Encontradas como recompensas ocasionais em masmorras.</li>
-          </List>
-          <InfoBox>
-            <p>
-              <strong>Dica:</strong> Mapeie mentalmente as minas da região onde você está jogando. Você pode farmear pedras voltando 
-              a essas localizações repetidamente se precisar de muitas pedras.
-            </p>
-          </InfoBox>
-        </SectionContent>
-      </Section>
-
-      <Section>
-        <SectionTitle>Armas Especiais vs Comuns</SectionTitle>
-        <SectionContent>
           <TwoColumnLayout>
             <Card>
               <h3>Armas Comuns</h3>
               <p>
-                Armas padrões encontradas ao longo do jogo. Podem ser aprimoradas até +25 com Pedras Normais. 
-                São versáteis e funcionam com qualquer build.
+                Usam Pedras de Forja normais e sobem até <HighlightText>+25</HighlightText>, exigem mais investimento, 
+                porém são mais flexíveis e versáteis, e suas pedras são mais fáceis de conseguir.
               </p>
             </Card>
             <Card>
-              <h3>Armas Especiais (Únicas)</h3>
+              <h3>Armas Especiais</h3>
               <p>
-                Armas com designs únicos e habilidades especiais. Aprimoradas com Pedras Sombrias até +10. 
-                Geralmente têm escalas específicas (Inteligência, Fé, etc).
+                Usam Pedras de Forja Sombrias e sobem até <HighlightText>+10</HighlightText>, sobem mais rápido e exigem 
+                menos pedras, mas são mais raras.
               </p>
             </Card>
           </TwoColumnLayout>
+        </SectionContent>
+      </Section>
 
+      <Section>
+        <SectionTitle>Afinidade das Armas</SectionTitle>
+        <SectionContent>
+          <Paragraph>
+            Quando você aplica uma Cinza da Guerra, também pode mudar a <HighlightText>afinidade</HighlightText> da arma. 
+            A afinidade altera como a arma escala com os atributos e, às vezes, adiciona danos diferentes, como por exemplo dano elemental.
+          </Paragraph>
+          <Paragraph>
+            Você pode transformar a mesma arma em diferentes configurações, como por exemplo:
+          </Paragraph>
+          <List>
+            <li><HighlightText>Força:</HighlightText> Focando em dano bruto</li>
+            <li><HighlightText>Destreza:</HighlightText> Priorizando ataques rápidos</li>
+            <li><HighlightText>Qualidade:</HighlightText> Equilibrando Força e Destreza</li>
+            <li><HighlightText>Mágica ou Sagrada:</HighlightText> Adicionando dano elemental</li>
+            <li><HighlightText>Status:</HighlightText> Sangramento, veneno ou outros efeitos</li>
+          </List>
           <InfoBox>
             <p>
-              <strong>Escolha:</strong> Armas comuns oferecem mais flexibilidade, enquanto armas especiais oferecem mais 
-              poder em builds específicas. Uma boa estratégia é ter uma arma comum e uma especial.
+              <strong>Flexibilidade:</strong> Isso permite adaptar a mesma arma para builds completamente diferentes, 
+              oferecendo muito mais liberdade de experimentação.
+            </p>
+          </InfoBox>
+        </SectionContent>
+      </Section>
+
+      <Section>
+        <SectionTitle>Cinzas da Guerra (Ashes of War)</SectionTitle>
+        <SectionContent>
+          <Paragraph>
+            <HighlightText>Cinzas da Guerra</HighlightText> são habilidades que você pode aplicar em várias armas,
+             elas definem a habilidade especial da arma, como ataques únicos, buffs, investidas ou efeitos elementais.
+          </Paragraph>
+          <Paragraph>
+            Ao trocar uma Cinza da Guerra, você muda como a arma se comporta em combate, é uma das formas mais importantes 
+            de personalizar seu estilo de jogo.
+          </Paragraph>
+          <List>
+            <li>Nem toda arma aceita Cinzas da Guerra</li>
+            <li>Nem toda Cinza funciona em qualquer arma tipo de arma</li>
+            <li>Algumas são exclusivas para espadas, lanças, armas pesadas, arcos, etc</li>
+          </List>
+          <InfoBox>
+            <p>
+              <strong>Experimentação:</strong> Use Cinzas da Guerra para testar diferentes estilos de combate e encontrar 
+              o que combina com sua build, usar cinza da guerra normalmente gasta sua "magia".
+            </p>
+          </InfoBox>
+        </SectionContent>
+      </Section>
+
+      <Section>
+        <SectionTitle>Armas Especiais e Limitações</SectionTitle>
+        <SectionContent>
+          <Paragraph>
+            Algumas armas do jogo são consideradas <HighlightText>especiais</HighlightText>, normalmente armas únicas, 
+            lendárias ou ligadas à lore, essas armas <HighlightText>não permitem trocar Cinzas da Guerra</HighlightText> 
+            nem alterar afinidade.
+          </Paragraph>
+          <Paragraph>
+            Elas já vêm com uma habilidade própria fixa e uma escala definida, e o seu crescimento depende quase totalmente 
+            de upar a arma e investir nos atributos certos.
+          </Paragraph>
+          <InfoBox>
+            <p>
+              <strong>Nem pior, nem melhor, só diferente:</strong> Isso não significa que elas são piores, apenas mais "engessadas". 
+              Em troca, muitas têm habilidades muito fortes ou efeitos únicos que compensam a falta de flexibilidade.
+            </p>
+          </InfoBox>
+        </SectionContent>
+      </Section>
+
+      <Section>
+        <SectionTitle>Pedras de Amolar (Whetblades)</SectionTitle>
+        <SectionContent>
+          <Paragraph>
+            As <HighlightText>Pedras de Amolar</HighlightText> desbloqueiam novas afinidades que você pode aplicar às armas. 
+            Sem elas, suas opções de afinidade ficam bem limitadas.
+          </Paragraph>
+          <Paragraph>
+            Cada Pedra de Amolar libera um grupo específico de afinidades, como mágicas, sagradas ou focadas em status negativos, 
+            elas não aumentam dano diretamente, mas <HighlightText>ampliam muito as opções de personalização</HighlightText> 
+            da arma.
+          </Paragraph>
+          <InfoBox>
+            <p>
+              <strong>Busque-as Cedo:</strong> Procure coletar Pedras de Amolar conforme progride no jogo para desbloquear 
+              mais opções de customização.
+            </p>
+          </InfoBox>
+        </SectionContent>
+      </Section>
+
+      <Section>
+        <SectionTitle>Resumo da Progressão das Armas</SectionTitle>
+        <SectionContent>
+          <Paragraph>
+            A progressão das armas em Elden Ring funciona como um conjunto de escolhas complementares:
+          </Paragraph>
+          <List>
+            <li>Você <HighlightText>upa a arma</HighlightText> para aumentar o dano base</li>
+            <li><HighlightText>Investe em atributos</HighlightText> para melhorar a escala</li>
+            <li><HighlightText>Escolhe se quer usar Cinzas da Guerra diferentes das iniciais da arma</HighlightText> para personalizar habilidades</li>
+            <li><HighlightText>Define afinidade</HighlightText> para alinhar a arma com sua build</li>
+          </List>
+          <InfoBox>
+            <p>
+              <strong>Conclusão:</strong> Não existe "arma certa", existe arma certa para o seu estilo de jogo, 
+              não é atoa que existem pessoas zerando de tudo quanto é jeito, use essas ferramentas para criar a arma perfeita para você 
+              sem pensar muito no estilo ou armas dos outros.
             </p>
           </InfoBox>
         </SectionContent>
