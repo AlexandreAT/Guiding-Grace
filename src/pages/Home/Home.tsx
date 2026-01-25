@@ -13,6 +13,8 @@ import {
   CardDescription,
   DisabledCardButton,
   DisabledCardContent,
+  CardIconContainer,
+  DisabledCardLabel,
 } from "./styles";
 
 interface MainCategory {
@@ -71,14 +73,10 @@ export default function Home() {
             category.disabled ? (
               <DisabledCardButton key={category.id} type="button" disabled>
                 <DisabledCardContent>
-                  <div style={{ fontSize: "3rem", marginBottom: "8px" }}>
-                    {category.icon}
-                  </div>
+                  <CardIconContainer>{category.icon}</CardIconContainer>
                   <CardTitle>{category.title}</CardTitle>
                   <CardDescription>{category.description}</CardDescription>
-                  <div style={{ fontSize: "0.8rem", marginTop: "8px", color: "#999" }}>
-                    Em Breve
-                  </div>
+                  <DisabledCardLabel>Em Breve</DisabledCardLabel>
                 </DisabledCardContent>
               </DisabledCardButton>
             ) : (
@@ -88,9 +86,7 @@ export default function Home() {
                 type="button"
               >
                 <CardContent>
-                  <div style={{ fontSize: "3rem", marginBottom: "8px" }}>
-                    {category.icon}
-                  </div>
+                  <CardIconContainer>{category.icon}</CardIconContainer>
                   <CardTitle>{category.title}</CardTitle>
                   <CardDescription>{category.description}</CardDescription>
                 </CardContent>

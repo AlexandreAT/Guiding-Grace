@@ -76,3 +76,12 @@ export const RegionIcon = styled.span`
     margin-right: ${THEME.spacing.xs};
   }
 `;
+
+export const RegionIconContainer = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+export const RegionContentContainer = styled.div`
+  flex: 1;
+`;

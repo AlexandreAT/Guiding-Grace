@@ -1,7 +1,23 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { REGIONS } from "../../../shared/const";
-import { ButtonPin, ContentWrapper, ImgController, MainContent, MapSection, MapTitle, PageContainer } from "../Home/styles";
+import {
+  ButtonPin,
+  ContentWrapper,
+  ImgController,
+  MainContent,
+  MapSection,
+  MapTitle,
+  PageContainer,
+  BackButtonLink,
+  PinControlsContainer,
+  PinControlLabel,
+  MapContainerWrapper,
+  MapLoadingOverlay,
+  LoadingContent,
+  LoadingSpinner,
+  LoadingText,
+} from "../Home/styles";
 import { Header } from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
 import MapViewer from "../../components/MapViewer";
@@ -40,32 +56,17 @@ export default function Guide() {
         <Sidebar activeRegionId={activeRegionId} onRegionSelect={setActiveRegionId} />
 
         <ContentWrapper>
-          <div style={{ marginBottom: "16px" }}>
-            <button
-              onClick={() => navigate("/select/basic-guide")}
-              style={{
-                background: "none",
-                border: "none",
-                color: "#d4af37",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                fontSize: "0.95rem",
-                fontFamily: "inherit",
-              }}
-            >
-              <IoArrowBack /> Voltar para Seleção de Build
-            </button>
-          </div>
+          <BackButtonLink onClick={() => navigate("/select/basic-guide")}>
+            <IoArrowBack /> Voltar para Seleção de Build
+          </BackButtonLink>
 
           <MapSection marginBottom={`${activeRegionId === 'erdtree' || activeRegionId === 'leyndell-sewers' && '5px'}`}>
             <MapTitle>{activeRegionId !== 'erdtree' && activeRegionId !== 'leyndell-sewers' && "Mapa de " }{activeRegion.displayName}</MapTitle>
             {activeRegionId !== 'erdtree' && activeRegionId !== 'leyndell-sewers' &&
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 8 }}>
+              <PinControlsContainer>
                 <ButtonPin onClick={() => setPinMode((s) => !s)}>{pinMode ? 'Desativar modo pin' : 'Ativar modo pin'}</ButtonPin>
-                {pinMode && <span style={{ fontSize: 12, color: '#ccc' }}>Clique no mapa para copiar coords</span>}
-              </div>
+                {pinMode && <PinControlLabel>Clique no mapa para copiar coords</PinControlLabel>}
+              </PinControlsContainer>
             }
             {activeRegionId === 'erdtree' ? (
               <ImgController>
@@ -81,40 +82,14 @@ export default function Guide() {
                 itemHeight="220px"
               />
             ) : (
-              <>
+              <MapContainerWrapper>
                 {isLoadingMap && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: 'rgba(10, 10, 10, 0.8)',
-                      zIndex: 10,
-                      borderRadius: '4px',
-                    }}
-                  >
-                    <div style={{ textAlign: 'center' }}>
-                      <div
-                        style={{
-                          width: '40px',
-                          height: '40px',
-                          border: '3px solid #d4af37',
-                          borderTop: '3px solid transparent',
-                          borderRadius: '50%',
-                          animation: 'spin 1s linear infinite',
-                          margin: '0 auto 16px',
-                        }}
-                      />
-                      <p style={{ color: '#d4af37', fontSize: '0.95rem', margin: 0 }}>
-                        Carregando mapa...
-                      </p>
-                    </div>
-                  </div>
+                  <MapLoadingOverlay>
+                    <LoadingContent>
+                      <LoadingSpinner />
+                      <LoadingText>Carregando mapa...</LoadingText>
+                    </LoadingContent>
+                  </MapLoadingOverlay>
                 )}
                 <MapViewer
                   mapImageUrl={`/maps/${activeRegionId}.jpg`}
@@ -129,7 +104,7 @@ export default function Guide() {
                   }}
                   onImageLoad={() => setIsLoadingMap(false)}
                 />
-              </>
+              </MapContainerWrapper>
             )}
             {activeRegionId !== 'erdtree' && activeRegionId !== 'leyndell-sewers' &&
               <MapLegend />

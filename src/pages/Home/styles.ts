@@ -292,3 +292,113 @@ export const PlaceholderMap = styled.div`
   text-align: center;
   padding: ${THEME.spacing.lg};
 `;
+
+// Guide Page Components
+export const BackButtonLink = styled.button`
+  background: none;
+  border: none;
+  color: ${THEME.colors.gold};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: ${THEME.spacing.sm};
+  font-size: 0.95rem;
+  font-family: ${THEME.fonts.body};
+  transition: opacity ${THEME.transitions.normal};
+  margin-bottom: ${THEME.spacing.md};
+
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
+export const PinControlsContainer = styled.div`
+  display: flex;
+  gap: ${THEME.spacing.sm};
+  align-items: center;
+  margin-bottom: ${THEME.spacing.md};
+`;
+
+export const PinControlLabel = styled.span`
+  font-size: 0.75rem;
+  color: #ccc;
+`;
+
+export const MapContainerWrapper = styled.div`
+  position: relative;
+  display: inline-block;
+  width: 100%;
+`;
+
+export const MapLoadingOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(10, 10, 10, 0.8);
+  z-index: 10;
+  border-radius: 4px;
+`;
+
+export const LoadingContent = styled.div`
+  text-align: center;
+`;
+
+export const LoadingSpinner = styled.div`
+  width: 40px;
+  height: 40px;
+  border: 3px solid ${THEME.colors.gold};
+  border-top: 3px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto ${THEME.spacing.md};
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+export const LoadingText = styled.p`
+  color: ${THEME.colors.gold};
+  font-size: 0.95rem;
+  margin: 0;
+`;
+
+// Select/Cards Components
+export const CardIconContainer = styled.div`
+  font-size: 3rem;
+  margin-bottom: ${THEME.spacing.sm};
+`;
+
+export const DisabledCardLabel = styled.div`
+  font-size: 0.8rem;
+  margin-top: ${THEME.spacing.sm};
+  color: #999;
+`;
+
+// Mechanics/Info Pages Components
+export const HomeContentWithOverflow = styled.div`
+  flex: 1;
+  padding: ${THEME.spacing.xl} ${THEME.spacing.lg};
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: auto;
+
+  @media (max-width: 768px) {
+    padding: ${THEME.spacing.md};
+  }
+`;
+
+export const ContentInnerWrapper = styled.div`
+  padding-top: var(--spacing-xl, 48px);
+`;

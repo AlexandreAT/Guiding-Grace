@@ -16,6 +16,8 @@ import {
   BackButton,
   DisabledCardButton,
   DisabledCardContent,
+  CardIconContainer,
+  DisabledCardLabel,
 } from "../Home/styles";
 
 interface SelectItem {
@@ -101,14 +103,10 @@ export default function Select() {
             item.disabled ? (
               <DisabledCardButton key={item.id} type="button" disabled>
                 <DisabledCardContent>
-                  <div style={{ fontSize: "3rem", marginBottom: "8px" }}>
-                    {item.icon}
-                  </div>
+                  <CardIconContainer>{item.icon}</CardIconContainer>
                   <CardTitle>{item.title}</CardTitle>
                   <CardDescription>{item.description}</CardDescription>
-                  <div style={{ fontSize: "0.8rem", marginTop: "8px", color: "#999" }}>
-                    Em Breve
-                  </div>
+                  <DisabledCardLabel>Em Breve</DisabledCardLabel>
                 </DisabledCardContent>
               </DisabledCardButton>
             ) : (
@@ -118,9 +116,7 @@ export default function Select() {
                 type="button"
               >
                 <CardContent>
-                  <div style={{ fontSize: "3rem", marginBottom: "8px" }}>
-                    {item.icon}
-                  </div>
+                  <CardIconContainer>{item.icon}</CardIconContainer>
                   <CardTitle>{item.title}</CardTitle>
                   <CardDescription>{item.description}</CardDescription>
                 </CardContent>

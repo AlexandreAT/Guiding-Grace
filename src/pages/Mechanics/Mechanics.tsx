@@ -1,7 +1,17 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { IoArrowBack } from "react-icons/io5";
 import { Header } from "../../components/Header";
-import { HomePageContainer, HomeHeaderSection, HomeTitle, HomeSubtitle, HomeContent, BackButtonContainer, BackButton } from "../Home/styles";
+import {
+  HomePageContainer,
+  HomeHeaderSection,
+  HomeTitle,
+  HomeSubtitle,
+  HomeContent,
+  BackButtonContainer,
+  BackButton,
+  HomeContentWithOverflow,
+  ContentInnerWrapper,
+} from "../Home/styles";
 import WeaponProgression from "../Info/pages/WeaponProgression";
 
 export default function Mechanics() {
@@ -45,11 +55,11 @@ export default function Mechanics() {
         <HomeSubtitle>{mechanic.description}</HomeSubtitle>
       </HomeHeaderSection>
 
-      <HomeContent style={{ overflow: "auto", paddingTop: "0" }}>
-        <div style={{ paddingTop: "var(--spacing-xl, 48px)" }}>
+      <HomeContentWithOverflow>
+        <ContentInnerWrapper>
           <Component />
-        </div>
-      </HomeContent>
+        </ContentInnerWrapper>
+      </HomeContentWithOverflow>
     </HomePageContainer>
   );
 }

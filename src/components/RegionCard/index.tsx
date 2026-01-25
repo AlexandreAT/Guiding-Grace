@@ -5,7 +5,7 @@
  */
 
 import React from "react";
-import { CardStyled, RegionIcon, RegionText, RegionName, RegionNumber } from "./styles";
+import { CardStyled, RegionIcon, RegionText, RegionName, RegionNumber, RegionIconContainer, RegionContentContainer } from "./styles";
 
 type IconProp = string | React.ComponentType<any>;
 
@@ -30,19 +30,19 @@ export default function RegionCard({
 
   return (
     <CardStyled isActive={isActive} onClick={onClick}>
-      <div style={{ display: "flex", alignItems: "center" }}>
+      <RegionIconContainer>
         {isStringIcon ? (
           <RegionIcon className={`ra ${icon as string}`} />
         ) : (
           <RegionIcon as={icon as React.ComponentType<any>} />
         )}
-        <div style={{ flex: 1 }}>
+        <RegionContentContainer>
           <RegionName>
             <RegionText color="white"><RegionNumber>{regionNumber}.</RegionNumber>{regionName}</RegionText>
           </RegionName>
           <RegionText size="0.875rem">Nível Recomendado: {recommendedLevel}</RegionText>
-        </div>
-      </div>
+        </RegionContentContainer>
+      </RegionIconContainer>
     </CardStyled>
   );
 }
