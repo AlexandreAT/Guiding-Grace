@@ -7,6 +7,15 @@ export const PageContainer = styled.div`
   color: ${THEME.colors.foreground};
   display: flex;
   flex-direction: column;
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
 `;
 
 export const HomePageContainer = styled.div`

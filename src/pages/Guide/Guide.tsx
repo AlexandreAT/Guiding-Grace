@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { REGIONS } from "../../../shared/const";
 import { ButtonPin, ContentWrapper, ImgController, MainContent, MapSection, MapTitle, PageContainer } from "../Home/styles";
@@ -17,6 +17,7 @@ export default function Guide() {
   const navigate = useNavigate();
   const [activeRegionId, setActiveRegionId] = useState<string>(REGIONS[0].id);
   const [pinMode, setPinMode] = useState<boolean>(false);
+  const [isLoadingMap, setIsLoadingMap] = useState<boolean>(false);
 
   const activeRegion = REGIONS.find((r) => r.id === activeRegionId) || REGIONS[0];
 
@@ -26,6 +27,10 @@ export default function Guide() {
 
   const mapWidth = "100%";
   const mapHeight = "650px";
+
+  useEffect(() => {
+    setIsLoadingMap(true);
+  }, [activeRegionId]);
 
   return (
     <PageContainer>
@@ -76,18 +81,55 @@ export default function Guide() {
                 itemHeight="220px"
               />
             ) : (
-              <MapViewer
-                mapImageUrl={`/maps/${activeRegionId}.jpg`}
-                regionName={activeRegion.displayName}
-                pins={pins}
-                pinMode={pinMode}
-                mapWidth={mapWidth}
-                mapHeight={mapHeight}
-                onMapClick={(coords) => console.log('Map click coords:', coords)}
-                onPinClick={(pinId) => {
-                  setScrollToLabel(pinId);
-                }}
-              />
+              <>
+                {isLoadingMap && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: 'rgba(10, 10, 10, 0.8)',
+                      zIndex: 10,
+                      borderRadius: '4px',
+                    }}
+                  >
+                    <div style={{ textAlign: 'center' }}>
+                      <div
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          border: '3px solid #d4af37',
+                          borderTop: '3px solid transparent',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite',
+                          margin: '0 auto 16px',
+                        }}
+                      />
+                      <p style={{ color: '#d4af37', fontSize: '0.95rem', margin: 0 }}>
+                        Carregando mapa...
+                      </p>
+                    </div>
+                  </div>
+                )}
+                <MapViewer
+                  mapImageUrl={`/maps/${activeRegionId}.jpg`}
+                  regionName={activeRegion.displayName}
+                  pins={isLoadingMap ? [] : pins}
+                  pinMode={pinMode}
+                  mapWidth={mapWidth}
+                  mapHeight={mapHeight}
+                  onMapClick={(coords) => console.log('Map click coords:', coords)}
+                  onPinClick={(pinId) => {
+                    setScrollToLabel(pinId);
+                  }}
+                  onImageLoad={() => setIsLoadingMap(false)}
+                />
+              </>
             )}
             {activeRegionId !== 'erdtree' && activeRegionId !== 'leyndell-sewers' &&
               <MapLegend />

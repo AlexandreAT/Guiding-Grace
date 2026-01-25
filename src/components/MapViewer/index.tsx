@@ -10,11 +10,12 @@ interface MapViewerProps {
   pinMode?: boolean;
   onMapClick?: (coords: { x: number; y: number }) => void;
   onPinClick?: (pinId: string) => void;
+  onImageLoad?: () => void;
   mapWidth?: string;
   mapHeight?: string;
 }
 
-export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode = false, onMapClick, onPinClick, mapWidth = "100%", mapHeight = "auto" }: MapViewerProps) {
+export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode = false, onMapClick, onPinClick, onImageLoad, mapWidth = "100%", mapHeight = "auto" }: MapViewerProps) {
   const [scale, setScale] = useState(1);
   const [offsetX, setOffsetX] = useState(0);
   const [offsetY, setOffsetY] = useState(0);
@@ -215,7 +216,7 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
           onTouchEnd={handleTouchEnd}
         >
         <MapInner scale={scale} offsetX={offsetX} offsetY={offsetY}>
-          <MapImage ref={imageRef} src={mapImageUrl} alt={`Mapa de ${regionName}`} draggable={false} />
+          <MapImage ref={imageRef} src={mapImageUrl} alt={`Mapa de ${regionName}`} draggable={false} onLoad={onImageLoad} />
 
           {pins.map((p) => (
             <Pin

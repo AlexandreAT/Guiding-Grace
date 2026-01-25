@@ -126,7 +126,6 @@ export default function RegionContent({
                     tabIndex={-1}
                     data-highlighted={highlighted && highlighted.s === index && highlighted.i === itemIndex ? 'true' : 'false'}
                   >
-                    {/* Support inline parts (links and images) if provided, otherwise plain text */}
                     {Array.isArray((item as any).parts) ? (
                       (item as any).parts.map((p: any, pi: number) => {
                         if (p.type === 'link') {
