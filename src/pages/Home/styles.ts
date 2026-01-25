@@ -1,12 +1,48 @@
 import styled from "styled-components";
-import { THEME } from "../../../shared/const";
+import { THEME, REGION_BACKGROUNDS } from "../../../shared/const";
 
-export const PageContainer = styled.div`
+export const PageContainer = styled.div<{ regionId?: string; isMobile?: boolean }>`
   min-height: 100vh;
-  background-color: ${THEME.colors.background};
   color: ${THEME.colors.foreground};
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+  margin-top: 100px;
+
+  ${(props) => {
+    const regionKey = props.regionId as keyof typeof REGION_BACKGROUNDS || "geral";
+    const regionConfig = REGION_BACKGROUNDS[regionKey] || { image: null, overlayOpacity: 0.8 };
+    const isMobile = props.isMobile;
+    
+    let backgroundImage = "none";
+    if (regionConfig.image) {
+      const imageName = isMobile 
+        ? `${regionConfig.image}-mobile.jpg` 
+        : `${regionConfig.image}.jpg`;
+      backgroundImage = `url(/images/${imageName})`;
+    }
+
+    return `
+      background-image: ${backgroundImage};
+      background-attachment: fixed;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      
+      &::before {
+        content: '';
+        position: fixed;
+        top: 100px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(10, 10, 10, ${regionConfig.overlayOpacity});
+        z-index: 1;
+        pointer-events: none;
+      }
+    `;
+  }}
 
   @keyframes spin {
     from {
@@ -24,6 +60,7 @@ export const HomePageContainer = styled.div`
   color: ${THEME.colors.foreground};
   display: flex;
   flex-direction: column;
+  margin-top: 100px;
 `;
 
 export const HomeHeaderSection = styled.div`
@@ -31,6 +68,8 @@ export const HomeHeaderSection = styled.div`
   border-bottom: 2px solid ${THEME.colors.gold};
   padding: ${THEME.spacing.xl} ${THEME.spacing.lg};
   text-align: center;
+  position: relative;
+  z-index: 2;
 
   @media (max-width: 768px) {
     padding: ${THEME.spacing.lg} ${THEME.spacing.md};
@@ -68,6 +107,8 @@ export const HomeContent = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
+  z-index: 2;
 `;
 
 export const CardsContainer = styled.div`
@@ -221,9 +262,17 @@ export const BackButton = styled.button`
 export const MainContent = styled.div`
   display: flex;
   flex: 1;
+  position: relative;
+  z-index: 2;
+  margin-left: 300px;
+
+  @media (max-width: 1024px) {
+    margin-left: 240px;
+  }
 
   @media (max-width: 768px) {
     flex-direction: column;
+    margin-left: 0;
   }
 `;
 
@@ -232,6 +281,8 @@ export const ContentWrapper = styled.div`
   display: flex;
   flex-direction: column;
   padding: ${THEME.spacing.lg};
+  position: relative;
+  z-index: 2;
 
   @media (max-width: 768px) {
     padding: ${THEME.spacing.md};
@@ -393,6 +444,8 @@ export const HomeContentWithOverflow = styled.div`
   flex-direction: column;
   align-items: center;
   overflow: auto;
+  position: relative;
+  z-index: 2;
 
   @media (max-width: 768px) {
     padding: ${THEME.spacing.md};

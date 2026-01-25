@@ -8,8 +8,10 @@ export const SidebarStyled = styled.aside`
   padding: ${THEME.spacing.lg} 0;
   height: calc(100vh - 100px);
   overflow-y: auto;
-  position: sticky;
+  position: fixed;
   top: 100px;
+  left: 0;
+  z-index: 2;
 
   @media (max-width: 1024px) {
     width: 240px;

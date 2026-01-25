@@ -6,9 +6,12 @@ export const HeaderStyled = styled.header`
   border-bottom: 2px solid ${THEME.colors.gold};
   padding: ${THEME.spacing.lg} 0;
   box-shadow: ${THEME.shadows.gold};
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
+  width: 100%;
 `;
 
 export const HeaderContent = styled.div`

@@ -269,3 +269,22 @@ export const getTheme = (themeType: ThemeType) => {
 
 // Exportar o tema padrão (dark)
 export const THEME = THEMES.dark;
+
+// Configurações de background por região
+export const REGION_BACKGROUNDS = {
+  "geral": { image: null, overlayOpacity: 0.8 },
+  "limgrave-top": { image: "limgrave-back", overlayOpacity: 0.7 },
+  "limgrave-bottom": { image: "limgrave-back", overlayOpacity: 0.7 },
+  "weeping-peninsula": { image: null, overlayOpacity: 0.8 },
+  "liurnia": { image: "liurnia-back", overlayOpacity: 0.75 },
+  "caelid-first": { image: null, overlayOpacity: 0.8 },
+  "caelid-second": { image: null, overlayOpacity: 0.8 },
+  "mt-gelmir": { image: null, overlayOpacity: 0.8 },
+  "leyndell-outskirts": { image: null, overlayOpacity: 0.8 },
+  "leyndell": { image: null, overlayOpacity: 0.8 },
+  "mt-giants-top": { image: null, overlayOpacity: 0.8 },
+  "mt-giants-bottom": { image: null, overlayOpacity: 0.8 },
+  "leyndell-sewers": { image: null, overlayOpacity: 0.8 },
+  "farum-azula": { image: null, overlayOpacity: 0.8 },
+  "erdtree": { image: null, overlayOpacity: 0.8 },
+} as const;

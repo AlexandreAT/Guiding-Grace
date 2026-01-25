@@ -34,6 +34,7 @@ export default function Guide() {
   const [activeRegionId, setActiveRegionId] = useState<string>(REGIONS[0].id);
   const [pinMode, setPinMode] = useState<boolean>(false);
   const [isLoadingMap, setIsLoadingMap] = useState<boolean>(false);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
 
   const activeRegion = REGIONS.find((r) => r.id === activeRegionId) || REGIONS[0];
 
@@ -48,8 +49,19 @@ export default function Guide() {
     setIsLoadingMap(true);
   }, [activeRegionId]);
 
+  // Detectar se é mobile
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
-    <PageContainer>
+    <PageContainer regionId={activeRegionId} isMobile={isMobile}>
       <Header onLogoClick={() => navigate("/")} />
 
       <MainContent>
