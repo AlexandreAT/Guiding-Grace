@@ -17,6 +17,7 @@ import {
   LoadingContent,
   LoadingSpinner,
   LoadingText,
+  ScrollToTopButton,
 } from "../Home/styles";
 import { Header } from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
@@ -35,6 +36,7 @@ export default function Guide() {
   const [pinMode, setPinMode] = useState<boolean>(false);
   const [isLoadingMap, setIsLoadingMap] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
 
   const activeRegion = REGIONS.find((r) => r.id === activeRegionId) || REGIONS[0];
 
@@ -60,12 +62,20 @@ export default function Guide() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const handleScrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <PageContainer regionId={activeRegionId} isMobile={isMobile}>
       <Header onLogoClick={() => navigate("/")} />
 
-      <MainContent>
-        <Sidebar activeRegionId={activeRegionId} onRegionSelect={setActiveRegionId} />
+      <MainContent sidebarOpen={sidebarOpen}>
+        <Sidebar 
+          activeRegionId={activeRegionId} 
+          onRegionSelect={setActiveRegionId}
+          onToggle={setSidebarOpen}
+        />
 
         <ContentWrapper>
           <BackButtonLink onClick={() => navigate("/select/basic-guide")}>
@@ -132,6 +142,10 @@ export default function Guide() {
           />
         </ContentWrapper>
       </MainContent>
+
+      <ScrollToTopButton onClick={handleScrollToTop} title="Voltar ao topo">
+        ↑
+      </ScrollToTopButton>
     </PageContainer>
   );
 }

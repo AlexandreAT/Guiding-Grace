@@ -8,18 +8,28 @@ export const PageContainer = styled.div<{ regionId?: string; isMobile?: boolean 
   flex-direction: column;
   position: relative;
   overflow-x: hidden;
-  margin-top: 100px;
+  margin-top: 75px;
+
+  @media (max-width: 768px) {
+    margin-top: 55px;
+  }
+
+  @media (max-width: 480px) {
+    margin-top: 50px;
+  }
 
   ${(props) => {
     const regionKey = props.regionId as keyof typeof REGION_BACKGROUNDS || "geral";
-    const regionConfig = REGION_BACKGROUNDS[regionKey] || { image: null, overlayOpacity: 0.8 };
+    const regionConfig = REGION_BACKGROUNDS[regionKey] || { image: null, overlayOpacity: 0.8, overlayOpacityMobile: 0.85 };
     const isMobile = props.isMobile;
+    
+    const overlayOpacity = isMobile ? regionConfig.overlayOpacityMobile : regionConfig.overlayOpacity;
     
     let backgroundImage = "none";
     if (regionConfig.image) {
       const imageName = isMobile 
-        ? `${regionConfig.image}-mobile.jpg` 
-        : `${regionConfig.image}.jpg`;
+        ? `${regionConfig.image}-mobile-back.jpg` 
+        : `${regionConfig.image}-back.jpg`;
       backgroundImage = `url(/images/${imageName})`;
     }
 
@@ -33,13 +43,25 @@ export const PageContainer = styled.div<{ regionId?: string; isMobile?: boolean 
       &::before {
         content: '';
         position: fixed;
-        top: 100px;
+        top: 65px;
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: rgba(10, 10, 10, ${regionConfig.overlayOpacity});
+        background-color: rgba(10, 10, 10, ${overlayOpacity});
         z-index: 1;
         pointer-events: none;
+      }
+
+      @media (max-width: 768px) {
+        &::before {
+          top: 55px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        &::before {
+          top: 50px;
+        }
       }
     `;
   }}
@@ -60,7 +82,15 @@ export const HomePageContainer = styled.div`
   color: ${THEME.colors.foreground};
   display: flex;
   flex-direction: column;
-  margin-top: 100px;
+  margin-top: 65px;
+
+  @media (max-width: 768px) {
+    margin-top: 55px;
+  }
+
+  @media (max-width: 480px) {
+    margin-top: 50px;
+  }
 `;
 
 export const HomeHeaderSection = styled.div`
@@ -259,15 +289,16 @@ export const BackButton = styled.button`
   }
 `;
 
-export const MainContent = styled.div`
+export const MainContent = styled.div<{ sidebarOpen?: boolean }>`
   display: flex;
   flex: 1;
   position: relative;
   z-index: 2;
-  margin-left: 300px;
+  margin-left: ${(props) => (props.sidebarOpen !== false ? "300px" : "0")};
+  transition: margin-left 0.3s ease-in-out;
 
   @media (max-width: 1024px) {
-    margin-left: 240px;
+    margin-left: ${(props) => (props.sidebarOpen !== false ? "240px" : "0")};
   }
 
   @media (max-width: 768px) {
@@ -454,4 +485,37 @@ export const HomeContentWithOverflow = styled.div`
 
 export const ContentInnerWrapper = styled.div`
   padding-top: var(--spacing-xl, 48px);
+`;
+
+export const ScrollToTopButton = styled.button`
+  display: none;
+  position: fixed;
+  bottom: ${THEME.spacing.xs};
+  right: ${THEME.spacing.xs};
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: ${THEME.colors.gold};
+  border: none;
+  color: ${THEME.colors.background};
+  font-size: 1.25rem;
+  cursor: pointer;
+  z-index: 50;
+  opacity: 0.7;
+  transition: opacity ${THEME.transitions.normal};
+  box-shadow: ${THEME.shadows.goldLg};
+
+  &:hover {
+    opacity: 1;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  @media (max-width: 768px) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 `;

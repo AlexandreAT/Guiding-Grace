@@ -4,7 +4,7 @@ import { THEME } from "../../../shared/const";
 export const HeaderStyled = styled.header`
   background-color: ${THEME.colors.background};
   border-bottom: 2px solid ${THEME.colors.gold};
-  padding: ${THEME.spacing.lg} 0;
+  padding: 15px 0;
   box-shadow: ${THEME.shadows.gold};
   position: fixed;
   top: 0;
@@ -12,6 +12,14 @@ export const HeaderStyled = styled.header`
   right: 0;
   z-index: 100;
   width: 100%;
+
+  @media (max-width: 768px) {
+    padding: 10px 0;
+  }
+
+  @media (max-width: 480px) {
+    padding: 8px 0;
+  }
 `;
 
 export const HeaderContent = styled.div`
@@ -35,6 +43,14 @@ export const Logo = styled.div`
 export const LogoIcon = styled.span`
   font-size: 2rem;
   color: ${THEME.colors.gold};
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.25rem;
+  }
 `;
 
 export const LogoText = styled.h1`
@@ -44,6 +60,14 @@ export const LogoText = styled.h1`
   color: ${THEME.colors.foreground};
   margin: 0;
   letter-spacing: 2px;
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.25rem;
+  }
 `;
 
 export const Subtitle = styled.p`
@@ -54,6 +78,16 @@ export const Subtitle = styled.p`
   margin-top: 0.25rem;
   letter-spacing: 1px;
   text-transform: uppercase;
+
+  @media (max-width: 768px) {
+    font-size: 0.75rem;
+    margin-top: 0.1rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 0.65rem;
+    display: none;
+  }
 `;
 
 export const ThemeSwitch = styled.input`
