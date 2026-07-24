@@ -1,84 +1,34 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { IoArrowBack } from "react-icons/io5";
+import { useNavigate, useParams } from "react-router-dom";
 import { Header } from "../../components/Header";
+import { HeroSection } from "../../components/HeroSection";
+import { NavigationCard } from "../../components/NavigationCard";
+import { SELECTIONS } from "../../data/navigation";
 import {
+  CardsGrid,
+  EmptyState,
   HomePageContainer,
-  HomeHeaderSection,
-  HomeTitle,
-  HomeSubtitle,
-  HomeContent,
-  CardsContainer,
-  CardButton,
-  CardContent,
-  CardTitle,
-  CardDescription,
-  BackButtonContainer,
-  BackButton,
-  DisabledCardButton,
-  DisabledCardContent,
-  CardIconContainer,
-  DisabledCardLabel,
+  PageContent,
 } from "../Home/styles";
-
-interface SelectItem {
-  id: string;
-  title: string;
-  description: string;
-  icon: string;
-  route?: string;
-  disabled?: boolean;
-}
-
-const SELECTIONS = {
-  "basic-guide": {
-    title: "Escolha sua Build",
-    subtitle: "Selecione uma build para começar o guia de progressão",
-    items: [
-      {
-        id: "quality-build",
-        title: "Build de Qualidade",
-        description: "FOR + DES - Versátil e com boa sustentação de combate",
-        icon: "⚔️",
-        route: "/guide/quality-build",
-      },
-      {
-        id: "dexterity-build",
-        title: "Build de Destreza",
-        description: "DEX - Rápida e com alto dano",
-        icon: "🗡️",
-        route: "/guide/dexterity-build",
-        disabled: true,
-      },
-    ],
-  },
-  "mechanics-guide": {
-    title: "Guias de Mecânicas",
-    subtitle: "Aprenda os sistemas do jogo em detalhes separadamente",
-    items: [
-      {
-        id: "weapons",
-        title: "Sistema de Armas",
-        description: "Progressão, tipos e aprimoramentos",
-        icon: "🗡️",
-        route: "/mechanics/weapons",
-      },
-    ],
-  },
-};
 
 export default function Select() {
   const { categoryId } = useParams<{ categoryId: string }>();
   const navigate = useNavigate();
-
-  const category = categoryId ? SELECTIONS[categoryId as keyof typeof SELECTIONS] : null;
+  const category = categoryId ? SELECTIONS[categoryId] : undefined;
 
   if (!category) {
     return (
       <HomePageContainer>
         <Header onLogoClick={() => navigate("/")} />
-        <HomeContent>
-          <h2>Categoria não encontrada</h2>
-        </HomeContent>
+        <main>
+          <PageContent>
+            <EmptyState>
+              <h1>Categoria não encontrada</h1>
+              <button type="button" onClick={() => navigate("/")}>
+                Voltar ao menu principal
+              </button>
+            </EmptyState>
+          </PageContent>
+        </main>
       </HomePageContainer>
     );
   }
@@ -86,45 +36,29 @@ export default function Select() {
   return (
     <HomePageContainer>
       <Header onLogoClick={() => navigate("/")} />
-
-      <HomeHeaderSection>
-        <BackButtonContainer>
-          <BackButton onClick={() => navigate("/")}>
-            <IoArrowBack /> Voltar ao Menu Principal
-          </BackButton>
-        </BackButtonContainer>
-        <HomeTitle>{category.title}</HomeTitle>
-        <HomeSubtitle>{category.subtitle}</HomeSubtitle>
-      </HomeHeaderSection>
-
-      <HomeContent>
-        <CardsContainer>
-          {category.items.map((item: SelectItem) =>
-            item.disabled ? (
-              <DisabledCardButton key={item.id} type="button" disabled>
-                <DisabledCardContent>
-                  <CardIconContainer>{item.icon}</CardIconContainer>
-                  <CardTitle>{item.title}</CardTitle>
-                  <CardDescription>{item.description}</CardDescription>
-                  <DisabledCardLabel>Em Breve</DisabledCardLabel>
-                </DisabledCardContent>
-              </DisabledCardButton>
-            ) : (
-              <CardButton
+      <main>
+        <HeroSection
+          title={category.title}
+          subtitle={category.subtitle}
+          backLabel="Voltar ao Menu Principal"
+          onBack={() => navigate("/")}
+        />
+        <PageContent>
+          <CardsGrid $selection>
+            {category.items.map((item) => (
+              <NavigationCard
                 key={item.id}
-                onClick={() => navigate(item.route || "/")}
-                type="button"
-              >
-                <CardContent>
-                  <CardIconContainer>{item.icon}</CardIconContainer>
-                  <CardTitle>{item.title}</CardTitle>
-                  <CardDescription>{item.description}</CardDescription>
-                </CardContent>
-              </CardButton>
-            )
-          )}
-        </CardsContainer>
-      </HomeContent>
+                title={item.title}
+                description={item.description}
+                icon={item.icon}
+                disabled={item.disabled}
+                status={item.status}
+                onClick={() => navigate(item.route ?? "/")}
+              />
+            ))}
+          </CardsGrid>
+        </PageContent>
+      </main>
     </HomePageContainer>
   );
 }

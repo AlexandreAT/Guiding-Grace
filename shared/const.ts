@@ -177,11 +177,16 @@ export type ThemeType = 'dark' | 'light';
 const THEMES = {
   dark: {
     colors: {
-      background: "#0a0a0a",
-      foreground: "#f5f5f5",
-      gold: "#d4af37",
-      goldDark: "#b8860b",
-      goldLight: "#ffd700",
+      background: "#070807",
+      backgroundSecondary: "#0b0c0b",
+      surface: "#10100d",
+      surfaceHighlighted: "#17140c",
+      foreground: "#f2f0ea",
+      textSecondary: "#b6b3ac",
+      textDisabled: "#77736a",
+      gold: "#d4a91f",
+      goldDark: "#755e25",
+      goldLight: "#e3c260",
       brown: "#8b7355",
       brownDark: "#5d4e37",
       accent: "#f5f5f5",
@@ -221,7 +226,12 @@ const THEMES = {
   light: {
     colors: {
       background: "#f5f5f5",
+      backgroundSecondary: "#eeeeea",
+      surface: "#ffffff",
+      surfaceHighlighted: "#fff9e8",
       foreground: "#0a0a0a",
+      textSecondary: "#55524b",
+      textDisabled: "#817d74",
       gold: "#d4af37",
       goldDark: "#b8860b",
       goldLight: "#ffd700",
