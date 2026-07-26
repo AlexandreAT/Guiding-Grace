@@ -154,24 +154,29 @@ export const EmptyState = styled.div`
 `;
 
 export const MainContent = styled.div<{ sidebarOpen?: boolean }>`
-  display: flex;
+  --regions-sidebar-width: 230px;
+  --sidebar-control-width: 28px;
+  display: grid;
+  grid-template-columns: ${(props) =>
+    props.sidebarOpen !== false
+      ? "var(--regions-sidebar-width) var(--sidebar-control-width) minmax(0, 1fr)"
+      : "0 var(--sidebar-control-width) minmax(0, 1fr)"};
   flex: 1;
   position: relative;
   z-index: 2;
-  margin-left: ${(props) => (props.sidebarOpen !== false ? "300px" : "0")};
-  transition: margin-left 0.3s ease-in-out;
+  transition: grid-template-columns 220ms ease;
 
   @media (max-width: 1024px) {
-    margin-left: ${(props) => (props.sidebarOpen !== false ? "240px" : "0")};
+    --regions-sidebar-width: 214px;
   }
 
   @media (max-width: 768px) {
-    flex-direction: column;
-    margin-left: 0;
+    display: block;
   }
 `;
 
 export const ContentWrapper = styled.div`
+  min-width: 0;
   flex: 1;
   display: flex;
   flex-direction: column;

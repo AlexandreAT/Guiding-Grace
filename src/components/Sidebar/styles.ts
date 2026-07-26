@@ -1,189 +1,172 @@
 import styled from "styled-components";
 import { THEME } from "../../../shared/const";
 
-export const SidebarWrapper = styled.div`
-  position: relative;
+export const SidebarPanel = styled.aside<{ $open: boolean }>`
+  width: 100%;
+  height: calc(100vh - 108px);
+  min-width: 0;
+  position: sticky;
+  top: 0;
+  z-index: 4;
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: ${({ $open }) =>
+    $open ? "1px solid rgba(212, 169, 31, 0.55)" : "0"};
+  background:
+    radial-gradient(circle at 50% 0%, rgba(176, 130, 25, 0.07), transparent 28%),
+    ${THEME.colors.background};
+  opacity: ${({ $open }) => ($open ? 1 : 0)};
+  visibility: ${({ $open }) => ($open ? "visible" : "hidden")};
+  transition:
+    opacity 180ms ease,
+    visibility 180ms ease;
 
   @media (max-width: 768px) {
-    display: none;
+    width: min(82vw, 300px);
+    height: calc(100vh - 82px);
+    position: fixed;
+    top: 82px;
+    left: 0;
+    z-index: 92;
+    border-right: 1px solid rgba(212, 169, 31, 0.55);
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(${({ $open }) => ($open ? "0" : "-101%")});
+    transition: transform 220ms ease;
+    box-shadow: ${({ $open }) =>
+      $open ? "18px 0 42px rgba(0, 0, 0, 0.52)" : "none"};
   }
 `;
 
-export const SidebarStyled = styled.aside<{ isOpen: boolean }>`
-  width: 300px;
-  background-color: ${THEME.colors.background};
-  border-right: 2px solid ${THEME.colors.gold};
-  padding: ${THEME.spacing.lg} 0;
-  height: calc(100vh - 75px);
-  overflow-y: auto;
-  overflow-x: hidden;
-  position: fixed;
-  top: 75px;
-  left: 0;
-  z-index: 2;
-  transform: translateX(${(props) => (props.isOpen ? "0" : "-100%")});
-  transition: transform 0.3s ease-in-out;
-
-  @media (max-width: 1024px) {
-    width: 240px;
-  }
-
-  @media (max-width: 768px) {
-    display: none;
-  }
-
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: ${THEME.colors.brownDark};
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: ${THEME.colors.gold};
-    border-radius: 4px;
-
-    &:hover {
-      background: ${THEME.colors.goldLight};
-    }
-  }
-`;
-
-export const ToggleButton = styled.button<{ isOpen: boolean }>`
-  position: fixed;
-  left: ${(props) => (props.isOpen ? "300px" : "0")};
-  top: 50%;
-  transform: translateY(-50%);
-  width: 40px;
-  height: 60px;
-  background-color: ${THEME.colors.background};
-  border: 2px solid ${THEME.colors.gold};
-  border-left: ${(props) => (props.isOpen ? "none" : "2px solid")};
-  border-right: ${(props) => (props.isOpen ? "2px solid" : "none")};
-  border-radius: ${(props) => (props.isOpen ? "0 8px 8px 0" : "0 8px 8px 0")};
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: ${THEME.colors.gold};
-  font-size: 1.5rem;
-  transition: all 0.3s ease-in-out;
-  z-index: 3;
-
-  &:hover {
-    background-color: ${THEME.colors.gold};
-    color: ${THEME.colors.background};
-    box-shadow: ${THEME.shadows.gold};
-  }
-
-  @media (max-width: 768px) {
-    display: none;
-  }
-
-  span {
-    transition: transform 0.3s ease-in-out;
-  }
+export const SidebarHeader = styled.header`
+  flex: 0 0 auto;
+  padding: 22px 16px 4px;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(12, 12, 9, 0.96), transparent);
 `;
 
 export const SidebarTitle = styled.h2`
-  font-family: ${THEME.fonts.rpgOld};
+  margin: 0;
+  font-family: ${THEME.fonts.rpg};
   font-size: 1.5rem;
-  font-weight: 700;
-  color: ${THEME.colors.gold};
-  padding: 0 ${THEME.spacing.md};
-  margin: 0 0 ${THEME.spacing.lg} 0;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  border-bottom: 1px solid ${THEME.colors.gold};
-  padding-bottom: ${THEME.spacing.md};
-
-  @media (max-width: 768px) {
-    font-size: 1.25rem;
-    padding: 0 ${THEME.spacing.md};
-    margin: ${THEME.spacing.sm} 0 ${THEME.spacing.sm} 0;
-  }
+  color: ${THEME.colors.goldLight};
 `;
 
-export const RegionsList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${THEME.spacing.sm};
-  padding: 0 ${THEME.spacing.md};
-`;
+export const RegionsNavigation = styled.nav`
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 12px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 169, 31, 0.35) transparent;
 
-export const CarouselOuterWrapper = styled.div`
-  display: none;
-  width: 100%;
-
-  @media (max-width: 768px) {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0 ${THEME.spacing.xs};
-    margin-top: ${THEME.spacing.sm};
-  }
-`;
-
-export const CarouselContainer = styled.div`
-  display: none;
-  flex-direction: column;
-
-  @media (max-width: 768px) {
-    display: flex;
-    padding: ${THEME.spacing.xs};
-    background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(10, 10, 10, 0.95) 100%);
-    border: 1px solid ${THEME.colors.gold};
-    border-radius: 8px;
-    margin-bottom: ${THEME.spacing.md};
-    box-shadow: ${THEME.shadows.md};
-    max-width: 95%;
-  }
-`;
-
-export const CarouselWrapper = styled.div`
-  display: flex;
-  gap: ${THEME.spacing.sm};
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  padding: 0 0 ${THEME.spacing.sm} 0;
-  cursor: grab;
-  user-select: none;
-  align-items: center;
-  justify-content: flex-start;
-
-  &:active {
-    cursor: grabbing;
-  }
-
-  /* Scrollbar styling for carousel */
   &::-webkit-scrollbar {
-    height: 6px;
+    width: 5px;
   }
 
   &::-webkit-scrollbar-track {
-    background: ${THEME.colors.brownDark};
-    border-radius: 4px;
+    background: transparent;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: ${THEME.colors.gold};
-    border-radius: 4px;
+    border-radius: 999px;
+    background: rgba(212, 169, 31, 0.32);
+  }
+`;
 
-    &:hover {
-      background: ${THEME.colors.goldLight};
-    }
+export const RegionList = styled.ul`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+`;
+
+export const RegionListItem = styled.li`
+  min-width: 0;
+`;
+
+export const SidebarControlRail = styled.div<{ $open: boolean }>`
+  width: 28px;
+  min-width: 28px;
+  height: calc(100vh - 108px);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(90deg, rgba(7, 8, 7, 0.96), rgba(7, 8, 7, 0.72));
+
+  @media (max-width: 768px) {
+    width: 28px;
+    height: 48px;
+    min-width: 0;
+    position: fixed;
+    top: 98px;
+    left: ${({ $open }) => ($open ? "min(82vw, 300px)" : "0")};
+    z-index: 94;
+    background: transparent;
+    transition: left 220ms ease;
+  }
+`;
+
+export const ToggleButton = styled.button<{ $open: boolean }>`
+  width: 24px;
+  height: 48px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(212, 169, 31, 0.72);
+  border-radius: 6px;
+  background: rgba(7, 8, 7, 0.96);
+  color: ${THEME.colors.goldLight};
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.34);
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease;
+
+  svg {
+    width: 17px;
+    height: 17px;
+    stroke-width: 2;
   }
 
-  /* Para navegadores Firefox */
-  scrollbar-color: ${THEME.colors.gold} ${THEME.colors.brownDark};
-  scrollbar-width: thin;
+  &:hover {
+    border-color: ${THEME.colors.goldLight};
+    background: rgba(212, 169, 31, 0.1);
+  }
 
-  /* Ensure children don't shrink */
-  & > * {
-    flex-shrink: 0;
-    width: 280px;
+  &:focus-visible {
+    outline: 2px solid ${THEME.colors.goldLight};
+    outline-offset: 3px;
+  }
+`;
+
+export const DrawerBackdrop = styled.button<{ $visible: boolean }>`
+  display: none;
+
+  @media (max-width: 768px) {
+    position: fixed;
+    inset: 82px 0 0;
+    z-index: 91;
+    display: block;
+    border: 0;
+    background: rgba(0, 0, 0, 0.68);
+    opacity: ${({ $visible }) => ($visible ? 1 : 0)};
+    visibility: ${({ $visible }) => ($visible ? "visible" : "hidden")};
+    pointer-events: ${({ $visible }) => ($visible ? "auto" : "none")};
+    transition:
+      opacity 180ms ease,
+      visibility 180ms ease;
   }
 `;

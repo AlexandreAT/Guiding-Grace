@@ -1,7 +1,19 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
+import type { MouseEvent, Touch, TouchEvent, WheelEvent as ReactWheelEvent } from "react";
+import type { IconType } from "react-icons";
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { ControlButton, ControlsContainer, MapContainerStyled, MapImage, MapImageContainer, ZoomLevel, MapInner, Pin, PinIconWrapper, PinIcon, MapWrapper } from "./styles";
 
-type PinData = { id: string; x: number; y: number; type?: string; label?: string; icon?: string | React.ComponentType<any>; color?: string; labelAbove?: boolean };
+type PinData = { id: string; x: number; y: number; type?: string; label?: string; icon?: string | IconType; color?: string; labelAbove?: boolean };
+
+interface TouchState {
+  isDragging: boolean;
+  lastX: number;
+  lastY: number;
+  pinch: boolean;
+  pinchDist: number;
+  pinchStartScale: number;
+}
 
 interface MapViewerProps {
   mapImageUrl: string;
@@ -23,8 +35,8 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
-  const touchState = useRef<any>({ isDragging: false, lastX: 0, lastY: 0, pinch: false, pinchDist: 0, pinchStartScale: 1 });
-  const [isMobile, setIsMobile] = useState(false);
+  const touchState = useRef<TouchState>({ isDragging: false, lastX: 0, lastY: 0, pinch: false, pinchDist: 0, pinchStartScale: 1 });
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   const MIN_SCALE = 1;
   const MAX_SCALE = 8;
@@ -46,7 +58,7 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
     setOffsetY(0);
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = (e: MouseEvent) => {
     e.preventDefault();
     if (scale > 1) {
       setIsDragging(true);
@@ -54,11 +66,11 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
     }
   };
 
-  const getTouchDistance = (t1: React.Touch, t2: React.Touch) => {
+  const getTouchDistance = (t1: Touch, t2: Touch) => {
     return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const handleTouchStart = (e: TouchEvent) => {
     if (!e.touches) return;
     if (e.touches.length === 2) {
       e.preventDefault();
@@ -78,7 +90,7 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
 
   const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handleTouchMove = (e: TouchEvent) => {
     if (!e.touches) return;
     if (e.touches.length === 2 && touchState.current.pinch) {
       e.preventDefault();
@@ -100,7 +112,7 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
     }
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handleTouchEnd = (e: TouchEvent) => {
     if (!e.touches || e.touches.length === 0) {
       touchState.current.isDragging = false;
       touchState.current.pinch = false;
@@ -115,8 +127,8 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
     }
   };
 
-  const handleMapClick = async (e: React.MouseEvent) => {
-    if (!pinMode) return;
+  const handleMapClick = async (e: MouseEvent) => {
+    if (!import.meta.env.DEV || !pinMode) return;
     if (isDragging) return;
     if (!imageRef.current) return;
 
@@ -137,7 +149,7 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
     if (onMapClick) onMapClick(coords);
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = (e: MouseEvent) => {
     if (!isDragging) return;
 
     const deltaX = e.clientX - dragStart.x;
@@ -153,7 +165,7 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
     setIsDragging(false);
   };
 
-  const handleWheel = (e: React.WheelEvent) => {
+  const handleWheel = (e: ReactWheelEvent) => {
     e.preventDefault();
     const step = isMobile ? 0.25 : 0.1;
     if (e.deltaY < 0) {
@@ -185,20 +197,6 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
     };
   }, []);
 
-  useEffect(() => {
-    // detect mobile to adjust zoom step and behavior
-    if (typeof window === 'undefined') return;
-    const mq = window.matchMedia('(max-width: 768px)');
-    setIsMobile(mq.matches);
-    const handler = (ev: MediaQueryListEvent) => setIsMobile(ev.matches);
-    if (mq.addEventListener) mq.addEventListener('change', handler);
-    else mq.addListener(handler as any);
-    return () => {
-      if (mq.removeEventListener) mq.removeEventListener('change', handler);
-      else mq.removeListener(handler as any);
-    };
-  }, []);
-
   return (
     <MapWrapper width={mapWidth} height={mapHeight}>
       <MapContainerStyled
@@ -210,7 +208,7 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
-          onClick={handleMapClick}
+          onClick={import.meta.env.DEV && pinMode ? handleMapClick : undefined}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}

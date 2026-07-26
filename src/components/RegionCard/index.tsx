@@ -1,19 +1,20 @@
-/**
- * RegionCard Component
- * Card para exibir informações de uma região.
- * Tema: Gótico Minimalista - bordas douradas, hover com brilho sutil.
- */
-
-import React from "react";
-import { CardStyled, RegionIcon, RegionText, RegionName, RegionNumber, RegionIconContainer, RegionContentContainer } from "./styles";
-
-type IconProp = string | React.ComponentType<any>;
+import type { IconType } from "react-icons";
+import {
+  CardStyled,
+  RecommendedLevel,
+  RegionContent,
+  RegionIcon,
+  RegionIconContainer,
+  RegionName,
+  RegionNumber,
+  RegionTitle,
+} from "./styles";
 
 interface RegionCardProps {
   regionName: string;
   regionNumber: number;
   recommendedLevel: string;
-  icon: IconProp;
+  icon: string | IconType;
   isActive?: boolean;
   onClick: () => void;
 }
@@ -23,26 +24,35 @@ export default function RegionCard({
   regionNumber,
   recommendedLevel,
   icon,
-  isActive,
+  isActive = false,
   onClick,
 }: RegionCardProps) {
-  const isStringIcon = typeof icon === "string";
+  const IconComponent = typeof icon === "string" ? null : icon;
 
   return (
-    <CardStyled isActive={isActive} onClick={onClick}>
-      <RegionIconContainer>
-        {isStringIcon ? (
-          <RegionIcon className={`ra ${icon as string}`} />
+    <CardStyled
+      type="button"
+      $active={isActive}
+      onClick={onClick}
+      aria-current={isActive ? "page" : undefined}
+    >
+      <RegionIconContainer $active={isActive}>
+        {IconComponent ? (
+          <IconComponent aria-hidden="true" />
         ) : (
-          <RegionIcon as={icon as React.ComponentType<any>} />
+          <RegionIcon className={`ra ${icon}`} aria-hidden="true" />
         )}
-        <RegionContentContainer>
-          <RegionName>
-            <RegionText color="white"><RegionNumber>{regionNumber}.</RegionNumber>{regionName}</RegionText>
-          </RegionName>
-          <RegionText size="0.875rem">Nível Recomendado: {recommendedLevel}</RegionText>
-        </RegionContentContainer>
       </RegionIconContainer>
+
+      <RegionContent>
+        <RegionTitle>
+          <RegionNumber>{regionNumber}.</RegionNumber>
+          <RegionName>{regionName}</RegionName>
+        </RegionTitle>
+        <RecommendedLevel>
+          Nível recomendado: {recommendedLevel.replace("-", "–")}
+        </RecommendedLevel>
+      </RegionContent>
     </CardStyled>
   );
 }

@@ -1,7 +1,20 @@
-import { useState, useRef, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { REGIONS } from "../../../shared/const";
+import { useMediaQuery } from "../../hooks/useMediaQuery";
+import { DecorativeDivider } from "../DecorativeDivider";
 import RegionCard from "../RegionCard";
-import { RegionsList, SidebarStyled, SidebarTitle, ToggleButton, CarouselContainer, CarouselWrapper, SidebarWrapper, CarouselOuterWrapper } from "./styles";
+import {
+  DrawerBackdrop,
+  RegionList,
+  RegionListItem,
+  RegionsNavigation,
+  SidebarControlRail,
+  SidebarHeader,
+  SidebarPanel,
+  SidebarTitle,
+  ToggleButton,
+} from "./styles";
 
 interface SidebarProps {
   activeRegionId: string;
@@ -9,107 +22,100 @@ interface SidebarProps {
   onToggle?: (isOpen: boolean) => void;
 }
 
-export default function Sidebar({ activeRegionId, onRegionSelect, onToggle }: SidebarProps) {
-  const [isOpen, setIsOpen] = useState(true);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-  const carouselRef = useRef<HTMLDivElement>(null);
+export default function Sidebar({
+  activeRegionId,
+  onRegionSelect,
+  onToggle,
+}: SidebarProps) {
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const [manualOpenState, setManualOpenState] = useState<boolean | null>(null);
+  const isOpen = manualOpenState ?? !isMobile;
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!carouselRef.current) return;
-    setIsDragging(true);
-    setStartX(e.pageX - carouselRef.current.offsetLeft);
-    setScrollLeft(carouselRef.current.scrollLeft);
-  };
+  const setOpen = useCallback((nextOpen: boolean) => {
+    setManualOpenState(nextOpen);
+    onToggle?.(nextOpen);
+  }, [onToggle]);
 
-  const handleMouseLeave = () => {
-    setIsDragging(false);
-  };
+  const handleToggle = () => setOpen(!isOpen);
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
+  const handleRegionSelect = (regionId: string) => {
+    onRegionSelect(regionId);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !carouselRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - carouselRef.current.offsetLeft;
-    const walk = (x - startX) * 1;
-    carouselRef.current.scrollLeft = scrollLeft - walk;
-  };
-
-  const handleToggle = () => {
-    const newState = !isOpen;
-    setIsOpen(newState);
-    onToggle?.(newState);
+    if (isMobile) {
+      setOpen(false);
+    }
   };
 
   useEffect(() => {
-    const carousel = carouselRef.current;
-    if (!carousel) return;
+    if (!isMobile || !isOpen) return;
 
-    carousel.addEventListener("mousedown", handleMouseDown as any);
-    carousel.addEventListener("mouseleave", handleMouseLeave);
-    carousel.addEventListener("mouseup", handleMouseUp);
-    carousel.addEventListener("mousemove", handleMouseMove as any);
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      carousel.removeEventListener("mousedown", handleMouseDown as any);
-      carousel.removeEventListener("mouseleave", handleMouseLeave);
-      carousel.removeEventListener("mouseup", handleMouseUp);
-      carousel.removeEventListener("mousemove", handleMouseMove as any);
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isDragging, startX, scrollLeft]);
+  }, [isMobile, isOpen, setOpen]);
 
   return (
     <>
-      <SidebarWrapper>
-        <SidebarStyled isOpen={isOpen}>
+      <SidebarPanel $open={isOpen} aria-hidden={!isOpen && !isMobile}>
+        <SidebarHeader>
           <SidebarTitle>Regiões</SidebarTitle>
-          <RegionsList>
-            {REGIONS.map((region) => (
-              <RegionCard
-                key={region.id}
-                regionName={region.name}
-                regionNumber={region.order}
-                recommendedLevel={region.recommendedLevel}
-                icon={region.icon}
-                isActive={activeRegionId === region.id}
-                onClick={() => onRegionSelect(region.id)}
-              />
-            ))}
-          </RegionsList>
-        </SidebarStyled>
-        <ToggleButton isOpen={isOpen} onClick={handleToggle} title={isOpen ? "Fechar" : "Abrir"}>
-          <span>{isOpen ? "‹" : "›"}</span>
-        </ToggleButton>
-      </SidebarWrapper>
+          <DecorativeDivider compact />
+        </SidebarHeader>
 
-      <CarouselOuterWrapper>
-        <CarouselContainer>
-          <SidebarTitle>Regiões</SidebarTitle>
-          <CarouselWrapper
-            ref={carouselRef}
-            onMouseDown={handleMouseDown}
-            onMouseLeave={handleMouseLeave}
-            onMouseUp={handleMouseUp}
-            onMouseMove={handleMouseMove}
-          >
+        <RegionsNavigation aria-label="Regiões do guia">
+          <RegionList>
             {REGIONS.map((region) => (
-              <RegionCard
-                key={region.id}
-                regionName={region.name}
-                regionNumber={region.order}
-                recommendedLevel={region.recommendedLevel}
-                icon={region.icon}
-                isActive={activeRegionId === region.id}
-                onClick={() => onRegionSelect(region.id)}
-              />
+              <RegionListItem key={region.id}>
+                <RegionCard
+                  regionName={region.name}
+                  regionNumber={region.order}
+                  recommendedLevel={region.recommendedLevel}
+                  icon={region.icon}
+                  isActive={activeRegionId === region.id}
+                  onClick={() => handleRegionSelect(region.id)}
+                />
+              </RegionListItem>
             ))}
-          </CarouselWrapper>
-        </CarouselContainer>
-      </CarouselOuterWrapper>
+          </RegionList>
+        </RegionsNavigation>
+      </SidebarPanel>
+
+      <SidebarControlRail $open={isOpen}>
+        <ToggleButton
+          type="button"
+          $open={isOpen}
+          onClick={handleToggle}
+          aria-label={
+            isOpen
+              ? "Recolher lista de regiões"
+              : "Expandir lista de regiões"
+          }
+          aria-expanded={isOpen}
+        >
+          {isOpen ? (
+            <IconChevronLeft aria-hidden="true" />
+          ) : (
+            <IconChevronRight aria-hidden="true" />
+          )}
+        </ToggleButton>
+      </SidebarControlRail>
+
+      <DrawerBackdrop
+        type="button"
+        $visible={isMobile && isOpen}
+        onClick={() => setOpen(false)}
+        aria-label="Fechar lista de regiões"
+        tabIndex={isMobile && isOpen ? 0 : -1}
+      />
     </>
   );
 }

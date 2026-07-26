@@ -3,6 +3,7 @@ import { GiCrownedSkull, GiDeathSkull, GiHorizonRoad } from "react-icons/gi";
 import { IoIosPerson } from "react-icons/io";
 import { PIN_COLORS } from "../../shared/const";
 import { IoEllipsisHorizontalOutline } from "react-icons/io5";
+import type { IconType } from "react-icons";
 
 export type PinData = { 
   id: string; 
@@ -10,7 +11,7 @@ export type PinData = {
   y: number; 
   type?: string; 
   label?: string;
-  icon?: string | React.ComponentType<any>;
+  icon?: string | IconType;
   color?: string;
   labelAbove?: boolean;
 };
