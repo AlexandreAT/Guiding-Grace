@@ -177,6 +177,7 @@ export const MainContent = styled.div<{ sidebarOpen?: boolean }>`
 
 export const ContentWrapper = styled.div`
   min-width: 0;
+  grid-column: 3;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -185,6 +186,7 @@ export const ContentWrapper = styled.div`
   z-index: 2;
 
   @media (max-width: 768px) {
+    grid-column: auto;
     padding: ${THEME.spacing.md};
   }
 `;

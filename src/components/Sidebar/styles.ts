@@ -2,11 +2,13 @@ import styled from "styled-components";
 import { THEME } from "../../../shared/const";
 
 export const SidebarPanel = styled.aside<{ $open: boolean }>`
-  width: 100%;
-  height: calc(100vh - 108px);
+  width: var(--regions-sidebar-width);
+  height: auto;
   min-width: 0;
-  position: sticky;
+  position: fixed;
   top: 108px;
+  bottom: 0;
+  left: 0;
   z-index: 4;
   display: flex;
   flex-direction: column;
@@ -24,7 +26,7 @@ export const SidebarPanel = styled.aside<{ $open: boolean }>`
 
   @media (max-width: 768px) {
     width: min(82vw, 300px);
-    height: calc(100vh - 82px);
+    height: auto;
     position: fixed;
     top: 82px;
     left: 0;
@@ -96,9 +98,12 @@ export const RegionListItem = styled.li`
 export const SidebarControlRail = styled.div<{ $open: boolean }>`
   width: 28px;
   min-width: 28px;
-  height: calc(100vh - 108px);
-  position: sticky;
+  height: auto;
+  position: fixed;
   top: 108px;
+  bottom: 0;
+  left: ${({ $open }) =>
+    $open ? "var(--regions-sidebar-width)" : "0"};
   z-index: 5;
   display: flex;
   align-items: center;
@@ -111,6 +116,7 @@ export const SidebarControlRail = styled.div<{ $open: boolean }>`
     min-width: 0;
     position: fixed;
     top: 98px;
+    bottom: auto;
     left: ${({ $open }) => ($open ? "min(82vw, 300px)" : "0")};
     z-index: 94;
     background: transparent;
