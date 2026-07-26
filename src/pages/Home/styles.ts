@@ -130,59 +130,6 @@ export const CardsGrid = styled.div<{ $selection?: boolean }>`
   }
 `;
 
-// Kept for the existing mechanics page until that screen receives its own redesign.
-export const HomeHeaderSection = styled.section`
-  padding: ${THEME.spacing.xl} ${THEME.spacing.lg};
-  border-bottom: 1px solid ${THEME.colors.gold};
-  background: linear-gradient(
-    135deg,
-    rgba(212, 169, 31, 0.15),
-    rgba(10, 10, 10, 0.6)
-  );
-  text-align: center;
-`;
-
-export const HomeTitle = styled.h1`
-  margin: 0;
-  font-family: ${THEME.fonts.rpgOld};
-  font-size: 3rem;
-  color: ${THEME.colors.gold};
-
-  @media (max-width: 768px) {
-    font-size: 2rem;
-  }
-`;
-
-export const HomeSubtitle = styled.p`
-  margin: ${THEME.spacing.md} 0 0;
-  font-family: ${THEME.fonts.body};
-  font-size: 1.1rem;
-  line-height: 1.6;
-`;
-
-export const HomeContent = styled.section`
-  flex: 1;
-  padding: ${THEME.spacing.xl} ${THEME.spacing.lg};
-  position: relative;
-  z-index: 2;
-`;
-
-export const BackButtonContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-bottom: ${THEME.spacing.xl};
-`;
-
-export const BackButton = styled.button`
-  padding: ${THEME.spacing.sm} ${THEME.spacing.md};
-  border: 1px solid ${THEME.colors.gold};
-  border-radius: 4px;
-  background: transparent;
-  color: ${THEME.colors.gold};
-  font-family: ${THEME.fonts.rpg};
-  cursor: pointer;
-`;
-
 export const EmptyState = styled.div`
   min-height: 50vh;
   display: grid;
@@ -360,25 +307,6 @@ export const LoadingText = styled.p`
   color: ${THEME.colors.gold};
   font-size: 0.95rem;
   margin: 0;
-`;
-
-export const HomeContentWithOverflow = styled.div`
-  flex: 1;
-  padding: ${THEME.spacing.xl} ${THEME.spacing.lg};
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow: auto;
-  position: relative;
-  z-index: 2;
-
-  @media (max-width: 768px) {
-    padding: ${THEME.spacing.md};
-  }
-`;
-
-export const ContentInnerWrapper = styled.div`
-  padding-top: var(--spacing-xl, 48px);
 `;
 
 export const ScrollToTopButton = styled.button`

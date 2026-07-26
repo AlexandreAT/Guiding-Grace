@@ -1,13 +1,22 @@
 import styled from "styled-components";
 import { THEME } from "../../../shared/const";
 
-export const DividerRoot = styled.div<{ $compact: boolean }>`
+export const DividerRoot = styled.div<{
+  $compact: boolean;
+  $align: "center" | "start";
+}>`
   width: min(${({ $compact }) => ($compact ? "190px" : "390px")}, 72vw);
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: ${({ $compact }) => ($compact ? "12px" : "18px")};
-  margin: ${({ $compact }) => ($compact ? "18px auto 20px" : "24px auto 26px")};
+  margin: ${({ $compact, $align }) => {
+    if ($align === "start") {
+      return $compact ? "12px 0 18px" : "20px 0 24px";
+    }
+
+    return $compact ? "18px auto 20px" : "24px auto 26px";
+  }};
 `;
 
 export const DividerLine = styled.span`
