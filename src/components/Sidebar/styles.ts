@@ -6,7 +6,7 @@ export const SidebarPanel = styled.aside<{ $open: boolean }>`
   height: calc(100vh - 108px);
   min-width: 0;
   position: sticky;
-  top: 0;
+  top: 108px;
   z-index: 4;
   display: flex;
   flex-direction: column;
@@ -98,7 +98,7 @@ export const SidebarControlRail = styled.div<{ $open: boolean }>`
   min-width: 28px;
   height: calc(100vh - 108px);
   position: sticky;
-  top: 0;
+  top: 108px;
   z-index: 5;
   display: flex;
   align-items: center;
