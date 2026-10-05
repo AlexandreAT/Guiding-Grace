@@ -1,14 +1,23 @@
 import type { IconType } from "react-icons";
+import ProgressBar from "../ProgressBar";
 import {
   CardStyled,
   RecommendedLevel,
   RegionContent,
   RegionIcon,
   RegionIconContainer,
+  RegionMeta,
   RegionName,
   RegionNumber,
+  RegionProgressText,
+  RegionStatus,
   RegionTitle,
 } from "./styles";
+
+export interface RegionProgress {
+  completed: number;
+  total: number;
+}
 
 interface RegionCardProps {
   regionName: string;
@@ -16,6 +25,9 @@ interface RegionCardProps {
   recommendedLevel: string;
   icon: string | IconType;
   isActive?: boolean;
+  disabled?: boolean;
+  status?: string;
+  progress?: RegionProgress;
   onClick: () => void;
 }
 
@@ -25,15 +37,20 @@ export default function RegionCard({
   recommendedLevel,
   icon,
   isActive = false,
+  disabled = false,
+  status,
+  progress,
   onClick,
 }: RegionCardProps) {
   const IconComponent = typeof icon === "string" ? null : icon;
+  const hasProgress = !status && progress && progress.total > 0;
 
   return (
     <CardStyled
       type="button"
       $active={isActive}
-      onClick={onClick}
+      disabled={disabled}
+      onClick={disabled ? undefined : onClick}
       aria-current={isActive ? "page" : undefined}
     >
       <RegionIconContainer $active={isActive}>
@@ -49,9 +66,25 @@ export default function RegionCard({
           <RegionNumber>{regionNumber}.</RegionNumber>
           <RegionName>{regionName}</RegionName>
         </RegionTitle>
-        <RecommendedLevel>
-          Nível recomendado: {recommendedLevel.replace("-", "–")}
-        </RecommendedLevel>
+        <RegionMeta>
+          <RecommendedLevel>
+            Nível recomendado: {recommendedLevel.replace("-", "–")}
+          </RecommendedLevel>
+          {status && <RegionStatus>{status}</RegionStatus>}
+          {hasProgress && (
+            <RegionProgressText>
+              {progress.completed}/{progress.total}
+            </RegionProgressText>
+          )}
+        </RegionMeta>
+        {hasProgress && (
+          <ProgressBar
+            compact
+            completed={progress.completed}
+            total={progress.total}
+            label={`Progresso de ${regionName}`}
+          />
+        )}
       </RegionContent>
     </CardStyled>
   );

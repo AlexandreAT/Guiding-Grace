@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Footer } from "../../components/Footer";
 import { Header } from "../../components/Header";
 import { HeroSection } from "../../components/HeroSection";
 import { NavigationCard } from "../../components/NavigationCard";
@@ -32,6 +33,7 @@ export default function Home() {
           </CardsGrid>
         </PageContent>
       </main>
+      <Footer />
     </HomePageContainer>
   );
 }

@@ -1,73 +1,59 @@
-# React + TypeScript + Vite
+# Guiding Grace
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Guia de progressão de **Elden Ring** em português, com mapa interativo, checklist de objetivos e progresso salvo no navegador.
 
-Currently, two official plugins are available:
+<!-- TODO: link do deploy -->
+<!-- TODO: GIF curto: marcar um objetivo → "Ver no mapa" → filtrar a legenda -->
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## O que dá para fazer
 
-## React Compiler
+- **Mapa interativo por região**: zoom (botões, roda do mouse e pinça no celular), arraste e marcações por categoria.
+- **Mapa e texto ligados**: clicar num pin abre e destaca o trecho do guia; clicar em "Ver no mapa" num tópico centraliza e destaca o pin.
+- **Checklist de progresso**: NPCs, chefes, itens e masmorras podem ser marcados como concluídos. A porcentagem aparece por região e no total, na sidebar, e os pins concluídos ficam esmaecidos no mapa.
+- **Filtros na legenda**: cada categoria mostra a quantidade de pins da região e pode ser ocultada; também dá para esconder o que já foi concluído.
+- **Spoilers protegidos**: trechos de lore ficam ocultos até o clique.
+- **Responsivo**: sidebar vira drawer no celular, sem scroll horizontal.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Decisões técnicas
 
-## Expanding the ESLint configuration
+- **Conteúdo como dados tipados.** Regiões, pins e seções ficam em `src/data` e `shared/const.ts`. Pins e tópicos do texto compartilham o mesmo `id`, e é isso que permite a navegação mapa ↔ texto e gerar o checklist direto dos dados, sem lista duplicada.
+- **Progresso com `useSyncExternalStore` + `localStorage`** (`src/hooks/useGuideProgress.ts`). Uma store pequena, salva por build, sincronizada entre abas pelo evento `storage` e tolerante a storage indisponível (modo privado, cota cheia).
+- **Sem estado global.** O único estado compartilhado é o progresso, isolado num hook; o resto é estado local da página. Por isso não há Redux.
+- **Ferramenta de autoria só em desenvolvimento.** O modo pin (clicar no mapa copia as coordenadas para cadastrar um novo pin) depende de `import.meta.env.DEV` e é removido do bundle de produção. No modo de desenvolvimento, as regiões "Em breve" também ficam acessíveis para a escrita do conteúdo.
+- **Escopo honesto.** Regiões sem conteúdo escrito aparecem bloqueadas como "Em breve", em vez de páginas vazias.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+React 19 · TypeScript · Vite · React Router · Styled Components
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Rodando localmente
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Requer Node.js **20.19+** ou **22.12+** (exigência do Vite 7).
+
+```bash
+npm install
+npm run dev      # desenvolvimento (com modo pin e todas as regiões)
+npm run build    # build de produção
+npm run preview  # serve o build de produção
+npm run lint
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Estrutura
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```text
+shared/const.ts      regiões, legenda, cores dos pins e tema
+src/data/            conteúdo das regiões, pins e navegação
+src/hooks/           progresso do guia e media queries
+src/components/      mapa, legenda, sidebar, conteúdo, cards...
+src/pages/           Home, seleção, guia, mecânicas e 404
 ```
+
+O guia técnico completo (arquitetura, padrões visuais e de código) está em [`GUIDING_GRACE_PROJECT_GUIDE.md`](GUIDING_GRACE_PROJECT_GUIDE.md).
+
+## Status
+
+Conteúdo completo: Terras Intermédias (visão geral), Limgrave (topo e base) e o guia de Sistema de Armas. As demais regiões estão em escrita.
+
+---
+
+Projeto de fã, sem fins lucrativos e sem afiliação com a FromSoftware ou a Bandai Namco. Elden Ring, seus mapas e imagens pertencem aos respectivos detentores.

@@ -1,15 +1,15 @@
 import styled from "styled-components";
 import { THEME } from "../../../shared/const";
 
-export const SpoilerWrapper = styled.span<{ isRevealed: boolean }>`
+export const SpoilerWrapper = styled.span<{ $isRevealed: boolean }>`
   position: relative;
   display: inline-block;
   cursor: pointer;
   transition: all ${THEME.transitions.fast};
   
-  color: ${(props) => (props.isRevealed ? THEME.colors.foreground : "transparent")};
-  text-shadow: ${(props) => (props.isRevealed ? "none" : "0 0 0 #666")};
-  user-select: ${(props) => (props.isRevealed ? "auto" : "none")};
+  color: ${(props) => (props.$isRevealed ? THEME.colors.foreground : "transparent")};
+  text-shadow: ${(props) => (props.$isRevealed ? "none" : "0 0 0 #666")};
+  user-select: ${(props) => (props.$isRevealed ? "auto" : "none")};
 `;
 
 export const SpoilerOverlay = styled.span`

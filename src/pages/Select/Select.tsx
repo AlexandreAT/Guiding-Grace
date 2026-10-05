@@ -1,14 +1,11 @@
 import { useNavigate, useParams } from "react-router-dom";
+import { Footer } from "../../components/Footer";
 import { Header } from "../../components/Header";
 import { HeroSection } from "../../components/HeroSection";
 import { NavigationCard } from "../../components/NavigationCard";
 import { SELECTIONS } from "../../data/navigation";
-import {
-  CardsGrid,
-  EmptyState,
-  HomePageContainer,
-  PageContent,
-} from "../Home/styles";
+import { CardsGrid, HomePageContainer, PageContent } from "../Home/styles";
+import NotFound from "../NotFound/NotFound";
 
 export default function Select() {
   const { categoryId } = useParams<{ categoryId: string }>();
@@ -17,19 +14,11 @@ export default function Select() {
 
   if (!category) {
     return (
-      <HomePageContainer>
-        <Header onLogoClick={() => navigate("/")} />
-        <main>
-          <PageContent>
-            <EmptyState>
-              <h1>Categoria não encontrada</h1>
-              <button type="button" onClick={() => navigate("/")}>
-                Voltar ao menu principal
-              </button>
-            </EmptyState>
-          </PageContent>
-        </main>
-      </HomePageContainer>
+      <NotFound
+        title="Categoria não encontrada"
+        description="Essa categoria de guia não existe."
+        actionLabel="Voltar ao menu principal"
+      />
     );
   }
 
@@ -59,6 +48,7 @@ export default function Select() {
           </CardsGrid>
         </PageContent>
       </main>
+      <Footer />
     </HomePageContainer>
   );
 }

@@ -92,7 +92,7 @@ Não existe, neste momento:
 
 O conteúdo é mantido diretamente no código por meio de objetos, arrays, arquivos TypeScript, componentes ou arquivos estáticos.
 
-Caso algum tipo de persistência seja introduzido no futuro, ela deve ser planejada separadamente e não adicionada de forma improvisada dentro dos componentes atuais.
+A única persistência existente é local: o progresso do checklist, salvo no `localStorage` por build e concentrado em `src/hooks/useGuideProgress.ts`. Qualquer nova persistência deve seguir o mesmo princípio: planejada separadamente e isolada em hook ou módulo próprio, nunca improvisada dentro dos componentes.
 
 ---
 
@@ -244,7 +244,7 @@ Cada parte do projeto deve ter uma função clara:
 
 Antes de criar um componente, procure se já existe algo semelhante.
 
-Elementos que devem ser compartilhados quando possível:
+Elementos que devem ser compartilhados quando possível (já existentes: `ProgressBar`, `PillButton`, `Footer`, `NotFound`):
 
 - Header;
 - Hero/banner;
@@ -734,7 +734,9 @@ interface LegendItem {
 
 # 18. Estados bloqueados e conteúdos futuros
 
-Conteúdo ainda indisponível deve possuir uma propriedade explícita:
+Conteúdo ainda indisponível deve possuir uma propriedade explícita. Isso vale para cards de navegação (`src/data/navigation.ts`) e para regiões (`disabled` e `status` em `REGIONS`, via `COMING_SOON`). Regiões bloqueadas continuam acessíveis em desenvolvimento para permitir a escrita do conteúdo; para liberar uma região, basta remover `...COMING_SOON` dela.
+
+Formato:
 
 ```ts
 interface GuideOption {
@@ -789,13 +791,16 @@ Funções atuais ou esperadas:
 
 ## 19.2. Modo pin
 
-O modo pin deve possuir um estado explícito:
+O modo pin é uma ferramenta de autoria: ao clicar no mapa, copia as coordenadas normalizadas (`x`, `y` entre 0 e 1) para cadastrar um novo pin em `src/data/regionPins.ts`.
 
-```ts
-const [isPinModeActive, setIsPinModeActive] = useState(false);
-```
+Ele deve existir **somente em desenvolvimento**. Toda lógica e todo botão relacionados devem depender de `import.meta.env.DEV`, para que o código seja removido do bundle de produção.
 
-Se ainda não estiver funcional, não simular persistência ou comportamento incompleto sem deixar claro no código.
+## 19.3. Ligação entre mapa, texto e checklist
+
+- Um pin e o tópico do texto que fala dele compartilham o mesmo `id`;
+- Clicar no pin abre a seção e destaca o tópico; "Ver no mapa" no tópico centraliza e destaca o pin;
+- Todo item com `style: "topic"` e `id` vira um objetivo marcável do checklist (`isTrackableItem` em `regionSections.ts`);
+- Para adicionar um objetivo, basta criar o tópico com `id` e, se houver posição no mapa, o pin com o mesmo `id`.
 
 ---
 
@@ -1255,11 +1260,8 @@ O conteúdo deve ser dividido em blocos legíveis, evitando paredes de texto.
 
 Possibilidades que podem ser avaliadas separadamente:
 
-- Persistência local de progresso;
-- Checklist de itens;
 - Pins personalizados;
 - Favoritos;
-- Progresso por região;
 - Importação e exportação de progresso;
 - CMS ou backend para conteúdo;
 - Novos jogos da FromSoftware.
@@ -1337,8 +1339,11 @@ O projeto já possui ou está estruturando:
 - Região ativa;
 - Mapa de progressão;
 - Controles de zoom;
-- Modo pin;
-- Legenda;
+- Modo pin (apenas em desenvolvimento);
+- Legenda com filtro por categoria;
+- Ligação bidirecional entre pins e texto;
+- Checklist de progresso por região, salvo no navegador;
+- Página 404 e tratamento de build inválida;
 - Accordions de conteúdo;
 - Assets próprios;
 - Identidade visual escura e dourada;

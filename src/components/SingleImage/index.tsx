@@ -22,11 +22,11 @@ export default function SingleImage({ imageName, width, height, alt, caption }: 
 
   return (
     <>
-      <Wrapper w={width}>
-        <Thumb src={src} alt={alt || imageName} onClick={() => setOpen(true)} draggable={false} h={height} />
+      <Wrapper $w={width}>
+        <Thumb src={src} alt={alt || imageName} onClick={() => setOpen(true)} draggable={false} $h={height} />
         {caption && (
           <CaptionBox>
-            <Caption fontSize='0.8em'>{caption}</Caption>
+            <Caption $fontSize='0.8em'>{caption}</Caption>
           </CaptionBox>
         )}
       </Wrapper>

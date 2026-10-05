@@ -23,7 +23,7 @@ export default function ImageCarousel({ images, itemWidth = '240px', itemHeight 
     setIndex(clamped);
     const el = itemRefs.current[clamped];
     if (el && trackRef.current) {
-      el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' } as any);
+      el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     }
   };
 
@@ -39,8 +39,8 @@ export default function ImageCarousel({ images, itemWidth = '240px', itemHeight 
                 ref={(el) => {
                     itemRefs.current[i] = el;
                 }}
-                w={itemWidth}
-                h={itemHeight}
+                $w={itemWidth}
+                $h={itemHeight}
             >
                 <SingleImage imageName={img.name} width={itemWidth} height={itemHeight} caption={img.caption} />
             </Item>

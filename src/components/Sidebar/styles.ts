@@ -176,3 +176,22 @@ export const DrawerBackdrop = styled.button<{ $visible: boolean }>`
       visibility 180ms ease;
   }
 `;
+
+export const OverallProgress = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px 4px 10px;
+`;
+
+export const OverallProgressLabel = styled.p`
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  font-family: ${THEME.fonts.body};
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: ${THEME.colors.textSecondary};
+`;

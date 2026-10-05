@@ -226,6 +226,7 @@ export const regionSections: Record<string, RegionSection[]> = {
           text: "Após falar com a Melina, teleporte-se de volta ao Mercador Kale, um novo diálogo será desbloqueado, e você vai receber um sino de invocação, ele serve para invocar espiritos aliados em certos momentos."
         },
         {
+          id: "limgrave-item-2",
           style: "normal",
           text: "Depois disso, retorne à Graça da Erdtree que você estava, próximo dali é possível encontrar a Espada do Lorde, além do acampamento de soldados."
         },
@@ -1106,3 +1107,13 @@ export const regionSections: Record<string, RegionSection[]> = {
 export const getSectionsForRegion = (regionId: string): RegionSection[] => {
   return regionSections[regionId] || [];
 };
+
+// Tópicos com id são os objetivos marcáveis no checklist de progresso
+export const isTrackableItem = (item: ContentItem): item is ContentItem & { id: string } =>
+  item.style === "topic" && typeof item.id === "string";
+
+export const getTrackableIdsForRegion = (regionId: string): string[] =>
+  getSectionsForRegion(regionId)
+    .flatMap((section) => section.content)
+    .filter(isTrackableItem)
+    .map((item) => item.id);

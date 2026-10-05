@@ -3,9 +3,12 @@ import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { REGIONS } from "../../../shared/const";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { DecorativeDivider } from "../DecorativeDivider";
-import RegionCard from "../RegionCard";
+import ProgressBar from "../ProgressBar";
+import RegionCard, { type RegionProgress } from "../RegionCard";
 import {
   DrawerBackdrop,
+  OverallProgress,
+  OverallProgressLabel,
   RegionList,
   RegionListItem,
   RegionsNavigation,
@@ -20,16 +23,28 @@ interface SidebarProps {
   activeRegionId: string;
   onRegionSelect: (regionId: string) => void;
   onToggle?: (isOpen: boolean) => void;
+  regionProgress: Record<string, RegionProgress>;
 }
+
+// Em desenvolvimento as regiões "Em breve" continuam acessíveis para a escrita do conteúdo
+const CAN_OPEN_LOCKED_REGIONS = import.meta.env.DEV;
 
 export default function Sidebar({
   activeRegionId,
   onRegionSelect,
   onToggle,
+  regionProgress,
 }: SidebarProps) {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [manualOpenState, setManualOpenState] = useState<boolean | null>(null);
   const isOpen = manualOpenState ?? !isMobile;
+  const overall = Object.values(regionProgress).reduce(
+    (sum, progress) => ({
+      completed: sum.completed + progress.completed,
+      total: sum.total + progress.total,
+    }),
+    { completed: 0, total: 0 },
+  );
 
   const setOpen = useCallback((nextOpen: boolean) => {
     setManualOpenState(nextOpen);
@@ -69,6 +84,21 @@ export default function Sidebar({
         <SidebarHeader>
           <SidebarTitle>Regiões</SidebarTitle>
           <DecorativeDivider compact />
+          {overall.total > 0 && (
+            <OverallProgress>
+              <OverallProgressLabel>
+                <span>Progresso geral</span>
+                <span>
+                  {overall.completed}/{overall.total}
+                </span>
+              </OverallProgressLabel>
+              <ProgressBar
+                completed={overall.completed}
+                total={overall.total}
+                label="Progresso geral do guia"
+              />
+            </OverallProgress>
+          )}
         </SidebarHeader>
 
         <RegionsNavigation aria-label="Regiões do guia">
@@ -81,6 +111,9 @@ export default function Sidebar({
                   recommendedLevel={region.recommendedLevel}
                   icon={region.icon}
                   isActive={activeRegionId === region.id}
+                  disabled={region.disabled && !CAN_OPEN_LOCKED_REGIONS}
+                  status={region.status}
+                  progress={regionProgress[region.id]}
                   onClick={() => handleRegionSelect(region.id)}
                 />
               </RegionListItem>

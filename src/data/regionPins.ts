@@ -1,15 +1,17 @@
 import { BsTools, BsStars  } from "react-icons/bs";
 import { GiCrownedSkull, GiDeathSkull, GiHorizonRoad } from "react-icons/gi";
 import { IoIosPerson } from "react-icons/io";
-import { PIN_COLORS } from "../../shared/const";
+import { PIN_COLORS, type MAP_LEGEND } from "../../shared/const";
 import { IoEllipsisHorizontalOutline } from "react-icons/io5";
 import type { IconType } from "react-icons";
 
-export type PinData = { 
-  id: string; 
-  x: number; 
-  y: number; 
-  type?: string; 
+export type PinType = keyof typeof MAP_LEGEND;
+
+export type PinData = {
+  id: string;
+  x: number;
+  y: number;
+  type: PinType;
   label?: string;
   icon?: string | IconType;
   color?: string;

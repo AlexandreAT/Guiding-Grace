@@ -9,7 +9,7 @@ export default function SpoilerText({ text }: SpoilerTextProps) {
   const [isRevealed, setIsRevealed] = useState(false);
 
   return (
-    <SpoilerWrapper onClick={() => setIsRevealed(!isRevealed)} isRevealed={isRevealed}>
+    <SpoilerWrapper onClick={() => setIsRevealed(!isRevealed)} $isRevealed={isRevealed}>
       {text}
       {!isRevealed && <SpoilerOverlay />}
     </SpoilerWrapper>

@@ -1,55 +1,41 @@
-import styled from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 import { THEME } from "../../../shared/const";
 
-export const MapWrapper = styled.div<{ width?: string; height?: string }>`
-  width: ${(props) => props.width || '100%'};
-  height: ${(props) => props.height || 'auto'};
+export const MapWrapper = styled.div`
+  /* Limites do quadro: o tamanho real segue a proporção da imagem dentro deles */
+  --map-max-width: 1100px;
+  --map-max-height: min(650px, 75vh);
+  width: 100%;
   display: flex;
-  flex-direction: row;
-  align-items: center;
   justify-content: center;
 
-  /* On very small viewports, center the map wrapper */
-  @media (max-width: 480px) {
-    justify-content: center;
+  @media (max-width: 768px) {
+    --map-max-height: 70vh;
   }
 `;
 
-export const MapContainerStyled = styled.div`
-  width: 80%;
-  height: 100%;
+export const MapContainerStyled = styled.div<{ $aspectRatio: number }>`
+  width: min(
+    100%,
+    var(--map-max-width),
+    calc(var(--map-max-height) * ${({ $aspectRatio }) => $aspectRatio})
+  );
+  aspect-ratio: ${({ $aspectRatio }) => $aspectRatio};
   background-color: ${THEME.colors.brownDark};
   border: 2px solid ${THEME.colors.gold};
   border-radius: 4px;
   overflow: hidden;
   position: relative;
   box-shadow: ${THEME.shadows.lg};
-  display: flex;
-  align-items: center;
-  justify-content: center;
   touch-action: none;
   -webkit-touch-callout: none;
-
-  @media (max-width: 768px) {
-    height: 100%;
-  }
-
-  @media (max-width: 480px) {
-    width: 460px;
-    height: 460px;
-    margin-left: auto;
-    margin-right: auto;
-  }
 `;
 
-export const MapImageContainer = styled.div`
+export const MapImageContainer = styled.div<{ $canPan: boolean }>`
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
-  cursor: grab;
+  cursor: ${({ $canPan }) => ($canPan ? "grab" : "default")};
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -58,39 +44,51 @@ export const MapImageContainer = styled.div`
   -webkit-touch-callout: none;
 
   &:active {
-    cursor: grabbing;
+    cursor: ${({ $canPan }) => ($canPan ? "grabbing" : "default")};
   }
 `;
 
-export const MapInner = styled.div<{ scale: number; offsetX: number; offsetY: number }>`
+// O transform muda a cada movimento; vai pelo atributo style para não gerar uma classe CSS por posição
+export const MapInner = styled.div.attrs<{ $scale: number; $offsetX: number; $offsetY: number; $animated: boolean }>(
+  ({ $scale, $offsetX, $offsetY }) => ({
+    style: { transform: `translate(${$offsetX}px, ${$offsetY}px) scale(${$scale})` },
+  }),
+)`
   position: relative;
-  display: inline-block;
-  transform: scale(${(props) => props.scale}) translate(${(props) => props.offsetX}px, ${(props) => props.offsetY}px);
+  width: 100%;
+  height: 100%;
   transform-origin: center center;
-  transition: transform ${THEME.transitions.fast};
+  transition: ${({ $animated }) =>
+    $animated ? `transform ${THEME.transitions.fast}` : "none"};
+  will-change: transform;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 `;
 
 export const MapImage = styled.img`
   display: block;
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
+  width: 100%;
+  height: 100%;
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;
+`;
 
-  /* For large desktop default keep a practical max-height so it doesn't
-     blow up visually when its container is very tall */
-  @media (min-width: 769px) {
-    max-height: 650px;
+const pinPulse = keyframes`
+  0% {
+    box-shadow: 0 0 0 0 rgba(227, 194, 96, 0.85);
+  }
+  100% {
+    box-shadow: 0 0 0 12px rgba(227, 194, 96, 0);
   }
 `;
 
-export const Pin = styled.button<{ pinColor?: string }>`
+export const Pin = styled.button<{ $pinColor?: string; $completed?: boolean; $highlighted?: boolean }>`
   position: absolute;
   display: flex;
   flex-direction: column;
@@ -101,6 +99,28 @@ export const Pin = styled.button<{ pinColor?: string }>`
   padding: 0;
   transform: translate(-50%, -50%);
   cursor: pointer;
+  opacity: ${({ $completed, $highlighted }) => ($completed && !$highlighted ? 0.5 : 1)};
+  z-index: ${({ $highlighted }) => ($highlighted ? 2 : 1)};
+  transition: opacity ${THEME.transitions.fast};
+
+  &:focus-visible {
+    outline: 1px solid ${THEME.colors.goldLight};
+    outline-offset: 2px;
+  }
+
+  ${({ $highlighted }) =>
+    $highlighted &&
+    css`
+      & > div {
+        border-color: ${THEME.colors.goldLight};
+        animation: ${pinPulse} 900ms ease-out 3;
+
+        @media (prefers-reduced-motion: reduce) {
+          animation: none;
+          box-shadow: 0 0 0 3px rgba(227, 194, 96, 0.7);
+        }
+      }
+    `}
 
   & > .pin-label {
     font-family: ${THEME.fonts.body};
@@ -109,7 +129,7 @@ export const Pin = styled.button<{ pinColor?: string }>`
     background: rgba(0,0,0,0.5);
     padding: 1px 2px;
     border-radius: 4px;
-    border: 1px solid ${(p) => p.pinColor || THEME.colors.gold};
+    border: 1px solid ${(p) => p.$pinColor || THEME.colors.gold};
     white-space: nowrap;
   }
 
@@ -119,19 +139,20 @@ export const Pin = styled.button<{ pinColor?: string }>`
     & > .pin-label {
       font-size: 2.5px;
       padding: 0 1px;
-    border: 1px solid ${(p) => p.pinColor || THEME.colors.gold}ff !important;
+    border: 1px solid ${(p) => p.$pinColor || THEME.colors.gold}ff !important;
     }
   }
 `;
 
-export const PinIconWrapper = styled.div<{ pinColor?: string }>`
+export const PinIconWrapper = styled.div<{ $pinColor?: string }>`
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 18px;
   height: 18px;
   background: rgba(0, 0, 0, 0.6);
-  border: 1px solid ${(p) => p.pinColor || THEME.colors.gold};
+  border: 1px solid ${(p) => p.$pinColor || THEME.colors.gold};
   border-radius: 50%;
   box-shadow: ${THEME.shadows.sm};
 
@@ -142,14 +163,36 @@ export const PinIconWrapper = styled.div<{ pinColor?: string }>`
   }
 `;
 
-export const PinIcon = styled.div<{ pinColor?: string }>`
+export const PinCompletedBadge = styled.span`
+  position: absolute;
+  top: -4px;
+  right: -5px;
+  width: 9px;
+  height: 9px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: ${THEME.colors.gold};
+  color: ${THEME.colors.background};
+
+  svg {
+    width: 7px;
+    height: 7px;
+  }
+
+  @media (max-width: 480px) {
+    display: none;
+  }
+`;
+
+export const PinIcon = styled.div<{ $pinColor?: string }>`
   display: flex;
   align-items: center;
   justify-content: center;
   width: 10px;
   height: 100%;
   font-size: 1.25rem;
-  color: ${(p) => p.pinColor || THEME.colors.gold};
+  color: ${(p) => p.$pinColor || THEME.colors.gold};
   
   &.ra {
     font-family: 'Remixicon';

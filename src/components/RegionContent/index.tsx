@@ -1,8 +1,31 @@
 import { useState, useEffect, useRef } from "react";
+import type { MouseEvent } from "react";
 import { IoIosArrowDown } from "react-icons/io";
-import { ContentContainerStyled, ExpandIcon, RegionDescription, RegionTitle, SectionCard, SectionContent, SectionHeader, SectionTitle, ContentBlock, ContentItemStyled, ImageLink, ImagePreview } from "./styles";
-import type { RegionSection } from "../../data/regionSections";
+import { IoLocationSharp } from "react-icons/io5";
+import {
+  ContentContainerStyled,
+  ExpandIcon,
+  RegionDescription,
+  RegionTitle,
+  SectionCard,
+  SectionContent,
+  SectionHeader,
+  SectionTitle,
+  ContentBlock,
+  ContentItemStyled,
+  ImageLink,
+  ImagePreview,
+  ProgressCount,
+  ProgressHeader,
+  ProgressLabel,
+  ProgressSummary,
+  TopicCheckbox,
+  TrackableTopic,
+} from "./styles";
+import { isTrackableItem, type ContentItem, type RegionSection } from "../../data/regionSections";
 import ImageModal from "../ImageModal";
+import { PillButton } from "../PillButton";
+import ProgressBar from "../ProgressBar";
 import SpoilerText from "../SpoilerText";
 
 interface RegionContentProps {
@@ -11,6 +34,11 @@ interface RegionContentProps {
   sections: RegionSection[];
   scrollToLabel?: string | undefined;
   onScrolled?: () => void;
+  completedIds: ReadonlySet<string>;
+  mappedIds: ReadonlySet<string>;
+  onToggleCompleted: (id: string) => void;
+  onResetProgress: () => void;
+  onLocateOnMap: (id: string) => void;
 }
 
 interface HoveredImage {
@@ -19,18 +47,34 @@ interface HoveredImage {
   y: number;
 }
 
+const matchesLabel = (item: ContentItem, label: string) =>
+  item.id === label ||
+  item.text === label ||
+  (item.parts?.some((part) => part.text === label) ?? false);
+
 export default function RegionContent({
   regionName,
   regionDescription,
   sections,
   scrollToLabel,
   onScrolled,
+  completedIds,
+  mappedIds,
+  onToggleCompleted,
+  onResetProgress,
+  onLocateOnMap,
 }: RegionContentProps) {
   const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set());
   const [highlighted, setHighlighted] = useState<{ s: number; i: number } | null>(null);
   const [imageModal, setImageModal] = useState<{ isOpen: boolean; src: string } | null>(null);
   const [hoveredImage, setHoveredImage] = useState<HoveredImage | null>(null);
   const highlightTimerRef = useRef<number | null>(null);
+
+  const trackableIds = sections
+    .flatMap((section) => section.content)
+    .filter(isTrackableItem)
+    .map((item) => item.id);
+  const completedCount = trackableIds.filter((id) => completedIds.has(id)).length;
 
   const toggleSection = (index: number) => {
     const newExpanded = new Set(expandedSections);
@@ -42,19 +86,17 @@ export default function RegionContent({
     setExpandedSections(newExpanded);
   };
 
+  const handleResetProgress = () => {
+    if (window.confirm(`Desmarcar todos os objetivos de ${regionName}?`)) {
+      onResetProgress();
+    }
+  };
+
   useEffect(() => {
     if (!scrollToLabel) return;
 
     for (let s = 0; s < sections.length; s++) {
-      const sec = sections[s];
-      const idx = sec.content.findIndex((it: any) => {
-        if (typeof it.id === 'string' && it.id === scrollToLabel) return true;
-        if (typeof it.text === 'string' && it.text === scrollToLabel) return true;
-        if (Array.isArray(it.parts)) {
-          return it.parts.some((p: any) => (p.text === scrollToLabel));
-        }
-        return false;
-      });
+      const idx = sections[s].content.findIndex((item) => matchesLabel(item, scrollToLabel));
 
       if (idx !== -1) {
         setExpandedSections((prev) => {
@@ -65,10 +107,10 @@ export default function RegionContent({
 
         setTimeout(() => {
           const selector = `[data-section-index="${s}"][data-item-index="${idx}"]`;
-          const el = document.querySelector(selector) as HTMLElement | null;
+          const el = document.querySelector<HTMLElement>(selector);
           if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            (el as HTMLElement).focus?.();
+            el.focus({ preventScroll: true });
             // set temporary highlight for 5s
             setHighlighted({ s, i: idx });
             if (highlightTimerRef.current) {
@@ -86,7 +128,7 @@ export default function RegionContent({
         break;
       }
     }
-  
+
     return () => {
       if (highlightTimerRef.current) {
         window.clearTimeout(highlightTimerRef.current);
@@ -103,85 +145,150 @@ export default function RegionContent({
     setHighlighted(null);
   }, [sections, regionName]);
 
+  const renderParts = (parts: NonNullable<ContentItem["parts"]>) =>
+    parts.map((p, pi) => {
+      if (p.type === 'link') {
+        return (
+          <a key={pi} href={p.href} target="_blank" rel="noreferrer">{p.text}</a>
+        );
+      } else if (p.type === 'image' && p.src) {
+        const src = p.src;
+        const handleImageHover = (e: MouseEvent<HTMLButtonElement>) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          setHoveredImage({
+            src,
+            x: rect.left,
+            y: rect.top - 20,
+          });
+        };
+
+        return (
+          <ImageLink
+            key={pi}
+            type="button"
+            onMouseEnter={handleImageHover}
+            onMouseLeave={() => setHoveredImage(null)}
+            onClick={() => setImageModal({ isOpen: true, src })}
+          >
+            {p.text}
+            {hoveredImage?.src === src && (
+              <ImagePreview
+                src={src}
+                alt={p.text}
+                style={{
+                  top: `${hoveredImage.y}px`,
+                  left: `${hoveredImage.x}px`,
+                }}
+              />
+            )}
+          </ImageLink>
+        );
+      } else if (p.type === 'spoiler') {
+        return (
+          <SpoilerText key={pi} text={p.text} />
+        );
+      }
+      return (
+        <span key={pi}>{p.text}</span>
+      );
+    });
+
+  const renderTrackableTopic = (item: ContentItem & { id: string }) => {
+    const isCompleted = completedIds.has(item.id);
+
+    return (
+      <TrackableTopic $completed={isCompleted}>
+        <TopicCheckbox>
+          <input
+            type="checkbox"
+            checked={isCompleted}
+            onChange={() => onToggleCompleted(item.id)}
+          />
+          <span>{item.text}</span>
+        </TopicCheckbox>
+        {mappedIds.has(item.id) && (
+          <PillButton
+            type="button"
+            onClick={() => onLocateOnMap(item.id)}
+            aria-label={`Ver ${item.text ?? "marcação"} no mapa`}
+          >
+            <IoLocationSharp aria-hidden="true" />
+            <span>Ver no mapa</span>
+          </PillButton>
+        )}
+      </TrackableTopic>
+    );
+  };
+
+  const renderItem = (item: ContentItem) => {
+    if (isTrackableItem(item)) return renderTrackableTopic(item);
+    if (item.parts) return renderParts(item.parts);
+    return item.text;
+  };
+
   return (
     <>
       <ContentContainerStyled>
         <RegionTitle>{regionName}</RegionTitle>
         <RegionDescription>{regionDescription}</RegionDescription>
 
-        {sections.map((section, index) => (
-          <SectionCard key={index}>
-            <SectionHeader onClick={() => toggleSection(index)}>
-              <SectionTitle>{section.title}</SectionTitle>
-              <ExpandIcon isExpanded={expandedSections.has(index)}><IoIosArrowDown /></ExpandIcon>
-            </SectionHeader>
-            <SectionContent isExpanded={expandedSections.has(index)}>
-              <ContentBlock>
-                {section.content.map((item, itemIndex) => (
-                  <ContentItemStyled
-                    key={itemIndex}
-                    contentStyle={(item as any).style}
-                    data-section-index={index}
-                    data-item-index={itemIndex}
-                    tabIndex={-1}
-                    data-highlighted={highlighted && highlighted.s === index && highlighted.i === itemIndex ? 'true' : 'false'}
-                  >
-                    {Array.isArray((item as any).parts) ? (
-                      (item as any).parts.map((p: any, pi: number) => {
-                        if (p.type === 'link') {
-                          return (
-                            <a key={pi} href={p.href} target="_blank" rel="noreferrer">{p.text}</a>
-                          );
-                        } else if (p.type === 'image') {
-                          const handleImageHover = (e: React.MouseEvent<HTMLButtonElement>) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            setHoveredImage({
-                              src: p.src,
-                              x: rect.left,
-                              y: rect.top - 20,
-                            });
-                          };
+        {trackableIds.length > 0 && (
+          <ProgressSummary>
+            <ProgressHeader>
+              <ProgressLabel>Progresso da região</ProgressLabel>
+              <ProgressCount>
+                {completedCount} de {trackableIds.length} objetivos
+              </ProgressCount>
+              {completedCount > 0 && (
+                <PillButton type="button" onClick={handleResetProgress}>
+                  Limpar
+                </PillButton>
+              )}
+            </ProgressHeader>
+            <ProgressBar
+              completed={completedCount}
+              total={trackableIds.length}
+              label={`Progresso de ${regionName}`}
+            />
+          </ProgressSummary>
+        )}
 
-                          return (
-                            <ImageLink
-                              key={pi}
-                              onMouseEnter={handleImageHover}
-                              onMouseLeave={() => setHoveredImage(null)}
-                              onClick={() => setImageModal({ isOpen: true, src: p.src })}
-                            >
-                              {p.text}
-                              {hoveredImage?.src === p.src && hoveredImage && (
-                                <ImagePreview
-                                  src={p.src}
-                                  alt={p.text}
-                                  style={{
-                                    top: `${hoveredImage.y}px`,
-                                    left: `${hoveredImage.x}px`,
-                                  }}
-                                />
-                              )}
-                            </ImageLink>
-                          );
-                        } else if (p.type === 'spoiler') {
-                          return (
-                            <SpoilerText key={pi} text={p.text} />
-                          );
-                        }
-                        return (
-                          <span key={pi}>{p.text}</span>
-                        );
-                      })
-                    ) : (
-                      (item as any).text
-                    )}
-                  </ContentItemStyled>
-                ))}
-              </ContentBlock>
-            </SectionContent>
-          </SectionCard>
-        ))}
+        {sections.map((section, index) => {
+          const isExpanded = expandedSections.has(index);
+          const contentId = `region-section-${index}`;
+
+          return (
+            <SectionCard key={index}>
+              <SectionHeader
+                type="button"
+                onClick={() => toggleSection(index)}
+                aria-expanded={isExpanded}
+                aria-controls={contentId}
+              >
+                <SectionTitle>{section.title}</SectionTitle>
+                <ExpandIcon $isExpanded={isExpanded}><IoIosArrowDown /></ExpandIcon>
+              </SectionHeader>
+              <SectionContent id={contentId} $isExpanded={isExpanded} hidden={!isExpanded}>
+                <ContentBlock>
+                  {section.content.map((item, itemIndex) => (
+                    <ContentItemStyled
+                      key={itemIndex}
+                      $contentStyle={item.style}
+                      data-section-index={index}
+                      data-item-index={itemIndex}
+                      tabIndex={-1}
+                      data-highlighted={highlighted && highlighted.s === index && highlighted.i === itemIndex ? 'true' : 'false'}
+                    >
+                      {renderItem(item)}
+                    </ContentItemStyled>
+                  ))}
+                </ContentBlock>
+              </SectionContent>
+            </SectionCard>
+          );
+        })}
       </ContentContainerStyled>
-      
+
       <ImageModal
         isOpen={imageModal?.isOpen ?? false}
         src={imageModal?.src ?? ""}

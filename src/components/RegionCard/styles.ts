@@ -28,10 +28,16 @@ export const CardStyled = styled.button<{ $active: boolean }>`
     box-shadow 180ms ease,
     transform 180ms ease;
 
-  &:hover {
+  &:hover:not(:disabled) {
     border-color: rgba(230, 190, 77, 0.9);
     background: rgba(168, 119, 24, 0.09);
     transform: translateX(2px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: saturate(0.68);
   }
 
   &:focus-visible {
@@ -85,10 +91,37 @@ export const RegionName = styled.span`
   overflow-wrap: anywhere;
 `;
 
+export const RegionMeta = styled.span`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  margin-bottom: 4px;
+`;
+
 export const RecommendedLevel = styled.span`
   display: block;
   font-family: ${THEME.fonts.title};
   font-size: 0.68rem;
   line-height: 1.25;
   color: ${THEME.colors.gold};
+`;
+
+export const RegionStatus = styled.span`
+  padding: 1px 7px;
+  border: 1px solid rgba(212, 169, 31, 0.32);
+  border-radius: 999px;
+  font-family: ${THEME.fonts.body};
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: ${THEME.colors.textSecondary};
+`;
+
+export const RegionProgressText = styled.span`
+  margin-left: auto;
+  font-family: ${THEME.fonts.body};
+  font-size: 0.68rem;
+  color: ${THEME.colors.textSecondary};
 `;

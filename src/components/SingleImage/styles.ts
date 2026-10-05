@@ -1,8 +1,8 @@
 import styled from 'styled-components';
 import { THEME } from "../../../shared/const";
 
-export const Wrapper = styled.div<{ w?: string }>`
-  width: ${(p) => p.w || '200px'};
+export const Wrapper = styled.div<{ $w?: string }>`
+  width: ${(p) => p.$w || '200px'};
   display: inline-flex;
   flex-direction: column;
   border-radius: 8px;
@@ -14,10 +14,10 @@ export const Wrapper = styled.div<{ w?: string }>`
   position: relative;
 `;
 
-export const Thumb = styled.img<{ h?: string }>`
+export const Thumb = styled.img<{ $h?: string }>`
   display: block;
   width: 100%;
-  height: ${(p) => p.h || '150px'};
+  height: ${(p) => p.$h || '150px'};
   object-fit: cover;
   cursor: zoom-in;
   transition: transform ${THEME.transitions.fast};
@@ -86,9 +86,9 @@ export const CloseButton = styled.button`
     font-weight: 700;
 `;
 
-export const Caption = styled.div<{fontSize?: string}>`
+export const Caption = styled.div<{ $fontSize?: string }>`
   font-family: ${THEME.fonts.rpgOld};
-  font-size: ${({ fontSize }) => fontSize || '1.2em'};
+  font-size: ${({ $fontSize }) => $fontSize || '1.2em'};
   color: #fff;
   text-align: center;
   white-space: normal;

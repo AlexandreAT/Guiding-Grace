@@ -7,11 +7,10 @@ import Select from './pages/Select/Select.tsx'
 import Guide from './pages/Guide/Guide.tsx'
 import Mechanics from './pages/Mechanics/Mechanics.tsx'
 import Info from './pages/Info/Info.tsx'
+import NotFound from './pages/NotFound/NotFound.tsx'
 
 // Importações
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import store from './redux/store.ts';
 
 const router = createBrowserRouter([
   {
@@ -37,6 +36,10 @@ const router = createBrowserRouter([
       {
         path: '/info/:pageId',
         element: <Info />
+      },
+      {
+        path: '*',
+        element: <NotFound />
       }
     ]
   }
@@ -44,8 +47,6 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <Provider store = {store}>
-      <RouterProvider router={router} />
-    </Provider>
+    <RouterProvider router={router} />
   </React.StrictMode>,
 )

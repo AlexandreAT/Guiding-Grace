@@ -1,8 +1,10 @@
 import type { ComponentType } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Footer } from "../../components/Footer";
 import { Header } from "../../components/Header";
 import { HeroSection } from "../../components/HeroSection";
-import { EmptyState, HomePageContainer, PageContent } from "../Home/styles";
+import { HomePageContainer, PageContent } from "../Home/styles";
+import NotFound from "../NotFound/NotFound";
 import WeaponProgression from "../Info/pages/WeaponProgression";
 
 interface MechanicsPageDefinition {
@@ -26,19 +28,12 @@ export default function Mechanics() {
 
   if (!mechanic) {
     return (
-      <HomePageContainer>
-        <Header onLogoClick={() => navigate("/")} />
-        <main>
-          <PageContent>
-            <EmptyState>
-              <h1>Guia de mecânica não encontrado</h1>
-              <button type="button" onClick={() => navigate("/")}>
-                Voltar ao início
-              </button>
-            </EmptyState>
-          </PageContent>
-        </main>
-      </HomePageContainer>
+      <NotFound
+        title="Guia de mecânica não encontrado"
+        description="Esse guia de mecânica não existe ou ainda não foi publicado."
+        actionLabel="Ver guias de mecânicas"
+        actionRoute="/select/mechanics-guide"
+      />
     );
   }
 
@@ -58,6 +53,7 @@ export default function Mechanics() {
           <Component />
         </PageContent>
       </main>
+      <Footer />
     </HomePageContainer>
   );
 }

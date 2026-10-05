@@ -96,19 +96,19 @@ export const SectionTitle = styled.h2`
   }
 `;
 
-export const ExpandIcon = styled.span<{ isExpanded: boolean }>`
+export const ExpandIcon = styled.span<{ $isExpanded: boolean }>`
   font-size: 1.25rem;
   color: ${THEME.colors.gold};
   transition: transform ${THEME.transitions.fast};
-  transform: ${(props) => (props.isExpanded ? "rotate(180deg)" : "rotate(0deg)")};
+  transform: ${(props) => (props.$isExpanded ? "rotate(180deg)" : "rotate(0deg)")};
 `;
 
-export const SectionContent = styled.div<{ isExpanded: boolean }>`
-  max-height: ${(props) => (props.isExpanded ? "none" : "0")};
+export const SectionContent = styled.div<{ $isExpanded: boolean }>`
+  max-height: ${(props) => (props.$isExpanded ? "none" : "0")};
   overflow: hidden;
   transition: max-height ${THEME.transitions.normal};
-  padding: ${(props) => (props.isExpanded ? THEME.spacing.md : "0")};
-  border-top: ${(props) => (props.isExpanded ? `1px solid ${THEME.colors.brown}` : "none")};
+  padding: ${(props) => (props.$isExpanded ? THEME.spacing.md : "0")};
+  border-top: ${(props) => (props.$isExpanded ? `1px solid ${THEME.colors.brown}` : "none")};
 `;
 
 export const SectionText = styled.p`
@@ -136,9 +136,9 @@ export const ContentBlock = styled.div`
   gap: ${THEME.spacing.sm};
 `;
 
-export const ContentItemStyled = styled.div<{ contentStyle: string }>`
+export const ContentItemStyled = styled.div<{ $contentStyle: string }>`
   --item-color: ${(props) => {
-    switch (props.contentStyle) {
+    switch (props.$contentStyle) {
       case 'title':
       case 'topic':
         return THEME.colors.gold;
@@ -149,7 +149,7 @@ export const ContentItemStyled = styled.div<{ contentStyle: string }>`
     }
   }};
   font-family: ${(props) => {
-    switch (props.contentStyle) {
+    switch (props.$contentStyle) {
       case 'title':
         return THEME.fonts.rpgOld;
       case 'topic':
@@ -159,7 +159,7 @@ export const ContentItemStyled = styled.div<{ contentStyle: string }>`
     }
   }};
   font-size: ${(props) => {
-    switch (props.contentStyle) {
+    switch (props.$contentStyle) {
       case 'title':
         return '1.3rem';
       case 'topic':
@@ -172,7 +172,7 @@ export const ContentItemStyled = styled.div<{ contentStyle: string }>`
   }};
   color: var(--item-color);
   font-weight: ${(props) => {
-    switch (props.contentStyle) {
+    switch (props.$contentStyle) {
       case 'title':
       case 'topic':
         return '600';
@@ -189,6 +189,12 @@ export const ContentItemStyled = styled.div<{ contentStyle: string }>`
   
   &[data-highlighted="true"] {
     --item-color: ${THEME.colors.royalRed};
+  }
+
+  &:focus {
+    outline: 1px solid rgba(212, 169, 31, 0.55);
+    outline-offset: 4px;
+    border-radius: 2px;
   }
 
   a {
@@ -250,5 +256,106 @@ export const ImagePreview = styled.img`
   @media (max-width: 768px) {
     max-width: 200px;
     max-height: 200px;
+  }
+`;
+
+export const ProgressSummary = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${THEME.spacing.xs};
+  margin: 0 0 ${THEME.spacing.lg};
+  padding: ${THEME.spacing.sm};
+  border: 1px solid rgba(212, 169, 31, 0.55);
+  border-radius: 4px;
+  background-color: rgba(10, 10, 10, 0.6);
+`;
+
+export const ProgressHeader = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px ${THEME.spacing.sm};
+`;
+
+export const ProgressLabel = styled.span`
+  font-family: ${THEME.fonts.rpg};
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: ${THEME.colors.gold};
+`;
+
+export const ProgressCount = styled.span`
+  flex: 1;
+  font-family: ${THEME.fonts.body};
+  font-size: 0.9rem;
+  color: ${THEME.colors.textSecondary};
+`;
+
+export const TrackableTopic = styled.div<{ $completed: boolean }>`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${THEME.spacing.xs};
+
+  label > span {
+    opacity: ${({ $completed }) => ($completed ? 0.6 : 1)};
+    text-decoration: ${({ $completed }) => ($completed ? "line-through" : "none")};
+    text-decoration-color: rgba(212, 169, 31, 0.7);
+    text-decoration-thickness: 1px;
+  }
+`;
+
+export const TopicCheckbox = styled.label`
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+
+  input {
+    appearance: none;
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    display: grid;
+    place-content: center;
+    border: 1px solid rgba(212, 169, 31, 0.72);
+    border-radius: 4px;
+    background: rgba(7, 8, 7, 0.9);
+    cursor: pointer;
+    transition:
+      background-color ${THEME.transitions.fast},
+      border-color ${THEME.transitions.fast};
+
+    &::before {
+      content: "";
+      width: 11px;
+      height: 11px;
+      background: ${THEME.colors.background};
+      clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+      transform: scale(0);
+      transition: transform ${THEME.transitions.fast};
+    }
+
+    &:checked {
+      border-color: ${THEME.colors.gold};
+      background: ${THEME.colors.gold};
+    }
+
+    &:checked::before {
+      transform: scale(1);
+    }
+
+    &:hover {
+      border-color: ${THEME.colors.goldLight};
+    }
+
+    &:focus-visible {
+      outline: 2px solid ${THEME.colors.goldLight};
+      outline-offset: 2px;
+    }
   }
 `;

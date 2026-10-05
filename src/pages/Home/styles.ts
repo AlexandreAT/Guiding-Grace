@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { THEME, REGION_BACKGROUNDS } from "../../../shared/const";
 
-export const PageContainer = styled.div<{ regionId?: string; isMobile?: boolean }>`
+export const PageContainer = styled.div<{ $regionId?: string; $isMobile?: boolean }>`
   min-height: 100vh;
   color: ${THEME.colors.foreground};
   display: flex;
@@ -16,19 +16,19 @@ export const PageContainer = styled.div<{ regionId?: string; isMobile?: boolean 
 
   ${(props) => {
     const regionKey =
-      (props.regionId as keyof typeof REGION_BACKGROUNDS) || "geral";
+      (props.$regionId as keyof typeof REGION_BACKGROUNDS) || "geral";
     const regionConfig = REGION_BACKGROUNDS[regionKey] || {
       image: null,
       overlayOpacity: 0.8,
       overlayOpacityMobile: 0.85,
     };
-    const overlayOpacity = props.isMobile
+    const overlayOpacity = props.$isMobile
       ? regionConfig.overlayOpacityMobile
       : regionConfig.overlayOpacity;
 
     let backgroundImage = "none";
     if (regionConfig.image) {
-      const imageName = props.isMobile
+      const imageName = props.$isMobile
         ? `${regionConfig.image}-mobile-back.jpg`
         : `${regionConfig.image}-back.jpg`;
       backgroundImage = `url(/images/${imageName})`;
@@ -142,7 +142,16 @@ export const EmptyState = styled.div`
     color: ${THEME.colors.goldLight};
   }
 
+  p {
+    max-width: 460px;
+    margin: 0 auto;
+    font-family: ${THEME.fonts.body};
+    line-height: 1.6;
+    color: ${THEME.colors.textSecondary};
+  }
+
   button {
+    justify-self: center;
     min-height: 48px;
     padding: 0 20px;
     border: 1px solid ${THEME.colors.gold};
@@ -150,15 +159,25 @@ export const EmptyState = styled.div`
     background: ${THEME.colors.surface};
     color: ${THEME.colors.foreground};
     cursor: pointer;
+    transition: border-color ${THEME.transitions.fast};
+
+    &:hover {
+      border-color: ${THEME.colors.goldLight};
+    }
+
+    &:focus-visible {
+      outline: 2px solid ${THEME.colors.goldLight};
+      outline-offset: 3px;
+    }
   }
 `;
 
-export const MainContent = styled.div<{ sidebarOpen?: boolean }>`
+export const MainContent = styled.div<{ $sidebarOpen?: boolean }>`
   --regions-sidebar-width: 230px;
   --sidebar-control-width: 28px;
   display: grid;
   grid-template-columns: ${(props) =>
-    props.sidebarOpen !== false
+    props.$sidebarOpen !== false
       ? "var(--regions-sidebar-width) var(--sidebar-control-width) minmax(0, 1fr)"
       : "0 var(--sidebar-control-width) minmax(0, 1fr)"};
   flex: 1;
@@ -191,8 +210,8 @@ export const ContentWrapper = styled.div`
   }
 `;
 
-export const MapSection = styled.div<{ marginBottom?: string }>`
-  margin-bottom: ${({ marginBottom }) => marginBottom || THEME.spacing.xl};
+export const MapSection = styled.div<{ $marginBottom?: string }>`
+  margin-bottom: ${({ $marginBottom }) => $marginBottom || THEME.spacing.xl};
 `;
 
 export const ButtonPin = styled.button`

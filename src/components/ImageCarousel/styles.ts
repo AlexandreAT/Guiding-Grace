@@ -14,9 +14,9 @@ export const Track = styled.div`
   padding: ${THEME.spacing.sm} 0;
 `;
 
-export const Item = styled.div<{ w?: string; h?: string }>`
-  width: ${(p) => p.w || '200px'};
-  height: ${(p) => p.h || '150px'};
+export const Item = styled.div<{ $w?: string; $h?: string }>`
+  width: ${(p) => p.$w || '200px'};
+  height: ${(p) => p.$h || '150px'};
   flex: 0 0 auto;
 `;
 

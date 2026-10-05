@@ -81,3 +81,6 @@ export const SELECTIONS: Record<string, SelectionCategory> = {
     ],
   },
 };
+
+export const getAvailableBuild = (buildId?: string): NavigationOption | undefined =>
+  SELECTIONS["basic-guide"].items.find((build) => build.id === buildId && !build.disabled);

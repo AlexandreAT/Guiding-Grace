@@ -5,12 +5,25 @@ import { GiCrownedSkull, GiDeathSkull, GiHorizonRoad } from "react-icons/gi";
 import { IoIosPerson } from "react-icons/io";
 import { GiCastle } from "react-icons/gi";
 import { IoEllipsisHorizontalOutline } from "react-icons/io5";
+import type { IconType } from "react-icons";
 
-export const COOKIE_NAME = "app_session_id";
-export const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365;
+export interface Region {
+  id: string;
+  name: string;
+  displayName: string;
+  order: number;
+  description: string;
+  recommendedLevel: string;
+  icon: string | IconType;
+  disabled?: boolean;
+  status?: string;
+}
+
+// Regiões cujo conteúdo ainda não foi escrito ficam bloqueadas em produção
+const COMING_SOON = { disabled: true, status: "Em breve" } as const;
 
 // Regiões do Elden Ring com metadados
-export const REGIONS = [
+export const REGIONS: readonly Region[] = [
   {
     id: "geral",
     name: "Terras Intermédias",
@@ -46,6 +59,7 @@ export const REGIONS = [
     description: "Uma região ao sul importante para exploração inicial.",
     recommendedLevel: "15-30",
     icon: GiCastle,
+    ...COMING_SOON,
   },
   {
     id: "liurnia",
@@ -55,6 +69,7 @@ export const REGIONS = [
     description: "Uma região gigante com lago, castelos e magias.",
     recommendedLevel: "40-60",
     icon: FaWater,
+    ...COMING_SOON,
   },
   {
     id: "caelid-first",
@@ -64,6 +79,7 @@ export const REGIONS = [
     description: "Uma região desolada e perigosa.",
     recommendedLevel: "50-70",
     icon: "ra-skull",
+    ...COMING_SOON,
   },
   {
     id: "caelid-second",
@@ -73,6 +89,7 @@ export const REGIONS = [
     description: "Continuação da região desolada de Caelid com desafios maiores.",
     recommendedLevel: "80-110",
     icon: "ra-skull",
+    ...COMING_SOON,
   },
   {
     id: "mt-gelmir",
@@ -82,6 +99,7 @@ export const REGIONS = [
     description: "Uma montanha vulcânica.",
     recommendedLevel: "70-90",
     icon: "ra-acid",
+    ...COMING_SOON,
   },
   {
     id: "leyndell-outskirts",
@@ -91,6 +109,7 @@ export const REGIONS = [
     description: "As terras ao redor da capital.",
     recommendedLevel: "60-80",
     icon: "ra-dead-tree",
+    ...COMING_SOON,
   },
   {
     id: "leyndell",
@@ -100,6 +119,7 @@ export const REGIONS = [
     description: "A capital dourada, o coração do reino.",
     recommendedLevel: "80-100",
     icon: "ra-crown",
+    ...COMING_SOON,
   },
   {
     id: "mt-giants-top",
@@ -109,6 +129,7 @@ export const REGIONS = [
     description: "As montanhas geladas dos gigantes.",
     recommendedLevel: "100-120",
     icon: LiaMountainSolid,
+    ...COMING_SOON,
   },
   {
     id: "mt-giants-bottom",
@@ -118,6 +139,7 @@ export const REGIONS = [
     description: "Uma região escondida, as profundezas geladas, na base da montanha dos gigantes.",
     recommendedLevel: "100-120",
     icon: BsSnow,
+    ...COMING_SOON,
   },
   {
     id: "leyndell-sewers",
@@ -127,6 +149,7 @@ export const REGIONS = [
     description: "Os esgostos escondidos da capital.",
     recommendedLevel: "100-120",
     icon: "ra-turd",
+    ...COMING_SOON,
   },
   {
     id: "farum-azula",
@@ -136,6 +159,7 @@ export const REGIONS = [
     description: "Uma fortaleza flutuante nos céus.",
     recommendedLevel: "110-140",
     icon: "ra-capitol",
+    ...COMING_SOON,
   },
   {
     id: "erdtree",
@@ -145,8 +169,9 @@ export const REGIONS = [
     description: "O coração do mundo, o destino final da jornada.",
     recommendedLevel: "140+",
     icon: "ra-dead-tree",
+    ...COMING_SOON,
   },
-] as const;
+];
 
 // Cores centralizadas para pins e legendas
 export const PIN_COLORS = {
@@ -170,115 +195,55 @@ export const MAP_LEGEND = {
   PATH: { label: "Caminho a Seguir", color: PIN_COLORS.PATH, icon: GiHorizonRoad },
 } as const;
 
-// Temas disponíveis
-export type ThemeType = 'dark' | 'light';
-
-// Definição dos temas
-const THEMES = {
-  dark: {
-    colors: {
-      background: "#070807",
-      backgroundSecondary: "#0b0c0b",
-      surface: "#10100d",
-      surfaceHighlighted: "#17140c",
-      foreground: "#f2f0ea",
-      textSecondary: "#b6b3ac",
-      textDisabled: "#77736a",
-      gold: "#d4a91f",
-      goldDark: "#755e25",
-      goldLight: "#e3c260",
-      brown: "#8b7355",
-      brownDark: "#5d4e37",
-      accent: "#f5f5f5",
-      accentDark: "#e0e0e0",
-      border: "#d4af37",
-      shadow: "rgba(212, 175, 55, 0.3)",
-      shadowDark: "rgba(0, 0, 0, 0.8)",
-      royalRed: "#9b1c31"
-    },
-    fonts: {
-      rpg: "'Cinzel', serif",
-      rpgOld: "'MedievalSharp', cursive",
-      title: "'Crimson Text', serif",
-      body: "'Source Sans Pro', sans-serif",
-    },
-    spacing: {
-      xs: "0.5rem",
-      sm: "1rem",
-      md: "1.5rem",
-      lg: "2rem",
-      xl: "3rem",
-      xxl: "4rem",
-    },
-    transitions: {
-      fast: "200ms ease-out",
-      normal: "300ms ease-out",
-      slow: "400ms ease-out",
-    },
-    shadows: {
-      sm: "0 2px 4px rgba(0, 0, 0, 0.5)",
-      md: "0 4px 8px rgba(0, 0, 0, 0.6)",
-      lg: "0 8px 16px rgba(0, 0, 0, 0.7)",
-      gold: "0 0 10px rgba(212, 175, 55, 0.3)",
-      goldLg: "0 0 20px rgba(212, 175, 55, 0.4)",
-    },
+// Tema visual do site
+export const THEME = {
+  colors: {
+    background: "#070807",
+    backgroundSecondary: "#0b0c0b",
+    surface: "#10100d",
+    surfaceHighlighted: "#17140c",
+    foreground: "#f2f0ea",
+    textSecondary: "#b6b3ac",
+    textDisabled: "#77736a",
+    gold: "#d4a91f",
+    goldDark: "#755e25",
+    goldLight: "#e3c260",
+    brown: "#8b7355",
+    brownDark: "#5d4e37",
+    accent: "#f5f5f5",
+    accentDark: "#e0e0e0",
+    border: "#d4af37",
+    shadow: "rgba(212, 175, 55, 0.3)",
+    shadowDark: "rgba(0, 0, 0, 0.8)",
+    royalRed: "#9b1c31"
   },
-  light: {
-    colors: {
-      background: "#f5f5f5",
-      backgroundSecondary: "#eeeeea",
-      surface: "#ffffff",
-      surfaceHighlighted: "#fff9e8",
-      foreground: "#0a0a0a",
-      textSecondary: "#55524b",
-      textDisabled: "#817d74",
-      gold: "#d4af37",
-      goldDark: "#b8860b",
-      goldLight: "#ffd700",
-      brown: "#8b7355",
-      brownDark: "#5d4e37",
-      accent: "#0a0a0a",
-      accentDark: "#333333",
-      border: "#d4af37",
-      shadow: "rgba(212, 175, 55, 0.2)",
-      shadowDark: "rgba(0, 0, 0, 0.2)",
-    },
-    fonts: {
-      rpg: "'Cinzel', serif",
-      rpgOld: "'MedievalSharp', cursive",
-      title: "'Crimson Text', serif",
-      body: "'Source Sans Pro', sans-serif",
-    },
-    spacing: {
-      xs: "0.5rem",
-      sm: "1rem",
-      md: "1.5rem",
-      lg: "2rem",
-      xl: "3rem",
-      xxl: "4rem",
-    },
-    transitions: {
-      fast: "200ms ease-out",
-      normal: "300ms ease-out",
-      slow: "400ms ease-out",
-    },
-    shadows: {
-      sm: "0 2px 4px rgba(0, 0, 0, 0.1)",
-      md: "0 4px 8px rgba(0, 0, 0, 0.15)",
-      lg: "0 8px 16px rgba(0, 0, 0, 0.2)",
-      gold: "0 0 10px rgba(212, 175, 55, 0.2)",
-      goldLg: "0 0 20px rgba(212, 175, 55, 0.3)",
-    },
+  fonts: {
+    rpg: "'Cinzel', serif",
+    rpgOld: "'MedievalSharp', cursive",
+    title: "'Crimson Text', serif",
+    body: "'Source Sans Pro', sans-serif",
+  },
+  spacing: {
+    xs: "0.5rem",
+    sm: "1rem",
+    md: "1.5rem",
+    lg: "2rem",
+    xl: "3rem",
+    xxl: "4rem",
+  },
+  transitions: {
+    fast: "200ms ease-out",
+    normal: "300ms ease-out",
+    slow: "400ms ease-out",
+  },
+  shadows: {
+    sm: "0 2px 4px rgba(0, 0, 0, 0.5)",
+    md: "0 4px 8px rgba(0, 0, 0, 0.6)",
+    lg: "0 8px 16px rgba(0, 0, 0, 0.7)",
+    gold: "0 0 10px rgba(212, 175, 55, 0.3)",
+    goldLg: "0 0 20px rgba(212, 175, 55, 0.4)",
   },
 } as const;
-
-// Função para obter o tema baseado no tipo
-export const getTheme = (themeType: ThemeType) => {
-  return THEMES[themeType];
-};
-
-// Exportar o tema padrão (dark)
-export const THEME = THEMES.dark;
 
 // Configurações de background por região
 export const REGION_BACKGROUNDS = {
