@@ -11,6 +11,8 @@ export const GuideContent = styled.div`
 
 export const MechanicPanel = styled.section`
   position: relative;
+  /* Âncora de navegação: não fica escondida atrás do header fixo */
+  scroll-margin-top: 132px;
   display: grid;
   grid-template-columns: 76px minmax(0, 1fr);
   gap: 26px;

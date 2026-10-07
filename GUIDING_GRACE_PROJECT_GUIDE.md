@@ -223,6 +223,70 @@ npm run test
 
 Nunca presuma que um script existe. Verifique primeiro o `package.json`.
 
+## 7.1. Gideon: as duas partes e como elas se conectam
+
+```text
+Site (Vite/Netlify)  ──VITE_GIDEON_API_URL──▶  Worker do Gideon (Cloudflare)  ──binding AI──▶  Workers AI
+```
+
+- **Site:** frontend estático. Sem `VITE_GIDEON_API_URL` e `VITE_TURNSTILE_SITE_KEY`, o Gideon funciona só no **modo local** (busca no próprio guia, sem IA), que também é o fallback quando a IA falha;
+- **Worker** (`worker/`): recebe a pergunta, confere o Turnstile e o limite por IP e faz duas chamadas ao Workers AI: a primeira **interpreta** a pergunta pela conversa (pergunta completa, tipo de pedido e assunto); o código então busca e filtra spoilers com essa interpretação; a segunda **redige** a resposta, cujas citações são validadas;
+- **Proteção da cota:** cada pergunta à IA leva um token do Turnstile (widget invisível no painel do chat), validado pelo Worker na Cloudflare; o Worker aceita até 15 perguntas por minuto por IP (Rate Limiting binding) e, ao estourar, o site pausa a IA por um minuto. Sem a secret do Turnstile o Worker não chama a IA (o site segue no modo local);
+- **Workers AI não usa chave de API.** O Worker roda dentro da conta Cloudflare e acessa a IA por um *binding* (`env.AI`, configurado em `worker/wrangler.jsonc`). Localmente, o `wrangler dev` usa o login feito com `npx wrangler login`. Por isso não existe chave para copiar nem guardar no `.env`.
+
+## 7.2. Variáveis e configurações
+
+| Onde | Nome | Valor | Secreto? |
+|---|---|---|---|
+| Site, local (`.env.local`) | `VITE_GIDEON_API_URL` | `http://localhost:8787` (Worker rodando na própria máquina) | Não |
+| Site, local (`.env.local`) | `VITE_TURNSTILE_SITE_KEY` | Chave de **teste** `1x00000000000000000000BB` (sempre passa, invisível) | Não |
+| Site, produção (painel do Netlify) | `VITE_GIDEON_API_URL` | URL pública do Worker (`https://guiding-grace-gideon.alexandre-arribamar.workers.dev`) | Não |
+| Site, produção (painel do Netlify) | `VITE_TURNSTILE_SITE_KEY` | Site Key do widget criado no painel Cloudflare → Turnstile | Não |
+| Worker, local (`worker/.dev.vars`) | `TURNSTILE_SECRET_KEY` | Chave de **teste** `1x0000000000000000000000000000000AA` (copie de `worker/.dev.vars.example`) | Teste, pública |
+| Worker, produção (`npx wrangler secret put`) | `TURNSTILE_SECRET_KEY` | Secret Key do widget do Turnstile | **Sim** |
+| Worker (`worker/wrangler.jsonc`) | `ALLOWED_ORIGINS` | Endereços que podem chamar o Worker: `localhost` do dev e o domínio do Netlify | Não |
+| Worker (`worker/wrangler.jsonc`) | `GIDEON_MODEL` | Modelo do Workers AI | Não |
+| Worker (`worker/wrangler.jsonc`) | `ASK_LIMITER` | Limite de perguntas por IP (15 por minuto) | Não |
+
+- Variáveis `VITE_*` vão para o bundle do navegador: **nunca colocar segredo nelas**;
+- O Vite só lê o `.env.local` ao iniciar: depois de criar ou alterar o arquivo, reinicie o `npm run dev`. O mesmo vale para o `worker/.dev.vars` e o `npm run worker:dev`;
+- As chaves de teste do Turnstile só funcionam juntas (Site Key de teste + secret de teste). Com uma delas faltando, o chat cai no modo local;
+- Segredos do Worker (ex.: a chave secreta do Turnstile) são cadastrados com `npx wrangler secret put <NOME>` (produção) ou em `worker/.dev.vars` (local). Os dois ficam fora do Git.
+
+## 7.3. Rodando em outra máquina
+
+Só o site (modo local, sem IA):
+
+```bash
+git clone <repositório> && cd Guiding-Grace
+npm install
+npm run dev
+```
+
+Site + Gideon com IA:
+
+```bash
+npm install
+npm install --prefix worker
+cd worker && npx wrangler login && cd ..   # uma vez por máquina, com a conta Cloudflare do projeto
+npm run worker:dev                          # terminal 1: Worker em http://localhost:8787
+npm run dev                                 # terminal 2: site em http://localhost:5173
+```
+
+Antes de rodar, copie `.env.example` para `.env.local` e `worker/.dev.vars.example` para `worker/.dev.vars` (os dois já trazem os valores de desenvolvimento, inclusive as chaves de teste do Turnstile).
+
+- Abra o site por `http://localhost:5173`; pelo `127.0.0.1` o Worker recusa a origem (CORS);
+- Mesmo em desenvolvimento, as respostas da IA consomem a cota gratuita diária da conta (10.000 Neurons; cerca de 7 a 8 por resposta, somando interpretação e redação);
+- A conta Cloudflare precisa ter um subdomínio `workers.dev` (criado uma vez, no primeiro Worker publicado).
+
+## 7.4. Produção
+
+- **Site:** Netlify, com `VITE_GIDEON_API_URL` e `VITE_TURNSTILE_SITE_KEY` cadastradas no painel (Site configuration → Environment variables). Depois de alterar uma variável, é preciso refazer o deploy;
+- **Worker:** `npm run worker:deploy` publica na conta Cloudflare logada; a origem do Netlify precisa estar em `ALLOWED_ORIGINS` e a `TURNSTILE_SECRET_KEY` cadastrada com `npx wrangler secret put TURNSTILE_SECRET_KEY` (dentro de `worker/`);
+- **Turnstile:** o widget no painel da Cloudflare precisa listar o domínio do Netlify (e `localhost`, se quiser testar a chave real localmente);
+- **Logs:** o Worker registra só o desfecho de cada chamada (`gideon_ask`: status, motivo, latência), nunca o texto da pergunta. Ver em Cloudflare → Workers → guiding-grace-gideon → Logs;
+- **O conteúdo vai nos dois deploys.** Ao mudar o guia, publique o site **e** o Worker. Enquanto as versões forem diferentes, o Worker responde `index_version_mismatch` e o site usa o modo local (sem resposta errada, só sem IA).
+
 ---
 
 # 8. Princípios arquiteturais
@@ -503,6 +567,23 @@ export const regions: Region[] = [
 - Dados bloqueados devem possuir propriedade explícita;
 - Não utilizar textos duplicados em vários componentes;
 - O conteúdo deve ser simples de encontrar e editar.
+
+## 13.2. Dados de domínio puros
+
+Os arquivos de `src/data/` são lidos tanto pela interface quanto pelo motor do Gideon (`shared/gideon/`, que no futuro também roda num Worker). Por isso:
+
+- Não importar componentes, ícones, imagens ou estilos em `regions.ts`, `regionSections.ts`, `regionPins.ts`, `guideAliases.ts` e `mechanics/`;
+- Pins guardam apenas `id`, coordenadas, `type`, `label` e `labelAbove`; ícone e cor vêm do `type` pela `MAP_LEGEND` (`shared/const.ts`);
+- Ícones das regiões ficam em `REGION_ICONS` (`shared/const.ts`);
+- Guias de mecânicas são dados (`src/data/mechanics/`) renderizados por `MechanicGuideContent`; cada seção tem `id` estável, que serve de âncora e de fonte citável;
+- Nada que dependa do ambiente (`import.meta.env`) entra nesses arquivos.
+
+## 13.3. Spoilers para o Gideon
+
+- Regiões do início da jornada podem ter `spoilerFree: true`: o Gideon fala delas mesmo antes da primeira visita;
+- As demais regiões só são usadas pelo Gideon depois de visitadas ou quando estão abertas na tela;
+- Um item pode receber `spoilerGate` (`afterObjectiveId` ou `regionId`) apenas como exceção editorial revisada; nunca inferir spoiler automaticamente;
+- Trechos com `type: 'spoiler'` nunca entram no índice do Gideon.
 
 ---
 
@@ -803,6 +884,19 @@ Ele deve existir **somente em desenvolvimento**. Toda lógica e todo botão rela
 - Para adicionar um objetivo, basta criar o tópico com `id` e, se houver posição no mapa, o pin com o mesmo `id`.
 
 ---
+
+## 19.4. Região e foco na URL
+
+A região ativa do guia vive na URL, o que permite links diretos e citações do Gideon vindas de qualquer tela:
+
+```text
+/guide/quality-build?region=limgrave-bottom&focus=limgrave-bottom-npc-1
+/mechanics/weapons?section=weapons-upgrade
+```
+
+- `focus` aceita o id de um item ou o texto de um tópico da região; com pin, centraliza o mapa; sem pin, abre o accordion e rola até o trecho;
+- Parâmetros inválidos, ou de regiões bloqueadas em produção, são ignorados;
+- Nomes dos parâmetros e montagem das URLs ficam em `src/routes/guideRoute.ts`; não montar essas URLs à mão.
 
 # 20. Responsividade
 

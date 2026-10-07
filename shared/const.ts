@@ -6,172 +6,29 @@ import { IoIosPerson } from "react-icons/io";
 import { GiCastle } from "react-icons/gi";
 import { IoEllipsisHorizontalOutline } from "react-icons/io5";
 import type { IconType } from "react-icons";
+import type { PinType } from "../src/data/regionPins";
 
-export interface Region {
-  id: string;
-  name: string;
-  displayName: string;
-  order: number;
-  description: string;
-  recommendedLevel: string;
-  icon: string | IconType;
-  disabled?: boolean;
-  status?: string;
-}
+// Em desenvolvimento as regiões "Em breve" continuam acessíveis para a escrita do conteúdo
+export const CAN_OPEN_LOCKED_REGIONS = import.meta.env.DEV;
 
-// Regiões cujo conteúdo ainda não foi escrito ficam bloqueadas em produção
-const COMING_SOON = { disabled: true, status: "Em breve" } as const;
-
-// Regiões do Elden Ring com metadados
-export const REGIONS: readonly Region[] = [
-  {
-    id: "geral",
-    name: "Terras Intermédias",
-    displayName: "Terras Intermédias - Geral",
-    order: 1,
-    description: "Toda a região das terras intermédias.",
-    recommendedLevel: "1-150",
-    icon: FaMapMarkedAlt,
-  },
-  {
-    id: "limgrave-top",
-    name: "Limgrave (Topo)",
-    displayName: "Limgrave - Parte Superior",
-    order: 2,
-    description: "A região inicial onde começa a jornada.",
-    recommendedLevel: "1-40",
-    icon: "ra-grass",
-  },
-  {
-    id: "limgrave-bottom",
-    name: "Limgrave (Base)",
-    displayName: "Limgrave - Parte Inferior",
-    order: 3,
-    description: "Continuação de Limgrave com áreas secretas.",
-    recommendedLevel: "15-30",
-    icon: "ra-grass",
-  },
-  {
-    id: "weeping-peninsula",
-    name: "Península das Lágrimas",
-    displayName: "Península das Lágrimas",
-    order: 4,
-    description: "Uma região ao sul importante para exploração inicial.",
-    recommendedLevel: "15-30",
-    icon: GiCastle,
-    ...COMING_SOON,
-  },
-  {
-    id: "liurnia",
-    name: "Liurnia dos Lagos",
-    displayName: "Liurnia dos Lagos",
-    order: 5,
-    description: "Uma região gigante com lago, castelos e magias.",
-    recommendedLevel: "40-60",
-    icon: FaWater,
-    ...COMING_SOON,
-  },
-  {
-    id: "caelid-first",
-    name: "Caelid (Primeira Parte)",
-    displayName: "Caelid - Primeira Parte",
-    order: 6,
-    description: "Uma região desolada e perigosa.",
-    recommendedLevel: "50-70",
-    icon: "ra-skull",
-    ...COMING_SOON,
-  },
-  {
-    id: "caelid-second",
-    name: "Caelid (Segunda Parte)",
-    displayName: "Caelid - Segunda Parte",
-    order: 7,
-    description: "Continuação da região desolada de Caelid com desafios maiores.",
-    recommendedLevel: "80-110",
-    icon: "ra-skull",
-    ...COMING_SOON,
-  },
-  {
-    id: "mt-gelmir",
-    name: "Monte Gelmir + Mansão Vulcânica",
-    displayName: "Monte Gelmir & Mansão Vulcânica",
-    order: 8,
-    description: "Uma montanha vulcânica.",
-    recommendedLevel: "70-90",
-    icon: "ra-acid",
-    ...COMING_SOON,
-  },
-  {
-    id: "leyndell-outskirts",
-    name: "Arredores da Capital Leyndell",
-    displayName: "Arredores da Capital Leyndell",
-    order: 9,
-    description: "As terras ao redor da capital.",
-    recommendedLevel: "60-80",
-    icon: "ra-dead-tree",
-    ...COMING_SOON,
-  },
-  {
-    id: "leyndell",
-    name: "Leyndell (Capital)",
-    displayName: "Leyndell - A Capital",
-    order: 10,
-    description: "A capital dourada, o coração do reino.",
-    recommendedLevel: "80-100",
-    icon: "ra-crown",
-    ...COMING_SOON,
-  },
-  {
-    id: "mt-giants-top",
-    name: "Montanha dos Gigantes (Topo)",
-    displayName: "Montanha dos Gigantes - Parte Superior",
-    order: 11,
-    description: "As montanhas geladas dos gigantes.",
-    recommendedLevel: "100-120",
-    icon: LiaMountainSolid,
-    ...COMING_SOON,
-  },
-  {
-    id: "mt-giants-bottom",
-    name: "Montanha dos Gigantes (Base)",
-    displayName: "Montanha dos Gigantes - Parte Inferior",
-    order: 12,
-    description: "Uma região escondida, as profundezas geladas, na base da montanha dos gigantes.",
-    recommendedLevel: "100-120",
-    icon: BsSnow,
-    ...COMING_SOON,
-  },
-  {
-    id: "leyndell-sewers",
-    name: "Esgotos de Leyndell",
-    displayName: "Esgotos de Leyndell",
-    order: 13,
-    description: "Os esgostos escondidos da capital.",
-    recommendedLevel: "100-120",
-    icon: "ra-turd",
-    ...COMING_SOON,
-  },
-  {
-    id: "farum-azula",
-    name: "Farum Azula",
-    displayName: "Farum Azula",
-    order: 14,
-    description: "Uma fortaleza flutuante nos céus.",
-    recommendedLevel: "110-140",
-    icon: "ra-capitol",
-    ...COMING_SOON,
-  },
-  {
-    id: "erdtree",
-    name: "Árvore Sacra",
-    displayName: "Árvore Sacra",
-    order: 15,
-    description: "O coração do mundo, o destino final da jornada.",
-    recommendedLevel: "140+",
-    icon: "ra-dead-tree",
-    ...COMING_SOON,
-  },
-];
+// Ícones das regiões na sidebar (o domínio fica em src/data/regions.ts)
+export const REGION_ICONS: Record<string, string | IconType> = {
+  "geral": FaMapMarkedAlt,
+  "limgrave-top": "ra-grass",
+  "limgrave-bottom": "ra-grass",
+  "weeping-peninsula": GiCastle,
+  "liurnia": FaWater,
+  "caelid-first": "ra-skull",
+  "caelid-second": "ra-skull",
+  "mt-gelmir": "ra-acid",
+  "leyndell-outskirts": "ra-dead-tree",
+  "leyndell": "ra-crown",
+  "mt-giants-top": LiaMountainSolid,
+  "mt-giants-bottom": BsSnow,
+  "leyndell-sewers": "ra-turd",
+  "farum-azula": "ra-capitol",
+  "erdtree": "ra-dead-tree",
+};
 
 // Cores centralizadas para pins e legendas
 export const PIN_COLORS = {
@@ -182,7 +39,7 @@ export const PIN_COLORS = {
   ITEM: "#08fcf0ab",
   GRACE: "#f1ee26ab",
   PATH: "#7bff00ab",
-} as const;
+} as const satisfies Record<PinType, string>;
 
 // Legendas para marcações no mapa
 export const MAP_LEGEND = {
@@ -193,7 +50,7 @@ export const MAP_LEGEND = {
   ITEM: { label: "Item Importante", color: PIN_COLORS.ITEM, icon: BsTools },
   GRACE: { label: "Graça de Erdtree", color: PIN_COLORS.GRACE, icon: BsStars },
   PATH: { label: "Caminho a Seguir", color: PIN_COLORS.PATH, icon: GiHorizonRoad },
-} as const;
+} as const satisfies Record<PinType, { label: string; color: string; icon: IconType }>;
 
 // Tema visual do site
 export const THEME = {
