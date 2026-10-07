@@ -5,11 +5,18 @@
 
 export type ContentStyle = 'normal' | 'title' | 'topic' | 'highlight';
 
+// Exceção editorial: o Gideon só fala do trecho depois do objetivo concluído ou da região visitada
+export interface SpoilerGate {
+  afterObjectiveId?: string;
+  regionId?: string;
+}
+
 export interface ContentItem {
   style: ContentStyle;
   text?: string;
   id?: string;
   parts?: Array<{ type: 'text' | 'link' | 'image' | 'spoiler'; text: string; href?: string; src?: string }>;
+  spoilerGate?: SpoilerGate;
 }
 
 export interface RegionSection {
@@ -206,7 +213,7 @@ export const regionSections: Record<string, RegionSection[]> = {
         },
         {
           style: "normal",
-          text: "Esgote todos os diálogos do Kale até receber um gesto (estalar de dedos). Gestos podem ser equipados no menu de status do personagem e são usados tanto para interação quanto para eventos específicos, como fazer um gesto em algum local para ativar um evento."
+          text: "Esgote todos os diálogos do Kale. Depois de ouvir um uivo perto das ruínas marcadas em Limgrave (Base), volte e pergunte a ele sobre o uivo: Kale ensina o gesto 'estalar de dedos'. Gestos podem ser equipados no menu de status do personagem e são usados tanto para interação quanto para eventos específicos, como fazer um gesto em algum local para ativar um evento."
         },
         {
           id: "limgrave-grace-1",
@@ -430,11 +437,11 @@ export const regionSections: Record<string, RegionSection[]> = {
         },
         {
           style: "normal",
-          text: "Blaidd é um NPC ligado diretamente a Ranni, uma das figuras mais importantes do jogo, seu encontro inicial acontece em Limgrave, mas só é ativado corretamente após um certo evento."
+          text: "Blaidd é um NPC ligado diretamente a Ranni, uma das figuras mais importantes do jogo. Seu encontro inicial acontece nas ruínas marcadas no mapa: ao se aproximar delas, você ouve um uivo. Volte ao Mercador Kale e pergunte sobre o uivo para aprender o gesto 'estalar de dedos'."
         },
         {
           style: "normal",
-          text: "Caso você tenha aprendido o gesto 'estalar de dedos' com o Mercador Kale, poderá usá-lo para chamar Blaidd, basta usar o gesto próximo da estrutura marcada no mapa, que ele vai descer de cima dela, mas cuidado com o urso da região."
+          text: "Com o gesto aprendido, volte às ruínas e use-o próximo da estrutura marcada no mapa, que ele vai descer de cima dela, mas cuidado com o urso da região."
         },
         {
           style: "normal",
@@ -1107,6 +1114,14 @@ export const regionSections: Record<string, RegionSection[]> = {
 export const getSectionsForRegion = (regionId: string): RegionSection[] => {
   return regionSections[regionId] || [];
 };
+
+// Âncora de navegação (?focus=): id de qualquer item ou texto de um tópico da região
+export const hasContentAnchor = (regionId: string, anchor: string): boolean =>
+  getSectionsForRegion(regionId).some((section) =>
+    section.content.some(
+      (item) => item.id === anchor || (item.style === "topic" && item.text === anchor),
+    ),
+  );
 
 // Tópicos com id são os objetivos marcáveis no checklist de progresso
 export const isTrackableItem = (item: ContentItem): item is ContentItem & { id: string } =>

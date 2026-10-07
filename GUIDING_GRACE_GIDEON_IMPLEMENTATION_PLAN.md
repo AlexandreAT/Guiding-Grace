@@ -139,6 +139,51 @@ interface GuideProgressRecord {
 - **Rate Limiting binding:** é permissivo e eventualmente consistente por localidade, e a documentação não explicita sua disponibilidade no plano Free. Fica **opcional**, como complemento. As garantias reais são Turnstile, limites de tamanho/tokens e fallback.
 - **Camadas da interface:** o botão "voltar ao topo" usa o canto inferior direito com `z-index: 50`; no mobile, sidebar/toggle usam `91–94` e o header usa `100`. O chat precisa de uma política de camadas explícita, não pode sobrepor modais existentes e deve definir seu comportamento quando a sidebar mobile abrir.
 
+### 1.2.10. Ajustes feitos durante a implementação (etapas 1 a 10)
+
+Decisões tomadas com base em testes reais, registradas aqui porque divergem ou detalham o plano:
+
+- **Regiões `spoilerFree`:** visão geral e Limgrave (Topo e Base) são liberadas para Gideon antes da primeira visita; regiões futuras continuam bloqueadas até serem visitadas. Sem isso, um visitante novo receberia "spoiler" ao perguntar sobre o Blaidd;
+- **Várias builds:** o contexto leva o progresso de todas as builds disponíveis; pedidos que dependem de progresso usam a build aberta → citada → única iniciada; com várias iniciadas, Gideon pergunta qual;
+- **Linguagem de chat:** abreviações (vc, pq, kd...), gírias do jogo (lvl, dex...), palavras incompletas e erros de digitação em nomes do guia são normalizados antes da busca;
+- **Continuação de conversa:** o assunto anterior permanece entre os trechos, a menos que a pergunta traga um nome novo;
+- **Informação espalhada:** além das fontes, a IA recebe até 2 trechos do mesmo assunto em outros tópicos/regiões (sempre filtrados pelo Progress Guard); só aparecem como fonte se forem citados;
+- **Progresso na IA:** cada trecho enviado leva `[checklist: concluído/não concluído]`; perguntas "já passei por X?" têm o fato decidido pelo código e só redigido pela IA;
+- **Verificação de nomes:** uma resposta que cita um nome do guia ausente dos trechos citados é descartada (evita ligações inventadas entre assuntos);
+- **Perguntas de relação:** "ligação entre X e Y" reúne os dois assuntos e os trechos que citam os dois; a IA recebe uma orientação própria (campo `guidance`) para dizer só o que o guia liga. Suposições marcadas e spoilers sob confirmação ficaram para a v2 (seção 49.2);
+- **"Sem base" separado de falha:** quando a IA responde `[SEM_BASE]` (ex.: pergunta hipotética), a tela diz que o guia não trata daquilo e mostra os trechos mais próximos;
+- **Fallback por motivo:** resposta descartada, cota diária esgotada (com horário de retorno e sem novas chamadas até lá) e Worker indisponível têm mensagens diferentes;
+- **Modelo:** temperatura 0,2 e `/no_think` (Qwen3), que funcionou nos testes: ~4 Neurons e 0,5–1,5 s por resposta.
+
+### 1.2.11. Proteção de produção como implementada (etapa 11)
+
+- **Turnstile por pergunta, sem sessão assinada:** widget invisível (`appearance: interaction-only`) montado só com o painel aberto; o token fica pronto antes da pergunta e é renovado depois de cada uso. A sessão da seção 25.3 não foi criada (não mede volume, e o token invisível não pesa na experiência);
+- **Worker fechado sem secret:** sem `TURNSTILE_SECRET_KEY` o Worker responde `ai_unavailable` e o site usa o motor local; erro de configuração nunca deixa a IA aberta;
+- **Rate Limiting binding por IP** (15 perguntas/60 s, sem custo extra no plano Free; folga para IPs compartilhados por operadoras e redes Wi-Fi): ao estourar, o Worker devolve `rate_limited` com `retryAt` e o site pausa a IA até lá (é o cooldown do cliente), com mensagem própria;
+- **Sem limite global e sem AI Gateway:** a própria cota gratuita é o teto global e só gera perda temporária da IA, nunca cobrança. O AI Gateway continua opcional;
+- **Local:** chaves de teste públicas da Cloudflare (`.env.example` e `worker/.dev.vars.example`). A secret de teste aceita qualquer token, então a recusa de token inválido só é real com a chave de produção.
+
+### 1.2.12. A IA interpreta a pergunta antes da busca (revisão da decisão "IA só redige")
+
+**Problema:** com a IA só redigindo, quem entendia a pergunta eram regras de palavras (regex de intenção, pronome = assunto da última resposta, busca lexical). Elas erravam o assunto em conversas reais ("e eu já encontrei ele antes?" virava Roderika; "e ela" virava o último personagem citado), e cada correção era mais uma regra.
+
+**Decisão (autor priorizou qualidade sobre quantidade de respostas):** o Worker faz duas chamadas ao modelo.
+
+1. **Interpretação** (`worker/src/interpret.ts`, `worker/src/prompts/interpret.ts`): a IA lê até 4 trocas da conversa, com o assunto de cada resposta (`sourceIds` → títulos) e os nomes citados no texto, e devolve três linhas: a pergunta completa, o **tipo de pedido** (busca, continuação, progresso, próximo passo, depois de, pular, relação) e os **assuntos** (títulos do guia);
+2. **Execução determinística:** `respondLocally` recebe essa interpretação e só executa (assunto escolhido pela IA, tipo de pedido escolhido pela IA); busca, Progress Guard, checklist e orientação continuam no código;
+3. **Redação:** como antes, com a pergunta original e a interpretada no prompt.
+
+**Garantias mantidas:**
+- a IA de interpretação só vê nomes que o jogador pode ver; um nome bloqueado na resposta dela descarta a interpretação;
+- assuntos que não são títulos do guia são ignorados;
+- falha ou tempo esgotado (6 s) na interpretação → pergunta original pelas regras de palavras;
+- sem IA (repouso, sem rede), o navegador usa o motor local com as regras de palavras, que continuam existindo para isso;
+- o navegador chama o Worker em toda pergunta que não seja cumprimento, já que o "não sei" local muitas vezes era só falta de entendimento.
+
+**Ajustes na validação da resposta:** um nome que é título de um trecho enviado e não citado conta como citação implícita e vira fonte (a IA dizia "siga para Varre" sem o `[n]`); nomes presentes na orientação escrita pelo código também são aceitos.
+
+**Custo:** ~2 chamadas por pergunta: ~1.300 respostas com IA por dia na cota gratuita (antes ~2.300); 1 a 2 s por resposta. Medido em 6 conversas reais + casos de borda: todas as referências resolvidas corretamente.
+
 ## 1.3. Etapas manuais do autor (obrigatório parar e pedir)
 
 Algumas ações dependem de conta, painel ou segredo do autor e **não podem ser feitas pelo agente**.
@@ -3171,6 +3216,48 @@ Futuramente Gideon poderá responder:
 A primeira versão já deve permitir o básico por meio do progresso.
 
 Não criar um planejador complexo ou agente autônomo.
+
+## 49.1. Evolução pós-MVP: etapas de missão (questlines)
+
+Hoje cada NPC, chefe ou item é **um único objetivo** no checklist. Por isso Gideon sabe se "Blaidd" foi marcado, mas não sabe *o que* o jogador já fez com ele. Para respostas como "você já ouviu o uivo e aprendeu o gesto; falta chamá-lo nas ruínas", o conteúdo precisa de etapas.
+
+Proposta:
+
+- **Modelo de dados:** um tópico pode ter etapas ordenadas, cada uma com `id` estável e texto curto. Ex.: Blaidd → ouvir o uivo nas ruínas → aprender o gesto com o Kale → chamá-lo nas ruínas → invocá-lo contra Darriwil. Etapas podem pertencer a regiões diferentes (linha de missão entre mapas);
+- **Checklist:** as etapas aparecem como subitens marcáveis do tópico; o progresso do tópico passa a ser derivado das etapas;
+- **Gideon:** os trechos enviados à IA levam o status de cada etapa; "já passei por X?" responde o que já foi feito e qual etapa falta;
+- **Spoiler:** etapas em regiões não visitadas continuam fora do contexto da IA; no máximo, Gideon diz que "a linha de missão continua numa região à frente", sem detalhar;
+- **Autoria:** o formato e o código são do projeto; **o conteúdo das etapas é escrito pelo autor do guia**.
+
+Pré-requisito: MVP publicado (etapas 11 e 12).
+
+## 49.2. Evolução pós-MVP: Gideon narrador (suposições marcadas e spoilers sob confirmação)
+
+**Já existe no MVP:** perguntas de relação ("qual a ligação entre Blaidd e Kale?") reúnem os dois assuntos e os trechos que citam os dois; a IA diz só o que o guia liga explicitamente e, se nada liga, diz isso.
+
+**Objetivo da v2:** Gideon ajudar a explicar a história fazendo conexões entre fatos do guia, **deixando visível quando está supondo**, e acessar conteúdo marcado como spoiler só com consentimento.
+
+### Suposições marcadas
+
+- **Protocolo:** a IA continua citando fatos com `[n]`; quando inferir algo a partir de fatos, marca o trecho com um delimitador próprio (ex.: `⟦...⟧`) e cita os trechos de que a inferência deriva. Ela admite a suposição de forma discreta no próprio texto ("ao que tudo indica...");
+- **Validação (código):** a resposta é dividida em segmentos `fato` e `suposição`; toda suposição precisa citar ao menos um trecho; texto fora de `⟦...⟧` continua sujeito às verificações atuais (citações válidas, nomes presentes nos trechos citados). Ligação entre assuntos sem marcação continua sendo descartada;
+- **Interface:** quando houver suposição, aparece o rótulo "Gideon está supondo" com efeito de fumaça que se dissipa (respeitando `prefers-reduced-motion`); os trechos supostos ficam com cor levemente diferente e, no hover/foco, mostram "Suposição de Gideon a partir de: <fontes>";
+- **Limite:** suposição nunca usa conteúdo bloqueado pelo Progress Guard nem conhecimento externo ao guia.
+
+### Spoilers sob confirmação
+
+- Hoje os trechos com `type: 'spoiler'` ficam **fora** do índice. Na v2 eles entram como passagens marcadas, que não são enviadas à IA por padrão;
+- Se a melhor resposta depender de uma passagem marcada, Gideon responde "Essa resposta pode conter informações que você ainda não sabe. Deseja que eu continue?", com as escolhas "Sim, pode continuar" / "Não";
+- O consentimento vale para aquele assunto na sessão; o Worker recebe quais passagens foram liberadas e só então as inclui; a parte da resposta baseada nelas aparece dentro do componente de spoiler (clique para revelar);
+- Regiões não visitadas continuam bloqueadas **independentemente** do consentimento: a confirmação vale apenas para os spoilers marcados pelo próprio guia em regiões já alcançadas.
+
+### Avaliação antes de liberar
+
+- Conjunto de perguntas de relação e de lore, com os fatos esperados e o que é aceitável como suposição;
+- Revisão manual de uma amostra: nenhuma inferência sem marcação, nenhuma suposição sem fonte;
+- Comparar modelos (Qwen3 30B × Llama 3.3 70B) nesse conjunto, já que inferência exige mais leitura do que o MVP.
+
+Pré-requisito: MVP publicado (etapas 11 e 12) e, de preferência, as etapas de missão (49.1), que dão fatos mais precisos para as conexões.
 
 ---
 

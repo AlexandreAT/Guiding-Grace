@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "guiding-grace-gideon",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-09-01",
+  // Workers AI pela própria conta: não existe chave de API para guardar
+  "ai": {
+    "binding": "AI",
+    // Mesmo no wrangler dev a IA roda na Cloudflare (consome a cota gratuita diária)
+    "remote": true
+  },
+  "vars": {
+    // Origens que podem chamar o Worker (separadas por vírgula): o site no Netlify e o dev local
+    "ALLOWED_ORIGINS": "https://guidinggrace.netlify.app,http://localhost:5173,http://localhost:4173",
+    "GIDEON_MODEL": "@cf/qwen/qwen3-30b-a3b-fp8"
+  },
+  // Até 15 perguntas por minuto por IP: folga para IPs compartilhados (4G, Wi-Fi de casa ou faculdade);
+  // sem custo extra no plano Free (no wrangler dev é simulado)
+  "ratelimits": [
+    {
+      "name": "ASK_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 15, "period": 60 }
+    }
+  ],
+  // TURNSTILE_SECRET_KEY é secret: produção via "npx wrangler secret put", local via .dev.vars (veja .dev.vars.example)
+  "observability": {
+    "enabled": true
+  }
+}

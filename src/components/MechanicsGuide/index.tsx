@@ -30,13 +30,14 @@ export function MechanicsGuidePage({ children }: ComponentProps<"div">) {
 }
 
 export function MechanicSection({
+  id,
   number,
   title,
   icon,
   children,
 }: MechanicSectionProps) {
   return (
-    <MechanicPanel>
+    <MechanicPanel id={id}>
       <SectionIcon aria-hidden="true">{icon}</SectionIcon>
       <SectionBody>
         <SectionHeading>

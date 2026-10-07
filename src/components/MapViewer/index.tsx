@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import type { MouseEvent, SyntheticEvent, Touch, TouchEvent } from "react";
 import { IoCheckmarkSharp } from "react-icons/io5";
+import { MAP_LEGEND } from "../../../shared/const";
 import type { PinData } from "../../data/regionPins";
 import { ControlButton, ControlsContainer, MapContainerStyled, MapImage, MapImageContainer, ZoomLevel, MapInner, Pin, PinCompletedBadge, PinIconWrapper, PinIcon, MapWrapper } from "./styles";
 import { MAX_SCALE, MIN_SCALE, useMapViewport, zoomAround } from "./useMapViewport";
@@ -211,6 +212,7 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
 
           {pins.map((p) => {
             const isCompleted = completedPinIds?.has(p.id) ?? false;
+            const legend = MAP_LEGEND[p.type];
 
             return (
             <Pin
@@ -224,27 +226,19 @@ export default function MapViewer({ mapImageUrl, regionName, pins = [], pinMode 
               }}
               title={p.label}
               aria-label={isCompleted ? `${p.label ?? "Marcação"} (concluído)` : p.label}
-              $pinColor={p.color}
+              $pinColor={legend.color}
               $completed={isCompleted}
               $highlighted={highlightedPinId === p.id}
             >
               {p.label && p.labelAbove && <span className="pin-label">{p.label}</span>}
 
-              <PinIconWrapper $pinColor={p.color}>
+              <PinIconWrapper $pinColor={legend.color}>
                 {isCompleted && (
                   <PinCompletedBadge aria-hidden="true">
                     <IoCheckmarkSharp />
                   </PinCompletedBadge>
                 )}
-                {p.icon ? (
-                  typeof p.icon === 'string' ? (
-                    <PinIcon className={p.icon} $pinColor={p.color} />
-                  ) : (
-                    <PinIcon as={p.icon} $pinColor={p.color} />
-                  )
-                ) : (
-                  <span className="pin-dot" style={{ width: 10, height: 10, borderRadius: '50%', background: p.color || '#d4af37' }} />
-                )}
+                <PinIcon as={legend.icon} $pinColor={legend.color} />
               </PinIconWrapper>
 
               {p.label && !p.labelAbove && <span className="pin-label">{p.label}</span>}

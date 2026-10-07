@@ -10,6 +10,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/build-sites-worker.mjs",
     "lint": "eslint .",
+    "test": "vitest run",
+    "worker:dev": "npm --prefix worker run dev",
+    "worker:deploy": "npm --prefix worker run deploy",
+    "worker:typecheck": "npm --prefix worker run typecheck",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -34,6 +38,7 @@
     "globals": "^16.5.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "vitest": "^3.2.7"
   }
 }

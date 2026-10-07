@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { IoArrowBack } from "react-icons/io5";
-import { REGIONS } from "../../../shared/const";
+import { CAN_OPEN_LOCKED_REGIONS } from "../../../shared/const";
 import {
   BackButtonLink,
   ButtonPin,
@@ -30,10 +30,17 @@ import RegionContent from "../../components/RegionContent";
 import Sidebar from "../../components/Sidebar";
 import SingleImage from "../../components/SingleImage";
 import { getAvailableBuild } from "../../data/navigation";
+import { REGIONS, isRegionAvailable } from "../../data/regions";
 import { getPinsForRegion, type PinType } from "../../data/regionPins";
-import { getSectionsForRegion, getTrackableIdsForRegion } from "../../data/regionSections";
+import {
+  getSectionsForRegion,
+  getTrackableIdsForRegion,
+  hasContentAnchor,
+} from "../../data/regionSections";
 import { useGuideProgress } from "../../hooks/useGuideProgress";
+import { saveLastGuideVisit } from "../../hooks/useLastGuideVisit";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
+import { GUIDE_FOCUS_PARAM, GUIDE_REGION_PARAM, resolveGuideRegion } from "../../routes/guideRoute";
 import NotFound from "../NotFound/NotFound";
 
 const TRACKABLE_IDS_BY_REGION = Object.fromEntries(
@@ -42,22 +49,31 @@ const TRACKABLE_IDS_BY_REGION = Object.fromEntries(
 
 export default function Guide() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { buildId } = useParams<{ buildId: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const build = getAvailableBuild(buildId);
-  const [activeRegionId, setActiveRegionId] = useState<string>(REGIONS[0].id);
+  // A região ativa vive na URL, o que permite links diretos e fontes do Gideon vindas de qualquer tela
+  const activeRegion = resolveGuideRegion(searchParams.get(GUIDE_REGION_PARAM), CAN_OPEN_LOCKED_REGIONS);
+  const activeRegionId = activeRegion.id;
+  const focusId = searchParams.get(GUIDE_FOCUS_PARAM);
   const [pinMode, setPinMode] = useState(false);
-  const [isLoadingMap, setIsLoadingMap] = useState(false);
+  const [loadedMapRegionId, setLoadedMapRegionId] = useState<string>();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [scrollToLabel, setScrollToLabel] = useState<string>();
   const [hiddenPinTypes, setHiddenPinTypes] = useState<ReadonlySet<PinType>>(new Set());
   const [hideCompletedPins, setHideCompletedPins] = useState(false);
   const [focusRequest, setFocusRequest] = useState<PinFocusRequest>();
-  const { completedIds, toggleCompleted, resetCompleted } = useGuideProgress(build?.id ?? "");
+  const [appliedFocusTarget, setAppliedFocusTarget] = useState<string>();
+  const { completedIds, toggleCompleted, resetCompleted, markRegionVisited } =
+    useGuideProgress(build?.id ?? "");
   const isMobile = useMediaQuery("(max-width: 768px)");
   const isDevelopment = import.meta.env.DEV;
+  const isLoadingMap = loadedMapRegionId !== activeRegionId;
+  const hasInteractiveMap =
+    activeRegionId !== "erdtree" && activeRegionId !== "leyndell-sewers";
+  const isMapReady = !hasInteractiveMap || !isLoadingMap;
 
-  const activeRegion =
-    REGIONS.find((region) => region.id === activeRegionId) || REGIONS[0];
   const pins = useMemo(() => getPinsForRegion(activeRegionId), [activeRegionId]);
   const regionSections = useMemo(
     () => getSectionsForRegion(activeRegionId),
@@ -100,6 +116,24 @@ export default function Guide() {
     [pins, hiddenPinTypes, hideCompletedPins, completedIds, focusRequest],
   );
 
+  useEffect(() => {
+    if (!build) return;
+    saveLastGuideVisit({ buildId: build.id, regionId: activeRegionId });
+    if (isRegionAvailable(activeRegion)) markRegionVisited(activeRegionId);
+  }, [build, activeRegion, activeRegionId, markRegionVisited]);
+
+  // ?focus= aponta um pin (centraliza o mapa) ou um trecho sem pin (abre e rola o conteúdo).
+  // Cada navegação tem uma key própria, então abrir de novo a mesma fonte refaz o foco
+  const focusTarget = focusId && isMapReady ? `${location.key}:${focusId}` : undefined;
+  if (focusId && focusTarget && focusTarget !== appliedFocusTarget) {
+    setAppliedFocusTarget(focusTarget);
+    if (mappedIds.has(focusId)) {
+      setFocusRequest({ pinId: focusId, requestId: (focusRequest?.requestId ?? 0) + 1 });
+    } else if (hasContentAnchor(activeRegionId, focusId)) {
+      setScrollToLabel(focusId);
+    }
+  }
+
   if (!build) {
     return (
       <NotFound
@@ -113,10 +147,9 @@ export default function Guide() {
 
   const handleRegionSelect = (regionId: string) => {
     if (regionId === activeRegionId) return;
-    setIsLoadingMap(true);
     setPinMode(false);
     setFocusRequest(undefined);
-    setActiveRegionId(regionId);
+    setSearchParams({ [GUIDE_REGION_PARAM]: regionId });
   };
 
   const handleTogglePinType = (type: PinType) => {
@@ -134,9 +167,6 @@ export default function Guide() {
   const handleLocateOnMap = (pinId: string) => {
     setFocusRequest({ pinId, requestId: Date.now() });
   };
-
-  const hasInteractiveMap =
-    activeRegionId !== "erdtree" && activeRegionId !== "leyndell-sewers";
 
   return (
     <PageContainer $regionId={activeRegionId} $isMobile={isMobile}>
@@ -224,7 +254,7 @@ export default function Guide() {
                   completedPinIds={completedIds}
                   focusRequest={focusRequest}
                   onPinClick={setScrollToLabel}
-                  onImageLoad={() => setIsLoadingMap(false)}
+                  onImageLoad={() => setLoadedMapRegionId(activeRegionId)}
                 />
               </MapContainerWrapper>
             )}

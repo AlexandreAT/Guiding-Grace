@@ -1,0 +1,5 @@
+# Copie para .dev.vars (só o wrangler dev lê; nunca versione o .dev.vars).
+# Chave de TESTE pública da Cloudflare: aceita apenas o token de teste do widget
+# (VITE_TURNSTILE_SITE_KEY=1x00000000000000000000BB no .env.local do site).
+# A chave real fica só na Cloudflare: npx wrangler secret put TURNSTILE_SECRET_KEY
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA

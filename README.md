@@ -36,7 +36,10 @@ npm run dev      # desenvolvimento (com modo pin e todas as regiões)
 npm run build    # build de produção
 npm run preview  # serve o build de produção
 npm run lint
+npm test         # testes e avaliação da busca do Gideon
 ```
+
+Sem nenhuma configuração, o site e o Gideon funcionam no **modo local** (busca no próprio guia, sem IA). Para usar a IA localmente, é preciso rodar também o Worker do Gideon com uma conta Cloudflare: o passo a passo está na seção 7 do [guia técnico](GUIDING_GRACE_PROJECT_GUIDE.md).
 
 ## Estrutura
 

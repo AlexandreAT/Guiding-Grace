@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
-import { REGIONS } from "../../../shared/const";
+import { CAN_OPEN_LOCKED_REGIONS, REGION_ICONS } from "../../../shared/const";
+import { REGIONS } from "../../data/regions";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { DecorativeDivider } from "../DecorativeDivider";
 import ProgressBar from "../ProgressBar";
@@ -25,9 +26,6 @@ interface SidebarProps {
   onToggle?: (isOpen: boolean) => void;
   regionProgress: Record<string, RegionProgress>;
 }
-
-// Em desenvolvimento as regiões "Em breve" continuam acessíveis para a escrita do conteúdo
-const CAN_OPEN_LOCKED_REGIONS = import.meta.env.DEV;
 
 export default function Sidebar({
   activeRegionId,
@@ -109,7 +107,7 @@ export default function Sidebar({
                   regionName={region.name}
                   regionNumber={region.order}
                   recommendedLevel={region.recommendedLevel}
-                  icon={region.icon}
+                  icon={REGION_ICONS[region.id]}
                   isActive={activeRegionId === region.id}
                   disabled={region.disabled && !CAN_OPEN_LOCKED_REGIONS}
                   status={region.status}

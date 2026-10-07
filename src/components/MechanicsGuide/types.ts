@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 export interface MechanicSectionProps {
+  id?: string;
   number: number;
   title: string;
   icon: ReactNode;
