@@ -24,7 +24,9 @@ Guia de progressão de **Elden Ring** em português, com mapa interativo, checkl
 
 ## Stack
 
-React 19 · TypeScript · Vite · React Router · Styled Components
+React 19 · TypeScript · Vite · React Router · Styled Components · Vitest
+
+Gideon: Cloudflare Workers · Workers AI · Turnstile
 
 ## Rodando localmente
 
@@ -39,16 +41,20 @@ npm run lint
 npm test         # testes e avaliação da busca do Gideon
 ```
 
-Sem nenhuma configuração, o site e o Gideon funcionam no **modo local** (busca no próprio guia, sem IA). Para usar a IA localmente, é preciso rodar também o Worker do Gideon com uma conta Cloudflare: o passo a passo está na seção 7 do [guia técnico](GUIDING_GRACE_PROJECT_GUIDE.md).
+Sem nenhuma configuração, o site e o Gideon funcionam no **modo local** (busca no próprio guia, sem IA). Para usar a IA localmente, é preciso rodar também o Worker do Gideon com uma conta Cloudflare gratuita: o passo a passo (e a publicação) está na seção 7 do [guia técnico](GUIDING_GRACE_PROJECT_GUIDE.md).
 
 ## Estrutura
 
 ```text
-shared/const.ts      regiões, legenda, cores dos pins e tema
-src/data/            conteúdo das regiões, pins e navegação
-src/hooks/           progresso do guia e media queries
-src/components/      mapa, legenda, sidebar, conteúdo, cards...
+shared/const.ts      legenda, cores dos pins, ícones das regiões e tema
+shared/gideon/       motor do Gideon (índice, busca, spoilers, respostas), usado pelo site e pelo Worker
+src/data/            conteúdo das regiões, pins, mecânicas e navegação (dados puros)
+src/hooks/           progresso do guia, conversa do Gideon, Turnstile e media queries
+src/services/        chamadas ao Worker e widget do Turnstile
+src/routes/          região e foco na URL do guia
+src/components/      mapa, legenda, sidebar, conteúdo, chat do Gideon...
 src/pages/           Home, seleção, guia, mecânicas e 404
+worker/              Worker do Gideon (Cloudflare): validação, proteção e chamada à IA
 ```
 
 O guia técnico completo (arquitetura, padrões visuais e de código) está em [`GUIDING_GRACE_PROJECT_GUIDE.md`](GUIDING_GRACE_PROJECT_GUIDE.md).

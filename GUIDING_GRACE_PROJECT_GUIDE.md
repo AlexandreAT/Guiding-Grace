@@ -258,7 +258,7 @@ Site (Vite/Netlify)  ──VITE_GIDEON_API_URL──▶  Worker do Gideon (Cloud
 Só o site (modo local, sem IA):
 
 ```bash
-git clone <repositório> && cd Guiding-Grace
+git clone https://github.com/AlexandreAT/Guiding-Grace.git && cd Guiding-Grace
 npm install
 npm run dev
 ```
@@ -268,7 +268,7 @@ Site + Gideon com IA:
 ```bash
 npm install
 npm install --prefix worker
-cd worker && npx wrangler login && cd ..   # uma vez por máquina, com a conta Cloudflare do projeto
+cd worker && npx wrangler login && cd ..   # uma vez por máquina, com uma conta Cloudflare (gratuita)
 npm run worker:dev                          # terminal 1: Worker em http://localhost:8787
 npm run dev                                 # terminal 2: site em http://localhost:5173
 ```
@@ -277,15 +277,22 @@ Antes de rodar, copie `.env.example` para `.env.local` e `worker/.dev.vars.examp
 
 - Abra o site por `http://localhost:5173`; pelo `127.0.0.1` o Worker recusa a origem (CORS);
 - Mesmo em desenvolvimento, as respostas da IA consomem a cota gratuita diária da conta (10.000 Neurons; cerca de 7 a 8 por resposta, somando interpretação e redação);
-- A conta Cloudflare precisa ter um subdomínio `workers.dev` (criado uma vez, no primeiro Worker publicado).
+- A conta Cloudflare precisa ter um subdomínio `workers.dev` (criado uma vez, no primeiro Worker publicado);
+- Qualquer conta Cloudflare serve para desenvolver: a IA local usa a cota gratuita da conta logada, e nada local depende da conta de produção;
+- No Windows, clone numa pasta pouco profunda (ex.: `C:\Projetos\Guiding-Grace`). O `wrangler dev` cria arquivos com caminhos longos dentro de `worker/.wrangler` e, acima do limite de 260 caracteres do Windows, o limite por IP falha com "internal error";
+- O npm 11 avisa que bloqueou scripts de instalação (`esbuild`, `workerd`). Pode ignorar: site, testes e Worker funcionam assim.
 
 ## 7.4. Produção
+
+Publicação pela conta do projeto: o Netlify publica sozinho a cada push no `master`; o Worker é publicado à mão por quem está logado no Wrangler com a conta Cloudflare do projeto (qualquer máquina serve, após `npx wrangler login`). A Secret Key do Turnstile fica guardada na Cloudflare: não é preciso levá-la para outra máquina.
 
 - **Site:** Netlify, com `VITE_GIDEON_API_URL` e `VITE_TURNSTILE_SITE_KEY` cadastradas no painel (Site configuration → Environment variables). Depois de alterar uma variável, é preciso refazer o deploy;
 - **Worker:** `npm run worker:deploy` publica na conta Cloudflare logada; a origem do Netlify precisa estar em `ALLOWED_ORIGINS` e a `TURNSTILE_SECRET_KEY` cadastrada com `npx wrangler secret put TURNSTILE_SECRET_KEY` (dentro de `worker/`);
 - **Turnstile:** o widget no painel da Cloudflare precisa listar o domínio do Netlify (e `localhost`, se quiser testar a chave real localmente);
 - **Logs:** o Worker registra só o desfecho de cada chamada (`gideon_ask`: status, motivo, latência), nunca o texto da pergunta. Ver em Cloudflare → Workers → guiding-grace-gideon → Logs;
 - **O conteúdo vai nos dois deploys.** Ao mudar o guia, publique o site **e** o Worker. Enquanto as versões forem diferentes, o Worker responde `index_version_mismatch` e o site usa o modo local (sem resposta errada, só sem IA).
+
+Em um fork, publique com a sua própria conta: rode `npm run worker:deploy` (cria `guiding-grace-gideon.<seu-subdominio>.workers.dev`), troque a origem do Netlify em `ALLOWED_ORIGINS`, crie o seu widget do Turnstile e cadastre as duas variáveis no seu site do Netlify.
 
 ---
 
