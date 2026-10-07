@@ -4,7 +4,8 @@
 **Projeto:** Guiding Grace  
 **Objetivo deste documento:** especificar o objetivo final, requisitos, arquitetura sugerida, decisões técnicas e critérios de aceite para a implementação do companheiro conversacional **Sir Gideon Ofnir** dentro do Guiding Grace.  
 **Destinatário principal:** Codex / agente de desenvolvimento responsável por implementar a funcionalidade.  
-**Data da especificação:** 06/10/2026.
+**Data da especificação:** 06/10/2026.  
+**Revisão técnica:** 07/10/2026 — ver seção 1.2; quando houver conflito, a 1.2 prevalece.
 
 ---
 
@@ -48,14 +49,134 @@ Antes de implementar qualquer coisa:
 
 Após a leitura da base atual, as decisões abaixo passam a fazer parte deste plano:
 
-- A região ativa, o foco de pin e o scroll para o conteúdo vivem hoje como estado local de `Guide.tsx`. A integração global de Gideon não poderá chamar esses estados diretamente. Citações devem ser resolvidas por um alvo de navegação serializável (preferencialmente query string ou `location.state` tipado) que `Guide` consome ao montar. Não criar uma segunda navegação paralela nem acoplar o componente global a callbacks internos da página.
-- O índice de conhecimento deve ser gerado uma vez a partir das fontes TypeScript e disponibilizado para **frontend e Worker a partir do mesmo artefato lógico**. O Worker não deve buscar o JSON hospedado no frontend a cada pergunta. A forma concreta pode ser um módulo gerado compartilhado e, separadamente, um JSON público para o fallback do navegador.
+- A região ativa, o foco de pin e o scroll para o conteúdo vivem hoje como estado local de `Guide.tsx`. A integração global de Gideon não poderá chamar esses estados diretamente. Citações devem ser resolvidas por um alvo de navegação serializável na **URL** (ver 1.2.3) que `Guide` lê e valida. Não criar uma segunda navegação paralela nem acoplar o componente global a callbacks internos da página.
+- O índice de conhecimento deve vir da **mesma origem lógica** para frontend e Worker: dados de domínio puros + uma função pura compartilhada `buildGuideIndex()` (ver 1.2.2). O Worker não deve buscar conteúdo hospedado no frontend a cada pergunta.
 - O conteúdo factual de `src/pages/Info/pages/WeaponProgression/` está hoje em JSX. Antes de entrar no retrieval, ele deve ser extraído para dados tipados reutilizáveis; a página continua responsável apenas pela apresentação.
 - O bloqueio de spoiler é uma proteção de experiência, não de confidencialidade. O frontend estático já distribui conteúdos TypeScript no bundle. Para impedir a resposta do assistente de revelar um fato, o filtro precisa ocorrer antes do LLM; para impedir acesso técnico ao texto no futuro seria necessária uma arquitetura diferente de entrega de conteúdo, fora do escopo inicial.
 - A regra por região não basta para todos os spoilers: conteúdos permitidos podem mencionar eventos ou personagens posteriores. Adicionar metadados editoriais de `spoilerGate` somente às exceções reais, revisados junto ao conteúdo. Nunca inferir esses gates automaticamente a partir do texto.
 - A busca determinística e suas fontes devem formar a base confiável da experiência. O LLM é responsável por redigir de forma curta e contextual; se ele falhar ou ficar sem cota, os mesmos resultados locais continuam sendo exibidos e navegáveis.
 - A proteção inicial contra abuso deve ser simples: Turnstile, limite global conservador/cooldown e orçamento baixo de tokens. Uma sessão assinada sem armazenamento não fornece rate limit confiável por pessoa e não é requisito do MVP.
 - Decisão de deploy: o frontend permanece no **Netlify**. A camada nova de IA/API será um **Cloudflare Worker separado**, criado e configurado somente durante a implementação efetiva. O artefato `dist/server/index.js` existente não implica migração do frontend e não deve motivar uma mudança de hospedagem.
+
+## 1.2. Decisões revisadas na validação técnica (07/10/2026)
+
+Após uma segunda validação contra o código real e a documentação atual da Cloudflare, as decisões abaixo **substituem** as partes correspondentes do restante deste documento. As seções afetadas já foram ajustadas; esta lista resume o que mudou e por quê.
+
+### 1.2.1. O modelo gera apenas texto com referências numeradas
+
+- A API do Worker continua respondendo JSON ao navegador, mas **o modelo não gera JSON**.
+- O modelo recebe os trechos permitidos numerados (`[1]`, `[2]`...) e devolve somente texto curto, citando os trechos usados com esses marcadores. Quando não houver base suficiente nos trechos, ele responde com um marcador reservado (ex.: `[SEM_BASE]`).
+- `status`, `citations`, `actions`, `choices` e os estados `clarify`, `not_covered`, `spoiler_blocked` e `social` são decididos **pelo código**, nunca pelo modelo.
+- O código converte os marcadores em citações: só são aceitos números que correspondam a trechos realmente enviados naquela chamada. Texto factual sem nenhum marcador válido, ou com `[SEM_BASE]`, não é exibido como resposta confiável (vira `not_covered` ou fallback).
+- **Motivo:** `@cf/qwen/qwen3-30b-a3b-fp8` não está na lista de modelos com JSON Mode da Cloudflare, e mesmo o JSON Mode não garante conformidade ao schema. Texto + marcadores elimina falhas de parsing, simplifica a validação e permite trocar de modelo livremente.
+- O Qwen3 é um modelo de raciocínio e a documentação não expõe parâmetro para desligar o raciocínio. Recursos como `/no_think` devem ser tratados **apenas como experimento**, não como premissa. Medir na etapa do provider: latência, tokens de saída e qualidade em português; se o raciocínio não for controlável ou encarecer a resposta, trocar de modelo.
+
+### 1.2.2. Dados de domínio puros + `buildGuideIndex()` compartilhado
+
+- Substitui o "gerador de índice + artefato gerado" e o JSON público em `public/data`.
+- O domínio do guia é separado da apresentação:
+  - pins guardam apenas `id`, coordenadas, `type`, `label` e dados de posição de rótulo; **ícone e cor são derivados do `type` pela camada visual** (`MAP_LEGEND` já existe para isso);
+  - metadados das regiões (id, nome, ordem, nível, status) ficam em módulo sem imports de UI; os ícones das regiões ficam na camada visual;
+  - o conteúdo factual dos guias de mecânicas também vira dado puro (seção 11).
+- Uma função pura `buildGuideIndex()` transforma esses dados em chunks. **Frontend e Worker importam a mesma função e os mesmos dados.** No frontend, o carregamento é dinâmico, apenas quando o chat abre.
+- Uma função determinística calcula o **hash de versão do índice** (ver 1.2.6).
+- **Motivo:** hoje `regionPins.ts` e `shared/const.ts` importam `react-icons`, o que impediria o Worker de importar os dados e exigiria executar TypeScript com dependências de UI num script. Com dados puros não há script de geração, dependência extra nem artefato desatualizado; a mesma separação adianta a validação de conteúdo do roadmap.
+
+### 1.2.3. Região e foco na URL
+
+- O alvo de navegação passa a ser a própria URL do guia, por exemplo:
+
+```text
+/guide/quality-build?region=limgrave-bottom&focus=limgrave-bottom-npc-1
+```
+
+- `Guide` deriva a região ativa da URL e só aplica o foco depois de validar: build disponível, região liberada e ID existente naquela região. Parâmetros inválidos são ignorados sem quebrar a página.
+- Com pin, o foco centraliza o mapa; sem pin, abre o accordion e rola até o conteúdo.
+- O contexto global de Gideon lê rota + parâmetros + progresso, sem provider-ponte nem referências imperativas à página.
+- **Motivo:** é mais simples, sobrevive a reload, gera link direto para um ponto do mapa e permite que citações acionadas de qualquer rota sejam apenas uma navegação.
+
+### 1.2.4. Motor local e chat antes do Worker
+
+- A ordem de implementação (seção 39) foi alterada: busca, Progress Guard, contexto, fontes, navegação e **chat determinístico** vêm primeiro; o Worker entra depois, apenas para redigir respostas a partir dos trechos permitidos.
+- O navegador resolve localmente `social`, `clarify`, `not_covered` e `spoiler_blocked`. O Worker só é chamado quando existem trechos permitidos para formular uma resposta — economizando cota e evitando Turnstile desnecessário.
+- **O Worker repete retrieval, Progress Guard e validação com o mesmo índice. Nunca confia em chunks, IDs ou textos enviados pelo navegador.** O navegador envia pergunta, contexto e progresso; o Worker recupera os trechos por conta própria.
+- **Motivo:** o fallback local já era obrigatório; construí-lo primeiro entrega uma versão útil e demonstrável sem infraestrutura e reduz o Worker a uma camada pequena e testável.
+
+### 1.2.5. Progresso versionado e metadados globais separados
+
+- O registro de progresso por build migra do formato atual (`string[]` de IDs concluídos) para um objeto versionado, por exemplo:
+
+```ts
+interface GuideProgressRecord {
+  version: 2;
+  completed: string[];
+  visited: string[];
+}
+```
+
+- A leitura deve ser retrocompatível: um `string[]` antigo é interpretado como `{ version: 2, completed: <array>, visited: [] }`, sem perda de progresso.
+- `lastBuildId` e `lastRegionId` ficam em **metadados globais separados**, fora do progresso de cada build. Eles servem para o contexto de telas sem build (Home) e para o futuro "continuar de onde parei" do roadmap.
+
+### 1.2.6. Hash de versão entre Netlify e Worker
+
+- Os deploys do frontend e do Worker são independentes; o conteúdo de um pode ficar diferente do outro.
+- O frontend envia o hash determinístico do índice em cada pedido. Se o Worker tiver outra versão, ele responde com um erro específico (ex.: HTTP 409, `index_version_mismatch`) e o navegador usa o fallback local.
+- O deploy automático do Worker por GitHub Actions deve entrar **junto com a CI** do roadmap (ainda inexistente) e exige um segredo de deploy da Cloudflare no repositório. Até lá, o deploy pode ser manual; o hash garante que a divergência não produza citações incorretas.
+
+### 1.2.7. Conteúdo "Em breve" fora do índice
+
+- Regiões com `disabled`/`COMING_SOON` **nunca entram no índice**: seu texto é provisório e pioraria a qualidade das respostas.
+- `spoiler_blocked` é validado com **fixtures unitárias** de chunks com gate, sem necessidade de publicar regiões futuras.
+
+### 1.2.8. Escopo de conteúdo do MVP
+
+- Gideon **não amplia o escopo** para escrever regiões novas; novas regiões continuam sendo trabalho do roadmap.
+- Como o conteúdo atual é pequeno, o MVP deve incluir: **perguntas sugeridas por tela**, apresentação honesta do que o guia cobre hoje e um `not_covered` bem resolvido.
+
+### 1.2.9. Outras definições
+
+- **Rota `/info/weapon-progression`:** duplica `/mechanics/weapons` e não possui links internos. Não é requisito de Gideon removê-la; tratar numa limpeza separada (preferencialmente redirecionando para `/mechanics/weapons`, preservando bookmarks). Enquanto existir, o contexto pode tratá-la como a mesma mecânica.
+- **Rate Limiting binding:** é permissivo e eventualmente consistente por localidade, e a documentação não explicita sua disponibilidade no plano Free. Fica **opcional**, como complemento. As garantias reais são Turnstile, limites de tamanho/tokens e fallback.
+- **Camadas da interface:** o botão "voltar ao topo" usa o canto inferior direito com `z-index: 50`; no mobile, sidebar/toggle usam `91–94` e o header usa `100`. O chat precisa de uma política de camadas explícita, não pode sobrepor modais existentes e deve definir seu comportamento quando a sidebar mobile abrir.
+
+## 1.3. Etapas manuais do autor (obrigatório parar e pedir)
+
+Algumas ações dependem de conta, painel ou segredo do autor e **não podem ser feitas pelo agente**.
+
+**Regra:** ao chegar em qualquer ponto que dependa de uma ação manual, o agente deve **parar a implementação** e pedir a ação ao autor, de forma super resumida, sempre neste formato:
+
+```text
+Ação manual necessária: <o quê>
+Onde: <site/painel/terminal>
+Como: <1 a 3 passos curtos>
+Me avise quando terminar (e me envie <dado público>, se houver).
+```
+
+Regras complementares:
+
+- só retomar a etapa depois da confirmação do autor;
+- agrupar no mesmo pedido as ações manuais da mesma etapa, para não interromper várias vezes;
+- **nunca pedir que o autor cole segredos no chat** (Turnstile secret, API tokens). Segredos são cadastrados pelo próprio autor via `wrangler secret put`, painel do Netlify/Cloudflare ou GitHub Secrets; o agente só informa o comando ou o local;
+- dados públicos podem ser pedidos normalmente (ex.: URL do site, Site Key do Turnstile, URL do Worker);
+- nunca versionar segredos nem arquivos `.dev.vars`/`.env` com valores reais.
+
+Ações manuais previstas:
+
+| Etapa | Ação manual | Onde |
+|---|---|---|
+| 8 | Criar conta Cloudflare (plano Free, sem cartão) | dash.cloudflare.com |
+| 8 | Autorizar o Wrangler na conta (`npx wrangler login`) | terminal → navegador |
+| 9 | Nenhuma chave extra: Workers AI usa o binding da própria conta. Só confirmar que o plano continua Free | painel Cloudflare → Workers AI |
+| 11 | Criar o widget Turnstile (hostnames: domínio do Netlify + `localhost`) e enviar a **Site Key** | painel Cloudflare → Turnstile |
+| 11 | Cadastrar a **Secret Key** do Turnstile no Worker (`npx wrangler secret put TURNSTILE_SECRET_KEY`) | terminal |
+| 11 | (Opcional) Criar AI Gateway e informar o nome | painel Cloudflare → AI Gateway |
+| 12 | Informar a URL de produção do Netlify (para o CORS) | — |
+| 12 | Publicar o Worker (`npm run worker:deploy`) e enviar a URL gerada | terminal |
+| 12 | Cadastrar variáveis do frontend (URL do Worker e Site Key) e refazer o deploy | Netlify → Site configuration → Environment variables |
+| 12 | Revisão manual em desktop e celular | navegador / celular |
+| CI (futuro) | Criar API Token (modelo "Edit Cloudflare Workers") e cadastrar `CLOUDFLARE_API_TOKEN` e `CLOUDFLARE_ACCOUNT_ID` | Cloudflare → My Profile → API Tokens; GitHub → Settings → Secrets |
+
+Se surgir outra ação manual não prevista nesta tabela, aplicar a mesma regra.
 
 ---
 
@@ -500,9 +621,9 @@ Trechos permitidos
    ↓
 LLM
    ↓
-Resposta estruturada
+Texto com referências [n]
    ↓
-Validação das citações
+Validação das citações + montagem da resposta pelo código
    ↓
 Interface
 ```
@@ -674,17 +795,17 @@ Arquitetura conceitual:
 
 ```text
 ┌─────────────────────────────────────────────────────────┐
-│                    GUIDING GRACE FRONTEND                │
+│                 GUIDING GRACE FRONTEND                  │
 │                                                         │
-│  Guide.tsx                                              │
-│     │                                                   │
-│     ├── progresso                                       │
-│     ├── região atual                                    │
-│     ├── histórico curto da conversa                     │
-│     ├── GuideAssistant                                  │
-│     └── integração existente mapa ↔ texto               │
+│  App (layout raiz)                                      │
+│     ├── <Outlet /> → Guide, Mechanics, Home...          │
+│     │      └── região e foco lidos da URL               │
+│     └── GideonAssistant (global)                        │
+│            ├── screenContext (rota + URL + progresso)   │
+│            ├── histórico curto (sessionStorage)         │
+│            └── citações → navegação pela URL            │
 │                                                         │
-│  Índice estático / busca local                          │
+│  Dados puros + buildGuideIndex() + busca local          │
 └───────────────────────┬─────────────────────────────────┘
                         │
                         │ pergunta + contexto
@@ -699,13 +820,13 @@ Arquitetura conceitual:
 │  aplica Progress Guard                                  │
 │  executa retrieval                                      │
 │  seleciona trechos                                      │
-│  monta prompt                                           │
+│  monta prompt com trechos numerados                     │
 │         │                                               │
 │         ▼                                               │
 │  Workers AI / provider                                  │
 │         │                                               │
 │         ▼                                               │
-│  valida JSON                                            │
+│  extrai referências [n] do texto                        │
 │  valida IDs/citações                                    │
 │  retorna resposta segura                                │
 └───────────────────────┬─────────────────────────────────┘
@@ -729,25 +850,30 @@ Arquitetura conceitual:
 
 O estado atual de `Guide` não é global: `activeRegionId`, `focusRequest` e `scrollToLabel` pertencem à página. Portanto, `GideonAssistant` global não deve manter referências imperativas a `MapViewer` ou `RegionContent`.
 
-Criar um contrato de alvo de navegação validável, por exemplo:
+O alvo de navegação é a **URL do guia** (decisão 1.2.3):
+
+```text
+/guide/:buildId?region=<regionId>&focus=<contentId>
+```
+
+Um helper tipado monta essa URL a partir de um alvo validado, por exemplo:
 
 ```ts
 interface GuideNavigationTarget {
   buildId: string;
   regionId: string;
-  contentId: string;
-  mode: "map" | "content";
+  contentId?: string;
 }
 ```
 
 Ao clicar numa citação:
 
 1. o resolvedor valida o `contentId`, a região e se existe pin;
-2. navega para o Guide com o alvo como query string ou estado de navegação tipado;
-3. `Guide` lê e valida esse alvo ao montar;
-4. a página seleciona a região e só então solicita foco no pin ou scroll do conteúdo.
+2. navega para a URL do alvo;
+3. `Guide` deriva a região ativa de `region` e valida build, região liberada e ID;
+4. com pin, solicita foco no mapa; sem pin, abre o accordion e rola até o conteúdo.
 
-Isso preserva a navegação existente mapa ↔ texto e também funciona quando a citação parte de Home, Mecânicas ou outra rota. A query string é preferível quando se desejar que o destino sobreviva a reload; `location.state` é aceitável para ações efêmeras, desde que exista fallback claro.
+A região ativa passa a ter a URL como fonte da verdade: trocar de região pela sidebar também atualiza `region`. Isso preserva a navegação existente mapa ↔ texto, funciona quando a citação parte de Home, Mecânicas ou outra rota, sobrevive a reload e gera links diretos. Parâmetros inválidos são ignorados sem quebrar a página.
 
 ## 8.2. Frontend
 
@@ -839,9 +965,12 @@ O Codex deve verificar no momento da implementação:
 
 - se o modelo continua disponível no plano Free;
 - qualidade em português;
-- suporte adequado à saída estruturada;
+- se segue o formato de texto com referências numeradas (decisão 1.2.1 — o modelo não precisa gerar JSON);
+- comportamento do raciocínio interno (o Qwen3 é modelo de raciocínio; `/no_think` é apenas experimento);
 - consumo de cota;
 - latência.
+
+Estimativa de custo em 07/10/2026 (Qwen3 30B: 4.625 Neurons por milhão de tokens de entrada e 30.475 por milhão de saída): uma resposta com ~1.500 tokens de entrada e ~300 de saída consome ~16 Neurons, ou seja, cerca de 600 respostas por dia dentro dos 10.000 Neurons gratuitos — **se** o raciocínio interno não inflar a saída. Medir antes de assumir.
 
 Se outro modelo gratuito da Cloudflare entregar resultado melhor, ele pode ser escolhido.
 
@@ -891,6 +1020,8 @@ src/data/regionPins.ts
 shared/const.ts
 ```
 
+Antes de entrarem no índice, essas fontes devem ser separadas em **dados de domínio puros**, sem imports de UI (decisão 1.2.2): ícones e cores de pins e regiões passam para a camada visual. Somente regiões liberadas (sem `disabled`/`COMING_SOON`) entram no índice (decisão 1.2.7).
+
 Também deverão entrar, quando estruturados adequadamente:
 
 - guias de mecânicas;
@@ -915,47 +1046,36 @@ O índice do Gideon deve ser **derivado** dos mesmos dados utilizados pela inter
 
 ---
 
-## 9.3. Índice gerado
+## 9.3. Índice derivado por função compartilhada
 
-Criar um processo capaz de transformar o conteúdo do projeto em um índice pesquisável.
+Não haverá script de geração nem artefato gerado (decisão 1.2.2).
 
-Nome sugerido:
+O índice é produzido por uma **função pura** sobre os dados de domínio:
 
-```text
-scripts/generate-guide-index.*
+```ts
+buildGuideIndex(sources) → { version: string; chunks: GuideChunk[] }
 ```
-
-Saída possível:
-
-```text
-public/data/guide-search-index.json
-```
-
-ou uma representação equivalente que possa ser compartilhada entre frontend e Worker.
-
-### Artefato compartilhado obrigatório
-
-O arquivo público acima pode atender ao fallback no navegador, mas não é uma dependência aceitável para o Worker em tempo de requisição. O processo de geração deve produzir uma origem lógica compartilhada — por exemplo, um módulo/JSON gerado importado pelo Worker e uma cópia pública derivada para o browser.
 
 Assim:
 
 ```text
-fontes TypeScript do guia
-        ↓ geração no build
-índice canônico gerado
-     ├── Worker: importado/empacotado para validar e recuperar fontes
-     └── Frontend: usado pela busca local e fallback
+dados de domínio puros (regiões, seções, pins, mecânicas)
+        ↓
+buildGuideIndex()  ← mesma função, mesmo código
+     ├── Worker: importa e executa ao iniciar o isolate (escopo de módulo)
+     └── Frontend: importa dinamicamente quando o chat abre
 ```
 
-O formato pode variar, mas os dois lados devem representar os mesmos chunks, IDs e metadados de gate. Não fazer `fetch` do deploy do frontend a cada chamada do Worker.
+`version` é um hash determinístico do índice resultante, usado para detectar divergência entre os deploys (decisão 1.2.6).
 
-O Codex tem liberdade para escolher a melhor forma de geração e empacotamento desde que:
+Requisitos:
 
-- não exista conteúdo duplicado manualmente;
-- a geração seja reproduzível;
-- novos conteúdos possam entrar no índice automaticamente;
-- o índice possa ser validado;
-- frontend e Worker utilizem a mesma origem lógica.
+- não existir conteúdo duplicado manualmente;
+- o resultado ser determinístico para os mesmos dados;
+- novos conteúdos entrarem no índice automaticamente;
+- o índice poder ser validado por testes (IDs únicos, pins existentes, regiões liberadas);
+- frontend e Worker usarem os mesmos dados e a mesma função;
+- não fazer `fetch` do deploy do frontend a cada chamada do Worker.
 
 ---
 
@@ -1283,7 +1403,7 @@ visitedRegionIds
 
 Quando o usuário efetivamente acessar uma região disponível, ela pode ser considerada visitada.
 
-A forma exata de persistência deve continuar separada da camada visual.
+A forma exata de persistência deve continuar separada da camada visual. O registro por build passa a ser versionado (`{ version, completed, visited }`), com leitura retrocompatível do formato antigo `string[]`; `lastBuildId` e `lastRegionId` ficam em metadados globais separados (decisão 1.2.5).
 
 ---
 
@@ -1413,7 +1533,7 @@ SYSTEM / REGRAS INEGOCIÁVEIS
 - fatos só podem vir das fontes fornecidas
 - não inventar
 - não revelar conteúdo bloqueado
-- saída estruturada
+- citar os trechos usados com [n]; sem base suficiente → [SEM_BASE]
 - respostas curtas
 
 PERSONA
@@ -1427,7 +1547,7 @@ CONTEXTO DO JOGADOR
 - progresso
 
 CONTEXTO RECUPERADO
-- chunks permitidos
+- chunks permitidos, numerados [1], [2]...
 
 CONVERSA RECENTE
 - histórico curto
@@ -1580,14 +1700,20 @@ interface GideonAskRequest {
   conversation: GideonConversationTurn[];
   lastCitationIds?: string[];
 
+  indexVersion: string;
   turnstileToken?: string;
-  sessionToken?: string;
 }
 ```
 
 Não enviar dados pessoais.
 
 Não enviar estado do aplicativo que não seja necessário.
+
+O request **não carrega chunks nem textos do guia**: o Worker recupera os trechos por conta própria com o mesmo índice e repete o Progress Guard (decisão 1.2.4). `lastCitationIds` serve apenas como pista para resolver referências como "e depois?" e também é validado.
+
+Se `indexVersion` for diferente da versão do índice do Worker, a resposta é um erro específico (ex.: HTTP 409, `index_version_mismatch`) e o navegador usa o fallback local (decisão 1.2.6).
+
+Como o navegador já resolve localmente `social`, `clarify`, `not_covered` e `spoiler_blocked`, o Worker é chamado apenas quando existem trechos permitidos para responder. Ainda assim, o Worker deve tratar esses estados caso os encontre.
 
 ---
 
@@ -1636,15 +1762,16 @@ O formato real pode evoluir.
 
 # 18. Saída do LLM
 
-Solicitar saída estruturada.
+O modelo gera **apenas texto** (decisão 1.2.1), em português, curto, citando os trechos usados com os marcadores numerados recebidos no prompt:
 
-O modelo não deve produzir HTML para a UI.
+```text
+Blaidd foi visto nas ruínas da Floresta Nebulosa [1].
+Kalé conhece uma forma peculiar de chamar a atenção dele [2].
+```
 
-Não deve inventar URLs.
+Quando os trechos não bastam, o modelo responde com o marcador reservado `[SEM_BASE]`.
 
-Não deve escolher livremente um `route`.
-
-Ele pode produzir IDs, mas esses IDs precisam ser validados depois.
+O modelo não deve produzir JSON, HTML, URLs, rotas, IDs ou comandos de UI. Status, citações, ações e escolhas são montados pelo código.
 
 ---
 
@@ -1652,24 +1779,16 @@ Ele pode produzir IDs, mas esses IDs precisam ser validados depois.
 
 Antes de devolver ao navegador:
 
-1. validar JSON;
-2. validar `status`;
-3. verificar tamanho da resposta;
-4. verificar que toda citação pertence ao conjunto de chunks enviados ao modelo;
-5. verificar que os IDs existem no índice real;
-6. verificar que continuam permitidos para o progresso atual;
-7. derivar ações no servidor/aplicação a partir de IDs válidos;
-8. nunca confiar diretamente em uma URL ou comando de UI criado pelo LLM.
+1. remover eventual bloco de raciocínio interno do texto, se o modelo o emitir;
+2. verificar tamanho da resposta;
+3. extrair os marcadores `[n]` e aceitar apenas números que correspondam a trechos enviados naquela chamada;
+4. converter cada marcador válido no chunk correspondente, confirmando que o ID existe no índice e continua permitido para o progresso atual;
+5. remover do texto os marcadores inválidos;
+6. se houver `[SEM_BASE]` ou nenhum marcador válido numa resposta factual, não exibir o texto como resposta confiável: retornar `not_covered` ou acionar o fallback;
+7. derivar ações (`OPEN_MAP`, `OPEN_CONTENT`, `OPEN_ROUTE`) no código a partir dos chunks citados;
+8. nunca confiar em URL, rota ou comando produzido pelo modelo.
 
-Se o modelo citar:
-
-```text
-limgrave-npc-999
-```
-
-e esse ID não existe, descartar a citação.
-
-Se uma resposta factual vier sem grounding suficiente, preferir fallback em vez de mostrar algo possivelmente inventado.
+Se o modelo citar `[7]` e só foram enviados 4 trechos, a citação é descartada.
 
 ---
 
@@ -1781,18 +1900,32 @@ O botão deve possuir:
 - z-index controlado;
 - comportamento consistente ao abrir/fechar.
 
+## Política de camadas
+
+Estado atual: botão "voltar ao topo" no canto inferior direito com `z-index: 50` (visível no mobile); sidebar mobile e seu toggle em `91–94`, com bloqueio de scroll do `body`; header em `100`; modal de imagem existente.
+
+Definir explicitamente a ordem das camadas do botão e do painel de Gideon, sem sobrepor modais existentes, e decidir o comportamento quando a sidebar mobile abrir (por exemplo, esconder o botão ou fechar o painel). O botão de Gideon não pode ocupar o mesmo ponto do "voltar ao topo".
+
+## Perguntas sugeridas e escopo
+
+Como o conteúdo atual é pequeno (decisão 1.2.8), o painel deve:
+
+- exibir perguntas sugeridas de acordo com a tela atual (região ativa, mecânica aberta ou Home), derivadas do índice — nunca perguntas cuja resposta não exista no guia;
+- apresentar de forma curta e honesta o que o Guiding Grace cobre hoje;
+- tratar `not_covered` como resposta normal, sem parecer erro.
+
 
 ---
 
 # 21. Integração das citações com o mapa
 
-Criar ou generalizar uma função no nível da página `Guide`.
+A citação é convertida numa URL do guia (decisão 1.2.3) e a aplicação apenas navega até ela:
 
-Conceito:
-
-```ts
-handleGideonTarget(regionId, id)
+```text
+/guide/:buildId?region=<regionId>&focus=<contentId>
 ```
+
+`Guide` lê os parâmetros, valida e aplica o comportamento abaixo, reaproveitando `focusRequest` (mapa) e `scrollToLabel` (conteúdo) que já existem.
 
 Comportamento:
 
@@ -1825,6 +1958,8 @@ Comportamento:
 - não fingir que existe pin.
 
 Não codificar essas regras dentro da mensagem do LLM.
+
+Para citações de mecânicas, a URL é a própria rota da mecânica (ex.: `/mechanics/weapons`), opcionalmente com um parâmetro de seção para rolar até o trecho.
 
 ---
 
@@ -1860,6 +1995,8 @@ Responsabilidades:
 - conhecer a mecânica/página atual;
 - opcionalmente receber o conteúdo atualmente destacado/visível;
 - produzir um objeto pequeno e serializável.
+
+Com a região na URL (decisão 1.2.3), o resolvedor deriva build e região diretamente da rota e dos parâmetros, e o progresso da store existente. Em telas sem build (Home), usa `lastBuildId` dos metadados globais (decisão 1.2.5). Não é necessário um provider-ponte para a página `Guide` publicar seu estado.
 
 Não armazenar toda a árvore React ou DOM.
 
@@ -1995,6 +2132,7 @@ Estados que devem acionar fallback incluem:
 - resposta inválida;
 - falha de parsing;
 - erro de validação de citações;
+- versão do índice diferente entre frontend e Worker (`index_version_mismatch`);
 - indisponibilidade do Worker.
 
 O fallback não deve exigir Turnstile, sessão de IA ou disponibilidade do Worker. Perguntas sociais e decisões determinísticas como `clarify`, `spoiler_blocked` e `not_covered` também podem ser resolvidas localmente quando houver informação suficiente.
@@ -2057,7 +2195,9 @@ Possibilidades:
 - controles do próprio provider;
 - combinação desses recursos.
 
-Não adicionar Redis, D1 ou KV apenas para rate limit se não forem necessários. Se o Rate Limiting binding puder ser usado no plano Free no momento da implantação, ele pode complementar esse mínimo; confirmar a disponibilidade antes de torná-lo requisito.
+Não adicionar Redis, D1 ou KV apenas para rate limit se não forem necessários.
+
+O Rate Limiting binding é **opcional** (decisão 1.2.9): é permissivo e eventualmente consistente por localidade, e a documentação não explicita sua disponibilidade no plano Free. Se estiver disponível na implantação, pode complementar o mínimo, mas não é a defesa principal. As garantias reais são Turnstile, limites de tamanho/tokens, chamar o Worker só quando houver trechos permitidos e o fallback local.
 
 Como Workers AI Free simplesmente deixa de atender quando a cota gratuita é excedida, o pior cenário deve ser perda temporária da geração, **não uma cobrança inesperada**. Limitar também tamanho de prompt, histórico, chunks enviados e tokens de saída para aumentar a duração útil da cota.
 
@@ -2412,6 +2552,8 @@ Critério:
 - nenhuma citação de Liurnia pode ser devolvida;
 - se detectada correspondência bloqueada, status adequado.
 
+Como regiões "Em breve" não entram no índice (decisão 1.2.7), esses casos são validados com **fixtures unitárias** de chunks de regiões futuras e chunks com `spoilerGate`, sem publicar conteúdo novo.
+
 ---
 
 ## 34.6. Conteúdo não coberto
@@ -2444,7 +2586,9 @@ Testes devem verificar:
 - pertence aos chunks recuperados;
 - está liberada;
 - `regionId` é válido;
-- pin existe quando a ação é `OPEN_MAP`.
+- pin existe quando a ação é `OPEN_MAP`;
+- marcadores `[n]` fora do intervalo enviado são descartados;
+- `[SEM_BASE]` ou ausência de marcador válido não resulta em `answered`.
 
 Meta ideal:
 
@@ -2467,6 +2611,10 @@ Prioridades:
 - aliases;
 - Progress Guard;
 - geração do contexto;
+- `buildGuideIndex()` e o hash de versão (determinismo, IDs únicos, exclusão de regiões "Em breve");
+- migração do progresso `string[]` → `{ version, completed, visited }`;
+- leitura e validação dos parâmetros `region`/`focus` da URL;
+- parsing dos marcadores `[n]` e `[SEM_BASE]`;
 - validação de response;
 - resolução de ações;
 - serialização do estado conversacional.
@@ -2533,35 +2681,29 @@ src/
 │       ├── styles.ts
 │       └── ...
 │
-├── data/
-│   ├── regionPins.ts
+├── data/                       dados de domínio puros, sem imports de UI
+│   ├── regionPins.ts           id, coordenadas, type, label (sem ícone/cor)
 │   ├── regionSections.ts
+│   ├── regions.ts              metadados das regiões (sem ícones)
 │   ├── guideAliases.ts
 │   └── mechanics/
 │       └── weaponProgression.ts
 │
 ├── hooks/
-│   ├── useGuideProgress.ts
+│   ├── useGuideProgress.ts     registro versionado { completed, visited }
 │   └── useGuideAssistant.ts
 │
-├── context/
-│   └── GideonContext/
-│       └── ...
-│
-├── search/
-│   ├── normalize.ts
-│   ├── guideSearch.ts
-│   ├── progressGuard.ts
-│   └── types.ts
-│
-└── ...
+└── ...                         camada visual deriva ícones/cores do type
 
 shared/
-└── guideIndex.generated.ts      índice canônico gerado (ou equivalente)
-
-scripts/
-├── generate-guide-index.*
-└── ...
+└── gideon/                     lógica pura usada pelo frontend e pelo Worker
+    ├── buildGuideIndex.ts      dados → chunks + hash de versão
+    ├── normalize.ts
+    ├── search.ts
+    ├── progressGuard.ts
+    ├── resolveContext.ts       contexto prioritário / clarify
+    ├── citations.ts            marcadores [n] e [SEM_BASE] → citações e ações
+    └── types.ts
 
 worker/
 ├── src/
@@ -2571,15 +2713,12 @@ worker/
 │   ├── providers/
 │   │   ├── types.ts
 │   │   └── workersAi.ts
-│   ├── validation/
 │   └── ...
 ├── wrangler.jsonc
 └── ...
-
-public/
-└── data/
-    └── guide-search-index.json
 ```
+
+Não há script de geração de índice nem JSON público de índice (decisão 1.2.2).
 
 Se uma estrutura mais simples resolver melhor, prefira a mais simples.
 
@@ -2587,36 +2726,40 @@ Se uma estrutura mais simples resolver melhor, prefira a mais simples.
 
 # 39. Ordem recomendada de implementação
 
+Ordem revisada (decisão 1.2.4): o motor local e o chat determinístico vêm antes do Worker. Ao fim da Etapa 7, Gideon já funciona sem nenhuma infraestrutura nova — e essa versão é, ao mesmo tempo, o fallback obrigatório.
+
 ## Etapa 1 — Preparação e contratos
 
 - ler arquitetura atual;
 - mapear como conteúdo/pins/progresso funcionam;
-- definir tipos compartilhados;
+- definir tipos compartilhados (chunk, contexto, request/response, status);
+- definir o contrato da URL do guia (`region`, `focus`);
+- definir o formato versionado do progresso e dos metadados globais;
+- configurar Vitest;
 - preservar o frontend no Netlify e planejar a configuração futura do Worker separado, sem criá-lo nesta etapa;
-- definir o contrato `GuideNavigationTarget`, incluindo como o Guide o recebe após uma navegação global;
-- decidir como índice será gerado;
 - documentar mudanças necessárias.
 
 **Não começar pelo chat visual.**
 
 ---
 
-## Etapa 2 — Base de conhecimento
+## Etapa 2 — Dados de domínio e base de conhecimento
 
-- criar gerador;
-- gerar um artefato canônico consumível pelo Worker e pelo frontend;
-- gerar chunks;
-- ligar pins;
-- incluir metadados;
+- separar dados de domínio da apresentação: pins sem ícone/cor (derivados do `type`), metadados de regiões sem ícones;
+- extrair o conteúdo factual de `WeaponProgression` para dados tipados (seção 11);
+- criar `buildGuideIndex()` e o hash de versão;
+- gerar chunks, ligar pins e incluir metadados;
 - distinguir chunks citáveis com pin de chunks citáveis apenas no conteúdo;
-- validar IDs;
+- excluir regiões "Em breve";
+- validar IDs com testes;
 - garantir zero duplicação manual.
 
 Critério:
 
 ```text
-é possível consultar o JSON/estrutura gerada e identificar
-qual texto corresponde a qual conteúdo real da aplicação.
+o mapa, a legenda e as páginas continuam idênticos visualmente,
+e é possível inspecionar o índice e identificar qual texto
+corresponde a qual conteúdo real da aplicação.
 ```
 
 ---
@@ -2639,39 +2782,38 @@ encontram os chunks esperados sem LLM.
 
 ---
 
-## Etapa 4 — Progress Guard
+## Etapa 4 — Progresso e Progress Guard
 
-- visited regions;
+- migração do progresso para `{ version, completed, visited }`, retrocompatível;
+- metadados globais `lastBuildId` / `lastRegionId`;
+- marcação de região visitada;
 - regras padrão;
 - gates explícitos revisados editorialmente para exceções reais;
 - filtro;
-- testes de spoiler.
+- testes de spoiler com fixtures.
 
 Critério:
 
 ```text
-conteúdo futuro não aparece no conjunto de chunks permitido.
+progresso antigo é preservado
+e conteúdo futuro não aparece no conjunto de chunks permitido.
 ```
 
 ---
 
-## Etapa 5 — Contexto global da aplicação
+## Etapa 5 — Região na URL e contexto global
 
-- montar `GideonAssistant` em nível global;
-- criar resolvedor/provider de `screenContext`;
-- integrar rota atual;
-- build atual;
-- região atual;
-- mecânica/página atual;
-- progresso;
-- regiões incompletas;
-- persistir estado aberto/fechado entre rotas;
+- `Guide` passa a derivar a região ativa de `?region=` e a aplicar `?focus=` após validação;
+- a sidebar atualiza a URL ao trocar de região;
+- resolvedor de `screenContext` a partir de rota, parâmetros e progresso;
+- regiões incompletas e contexto prioritário;
 - testes da regra de ambiguidade.
 
 Critério:
 
 ```text
-Gideon consegue saber onde o usuário está sem o usuário precisar explicar.
+um link com region/focus abre a região e foca o pin certo, inclusive após reload,
+e Gideon consegue saber onde o usuário está sem o usuário precisar explicar.
 ```
 
 ---
@@ -2689,81 +2831,72 @@ Gideon consegue saber onde o usuário está sem o usuário precisar explicar.
 
 ---
 
-## Etapa 7 — Worker sem LLM
+## Etapa 7 — Chat determinístico (MVP local)
+
+- montar `GideonAssistant` em nível global;
+- abertura/fechamento persistente entre rotas;
+- mensagens, input, loading e estados;
+- respostas locais: `social`, `clarify` com escolhas, `not_covered`, `spoiler_blocked` e resultados da busca com fontes;
+- citações navegáveis pela URL (mapa ou conteúdo);
+- perguntas sugeridas por tela e apresentação do escopo;
+- política de camadas, responsividade e acessibilidade.
+
+Critério:
+
+```text
+sem Worker nem IA, é possível perguntar, receber fontes reais
+e navegar até o pin ou trecho correto em desktop e mobile.
+```
+
+---
+
+## Etapa 8 — Worker sem LLM
 
 Antes de adicionar geração:
 
 - endpoint;
 - CORS;
-- validação do request;
-- retrieval;
-- Progress Guard;
+- validação do request e limites de tamanho;
+- verificação de `indexVersion`;
+- retrieval e Progress Guard próprios, com o mesmo índice;
 - resposta de debug/estruturada.
 
 Isso permite validar a infraestrutura sem gastar cota.
 
 ---
 
-## Etapa 8 — Provider de IA + Gideon
+## Etapa 9 — Provider de IA + Gideon
 
 - binding Workers AI;
 - interface de provider;
-- prompt;
-- saída estruturada;
+- prompt com trechos numerados;
+- texto com marcadores `[n]` / `[SEM_BASE]` (sem JSON do modelo);
+- experimento de controle do raciocínio do Qwen3 e medição de latência/tokens;
 - personalidade;
 - limite de tokens;
 - validação pós-modelo.
 
 ---
 
-## Etapa 9 — Frontend do chat
+## Etapa 10 — Chat conectado ao Worker
 
-- componente;
-- abertura/fechamento;
-- mensagens;
-- loading;
-- erro;
-- citations;
-- navegação;
-- responsive;
-- acessibilidade.
+- chamar o Worker apenas quando houver trechos permitidos;
+- exibir a resposta redigida com as citações validadas;
+- fallback para o motor local em timeout, rede, 429, cota, resposta inválida e `index_version_mismatch`.
 
 ---
 
-## Etapa 10 — Integração com mapa e conteúdo
-
-- mesma região;
-- outra região;
-- pin;
-- conteúdo sem pin;
-- mecânica;
-- foco e highlight.
-
----
-
-## Etapa 11 — Fallback
-
-- falha de rede;
-- 429;
-- IA indisponível;
-- resposta inválida;
-- busca local;
-- mensagens úteis.
-
----
-
-## Etapa 12 — Proteção de produção
+## Etapa 11 — Proteção de produção
 
 - Turnstile;
-- rate limiting;
 - origem permitida;
-- AI Gateway, se adequado;
-- limites de input;
+- limites de input e tokens;
+- Rate Limiting binding e AI Gateway apenas se adequados (opcionais);
 - observabilidade básica.
 
 ---
 
-## Etapa 13 — Testes, documentação e deploy
+## Etapa 12 — Testes, documentação e deploy
 
 - unit;
 - evals;
@@ -2773,7 +2906,8 @@ Isso permite validar a infraestrutura sem gastar cota.
 - deploy Worker;
 - deploy site;
 - verificar produção real;
-- atualizar README/guia técnico quando necessário.
+- deploy automático do Worker por GitHub Actions quando a CI do roadmap existir;
+- atualizar README/guia técnico/roadmap quando necessário.
 
 ---
 
@@ -2789,7 +2923,6 @@ Possível resultado:
     "dev": "...",
     "build": "...",
     "lint": "...",
-    "generate:guide-index": "...",
     "test": "...",
     "eval:search": "...",
     "worker:dev": "...",
@@ -2800,7 +2933,7 @@ Possível resultado:
 
 Não quebrar os scripts existentes.
 
-A geração do índice deve acontecer automaticamente quando necessário no build de produção.
+Não há etapa de geração de índice: frontend e Worker derivam o índice em tempo de execução a partir dos mesmos dados (decisão 1.2.2).
 
 ---
 
@@ -2822,7 +2955,9 @@ Validar que:
 
 ## Worker
 
-Criar projeto Cloudflare Workers no mesmo repositório ou estrutura equivalente, com configuração explícita de Wrangler e scripts de desenvolvimento/deploy. O Worker deve importar o índice canônico gerado no build, e não depender de buscar o deploy do site para recuperar conhecimento.
+Criar projeto Cloudflare Workers no mesmo repositório ou estrutura equivalente, com configuração explícita de Wrangler e scripts de desenvolvimento/deploy. O Worker importa os mesmos dados de domínio e a mesma `buildGuideIndex()` do frontend, e não depende de buscar o deploy do site para recuperar conhecimento.
+
+Como os deploys são independentes, o Worker precisa ser publicado novamente sempre que o conteúdo do guia mudar. O hash de versão (decisão 1.2.6) faz o navegador usar o fallback local enquanto as versões estiverem diferentes. O deploy automático por GitHub Actions entra junto com a CI do roadmap e exige um segredo de deploy da Cloudflare no repositório; até lá, o deploy é manual.
 
 Configurar:
 
@@ -2890,7 +3025,9 @@ A feature só pode ser considerada completa quando:
 - [ ] clicar em fonte sem pin leva ao conteúdo correto;
 - [ ] outra região pode ser aberta corretamente quando necessário;
 - [ ] uma citação acionada fora do Guide chega ao alvo correto sem o componente global acessar callbacks internos de `Guide`;
-- [ ] quando o alvo for serializado na URL, ele continua funcionando após reload;
+- [ ] a região ativa e o foco vivem na URL e continuam funcionando após reload;
+- [ ] progresso salvo no formato antigo é preservado após a migração;
+- [ ] perguntas sugeridas por tela levam apenas a conteúdos existentes;
 - [ ] perguntas de continuação funcionam em casos básicos;
 - [ ] progresso influencia o conhecimento disponível;
 - [ ] conteúdo futuro pode ser bloqueado;
@@ -2919,7 +3056,12 @@ A feature só pode ser considerada completa quando:
 - [ ] retrieval testável;
 - [ ] Progress Guard testável;
 - [ ] índice derivado dos dados reais;
-- [ ] Worker e frontend usam o mesmo índice lógico gerado;
+- [ ] Worker e frontend usam os mesmos dados de domínio e a mesma `buildGuideIndex()`;
+- [ ] dados de domínio sem imports de UI;
+- [ ] regiões "Em breve" fora do índice;
+- [ ] divergência de versão do índice aciona fallback;
+- [ ] o modelo não gera JSON; status, citações e ações são decididos pelo código;
+- [ ] o Worker não confia em chunks, IDs ou textos enviados pelo navegador;
 - [ ] chat sem persistência remota obrigatória;
 - [ ] estado global de Gideon não depende de componente de página específico;
 - [ ] screen context é pequeno, tipado e serializável;
@@ -3457,17 +3599,19 @@ A implementação recomendada utiliza:
 ```text
 Frontend existente no Netlify
 +
-índice próprio gerado no build
+dados de domínio puros + buildGuideIndex() compartilhado
 +
-busca lexical determinística
+busca lexical determinística (motor local = MVP e fallback)
 +
-Cloudflare Worker
+região e foco na URL
 +
-Workers AI
+Cloudflare Worker (repete retrieval e validação)
++
+Workers AI gerando apenas texto com referências [n]
 +
 Turnstile
 +
-AI Gateway quando útil
+AI Gateway / Rate Limiting quando úteis (opcionais)
 ```
 
 Não usar AI Search, embeddings ou banco vetorial na primeira versão sem evidência de necessidade.
