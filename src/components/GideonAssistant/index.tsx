@@ -4,7 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { GiCrystalBall } from "react-icons/gi";
 import { IoClose, IoSend, IoShieldCheckmarkOutline } from "react-icons/io5";
 import type { GideonChoice, GideonSource } from "../../../shared/gideon/types";
+import gideonIcon from "../../assets/gideon-icon.png";
 import { MAX_QUESTION_LENGTH, useGideonConversation } from "../../hooks/useGideonConversation";
+import { useDragToClose } from "../../hooks/useDragToClose";
 import { useGideonScreenContext } from "../../hooks/useGideonScreenContext";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
 import GideonMessage from "../GideonMessage";
@@ -12,8 +14,10 @@ import { PillButton } from "../PillButton";
 import {
   CloseButton,
   Composer,
+  DragHandle,
   ComposerInput,
   HeaderActions,
+  HeaderAvatar,
   HeaderIdentity,
   HeaderSubtitle,
   HeaderTitle,
@@ -57,6 +61,23 @@ export default function GideonAssistant() {
     launcherRef.current?.focus();
   };
 
+  // No celular, puxar o cabeçalho para baixo fecha o painel, como o X
+  const { panelRef, panelStyle, handleProps } = useDragToClose<HTMLElement>(isMobile, close);
+
+  // No computador, clicar fora do painel fecha o chat; o botão do Gideon já alterna sozinho
+  useEffect(() => {
+    if (!isOpen || isMobile) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (panelRef.current?.contains(target) || launcherRef.current?.contains(target)) return;
+      setOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [isOpen, isMobile, panelRef, setOpen]);
+
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     ask(question);
@@ -78,10 +99,11 @@ export default function GideonAssistant() {
   return (
     <>
       {isOpen && (
-        <Panel id={PANEL_ID} aria-labelledby={TITLE_ID} onKeyDown={handleKeyDown}>
-          <PanelHeader>
+        <Panel ref={panelRef} id={PANEL_ID} aria-labelledby={TITLE_ID} onKeyDown={handleKeyDown} style={panelStyle}>
+          <PanelHeader {...handleProps}>
+            {isMobile && <DragHandle aria-hidden="true" />}
             <HeaderIdentity>
-              <GiCrystalBall aria-hidden="true" />
+              <HeaderAvatar src={gideonIcon} alt="" />
               <span>
                 <HeaderTitle id={TITLE_ID}>Sir Gideon Ofnir</HeaderTitle>
                 <HeaderSubtitle>

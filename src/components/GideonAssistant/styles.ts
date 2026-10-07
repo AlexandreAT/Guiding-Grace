@@ -123,6 +123,25 @@ export const PanelHeader = styled.header`
   gap: ${THEME.spacing.sm};
   padding: 14px 16px;
   border-bottom: 1px solid rgba(212, 169, 31, 0.24);
+
+  /* No celular o cabeçalho é a alça do painel: o gesto de arrastar não pode rolar a página */
+  @media (max-width: 768px) {
+    position: relative;
+    padding-top: 20px;
+    touch-action: none;
+    cursor: grab;
+  }
+`;
+
+export const DragHandle = styled.span`
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(212, 169, 31, 0.45);
+  transform: translateX(-50%);
 `;
 
 export const HeaderIdentity = styled.div`
@@ -130,13 +149,17 @@ export const HeaderIdentity = styled.div`
   align-items: center;
   gap: 10px;
   min-width: 0;
+`;
 
-  svg {
-    flex: 0 0 auto;
-    width: 26px;
-    height: 26px;
-    color: ${THEME.colors.goldLight};
-  }
+// Retrato do Gideon no cabeçalho do chat; o botão de abrir continua com a bola de cristal
+export const HeaderAvatar = styled.img`
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(212, 169, 31, 0.55);
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 12px rgba(212, 169, 31, 0.22);
 `;
 
 export const HeaderTitle = styled.h2`
