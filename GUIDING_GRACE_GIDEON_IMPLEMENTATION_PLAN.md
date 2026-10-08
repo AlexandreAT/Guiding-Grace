@@ -184,6 +184,22 @@ Decisões tomadas com base em testes reais, registradas aqui porque divergem ou 
 
 **Custo:** ~2 chamadas por pergunta: ~1.300 respostas com IA por dia na cota gratuita (antes ~2.300); 1 a 2 s por resposta. Medido em 6 conversas reais + casos de borda: todas as referências resolvidas corretamente.
 
+### 1.2.13. Compêndio: Chefes e Lore (expansão pós-MVP, 08/10/2026)
+
+**Estado:** etapas 1 a 12 concluídas e em produção (https://guidinggrace.netlify.app).
+
+Nova expansão, detalhada na **seção 11.1** e implementada nas **Etapas 13 a 18**: páginas reais de **Chefes** e **Lore**, cujos dados também alimentam o Gideon pelo mesmo `buildGuideIndex()`. Decisões principais:
+
+- **uma informação, dois leitores:** página e Gideon leem os mesmos dados; não existe base exclusiva da IA nem segundo RAG;
+- **fontes externas só em desenvolvimento:** importadores convertem dados objetivos para arquivos internos commitados; o build e o runtime nunca acessam fonte externa; IDs e slugs são do Guiding Grace;
+- **fontes escolhidas após pesquisa de licenças (11.1.10):** fatos de chefes da Eldenpedia (CC BY-SA 4.0, só fatos, com proveniência por registro); nomes oficiais em pt-BR dos textos do jogo; textos do jogo só em citação curta. A Fan API e o ERDB, citados na proposta original, foram descartados (sem licença, dados errados ou sem chefes);
+- **dados objetivos × editoriais em arquivos separados:** importadores só escrevem `gameData`; o texto editorial nunca é sobrescrito;
+- **regra única de conhecimento:** o `SpoilerGate` atual vale para páginas e Gideon (sem renomeação ampla); o gate de lore é decisão obrigatória do autor;
+- **"Mostrar mesmo assim" vale só para a interface:** revelar uma seção não libera aquele conhecimento para o Gideon;
+- **certeza curada (`explicit`/`inferred`/`interpretation`):** antecipa, de forma determinística, parte do "Gideon narrador" (49.2);
+- **a lore da região "Geral" vira os primeiros artigos**, sem duplicar texto;
+- **navegação:** um card "Compêndio" na Home e no menu, com hubs `/bosses` e `/lore`.
+
 ## 1.3. Etapas manuais do autor (obrigatório parar e pedir)
 
 Algumas ações dependem de conta, painel ou segredo do autor e **não podem ser feitas pelo agente**.
@@ -219,6 +235,10 @@ Ações manuais previstas:
 | 12 | Publicar o Worker (`npm run worker:deploy`) e enviar a URL gerada | terminal |
 | 12 | Cadastrar variáveis do frontend (URL do Worker e Site Key) e refazer o deploy | Netlify → Site configuration → Environment variables |
 | 12 | Revisão manual em desktop e celular | navegador / celular |
+| 15 | Revisar a `certainty` proposta para cada seção de lore migrada da região "Geral" | arquivos de `src/data/compendium/lore/` |
+| 17 (opcional) | Extrair parâmetros e textos `porbr` da **própria cópia do jogo** (WitchyBND/Smithbox) para conferir valores e nomes da DLC; os arquivos ficam fora do Git | PC com o jogo instalado |
+| 18 | Escrever ou revisar o texto editorial dos chefes e artigos iniciais (estratégia, lore, relações, gates) | arquivos de `src/data/compendium/` |
+| 18 | Decidir o uso de imagens de chefes (ex.: capturas próprias) ou seguir sem imagens | — |
 | CI (futuro) | Criar API Token (modelo "Edit Cloudflare Workers") e cadastrar `CLOUDFLARE_API_TOKEN` e `CLOUDFLARE_ACCOUNT_ID` | Cloudflare → My Profile → API Tokens; GitHub → Settings → Secrets |
 
 Se surgir outra ação manual não prevista nesta tabela, aplicar a mesma regra.
@@ -1227,6 +1247,333 @@ com base no conteúdo real do Guia de Mecânicas.
 
 ---
 
+# 11.1. Compêndio: Chefes e Lore
+
+As etapas 1 a 12 entregaram um Gideon que conhece regiões, objetivos, pins, progresso e mecânicas. O **Compêndio** amplia o Guiding Grace para duas novas categorias de conteúdo, **Chefes** e **Lore**, que respondem perguntas como "quem é Godrick?", "qual a fraqueza de Godrick?", "o que foi a Noite das Facas Negras?" ou "qual a relação entre Ranni e a Runa da Morte?".
+
+O Compêndio é, antes de tudo, **parte do site**: páginas reais, navegáveis e úteis sem o Gideon. O Gideon fica mais inteligente como consequência, porque lê os mesmos dados.
+
+## 11.1.1. Princípio: uma informação, dois leitores
+
+A mesma informação usada pela página alimenta o Gideon. Não existe base separada para a IA.
+
+```text
+fontes externas (só em desenvolvimento)
+        ↓
+scripts de importação / pesquisa
+        ↓
+dados internos versionados no Git (src/data/compendium/)
+        ↓
+┌─────────────┬──────────────┬────────────────────────┐
+│ Chefes      │ Lore         │ Regiões / Mecânicas    │
+│ (páginas)   │ (páginas)    │ (páginas atuais)       │
+└─────────────┴──────────────┴────────────────────────┘
+                      ↓
+              buildGuideIndex()  (o mesmo de hoje)
+                      ↓
+                 GuideChunk[]
+                      ↓
+     busca → Progress Guard (regra única de conhecimento)
+                      ↓
+                    Gideon
+```
+
+Consequência direta: **quanto mais o site cresce, mais o Gideon sabe**, sem duplicar conhecimento e sem um segundo RAG.
+
+## 11.1.2. Fontes externas são ferramenta de importação, nunca dependência de produção
+
+APIs, datasets e wikis da comunidade podem ajudar a obter dados objetivos (nome, localização, HP, runas, drops, resistências, fraquezas). Eles **só são acessados por scripts executados em desenvolvimento**. O resultado é convertido para o formato interno e commitado.
+
+```text
+usuário abre /bosses/godrick-the-grafted
+→ a página lê src/data/compendium/... (já no bundle)
+→ nenhuma chamada externa
+```
+
+Se uma fonte sair do ar:
+
+- páginas, URLs, busca, Gideon e deploy continuam funcionando;
+- só novos imports daquela fonte param, até trocarmos o adapter.
+
+Regras:
+
+- **IDs e slugs são do Guiding Grace** (`godrick-the-grafted`) e nunca mudam por causa da fonte. IDs externos ficam registrados apenas como mapeamento para reimportação (`externalIds`);
+- o build nunca acessa a rede: ele usa só os arquivos presentes no repositório;
+- URL externa nunca vira rota interna.
+
+## 11.1.3. Dados objetivos × conteúdo editorial
+
+| | Dados objetivos | Conteúdo editorial |
+|---|---|---|
+| Exemplos | nome oficial (pt-BR e inglês), região, HP, runas, fases, fraquezas, resistências, drops | resumo amigável, estratégia, contexto para iniciante, importância narrativa, explicação de lore, relações, certeza, regras de spoiler |
+| Origem | importados ou digitados com apoio de datasets | escritos e revisados pelo autor do guia |
+| Arquivo | `src/data/compendium/gameData/*.json`, **escritos só pelos importadores** | `src/data/compendium/bosses/*.ts` e `lore/*.ts`, **nunca tocados por importadores** |
+
+A separação por arquivo é o que garante que reimportar dados não apaga texto escrito à mão. O valor do Guiding Grace continua sendo **organizar, resumir e explicar**; não copiar uma wiki.
+
+## 11.1.4. Modelo de dados
+
+Somente referência; os nomes finais seguem o código real.
+
+**Blocos de texto compartilhados.** Os blocos de `src/data/mechanics/types.ts` (`paragraph`, `list`, `callout`, `comparison`, com partes `text`/`highlight`) já são um formato genérico de conteúdo. Eles passam para `src/data/contentBlocks.ts` (mecânicas reexportam, sem regressão), e o componente `MechanicGuideContent` vira o renderizador comum `ContentBlocks`. Mecânicas, chefes e lore usam o mesmo formato e o mesmo componente.
+
+**Gate de conhecimento.** Continua sendo o `SpoilerGate` atual (`regionId`, `afterObjectiveId`), sem renomeação ampla: a mudança é de **uso**, não de nome. A função que decide se um gate está aberto sai de `isChunkAllowed` para uma função pura própria (`isGateOpen(gate, progress)`), usada pelo Progress Guard e pelas páginas. Ver 11.1.7.
+
+```ts
+// Grau de certeza de uma afirmação de lore: impede que interpretação seja guardada como fato
+type Certainty = "explicit" | "inferred" | "interpretation";
+// explicit: o jogo afirma (descrição, diálogo, evento visto)
+// inferred: fortemente sugerido por mais de uma evidência
+// interpretation: leitura possível, discutida pela comunidade
+
+// De onde veio a informação (proveniência). Não é exibido por padrão, mas permite revisar e atribuir
+type ContentSource =
+  | { type: "item-description"; item: string }
+  | { type: "dialogue"; character: string }
+  | { type: "game-data"; dataset: string }
+  | { type: "external"; name: string; url: string; license?: string };
+
+// Relação tipada entre entradas do Compêndio (sem banco de grafos)
+interface CompendiumRef {
+  kind: "boss" | "lore";
+  id: string;
+}
+
+interface CompendiumSection {
+  id: string;                 // estável: âncora (?section=) e chunk do Gideon
+  title: string;
+  blocks: ContentBlock[];
+  gate?: SpoilerGate;         // mais restrito que o padrão da entrada, quando preciso
+  certainty?: Certainty;      // obrigatório em seções de lore (validado pelo content:check)
+  sources?: ContentSource[];
+}
+
+interface BossGuide {
+  id: string;                 // = slug da URL, estável e nosso
+  name: string;               // nome oficial em português
+  englishName: string;
+  aliases: string[];          // "Godrick", "o Enxertado"
+  regionId: string;           // região onde o chefe é enfrentado (gate padrão)
+  objectiveId?: string;       // tópico do checklist no guia da região (ex.: limgrave-boss-1)
+  importance: "main" | "remembrance" | "optional";
+  summary: string;
+  sections: CompendiumSection[];   // visão geral, estratégia, lore (origem, relações...)
+  related: CompendiumRef[];
+}
+
+// Escrito só pelos importadores, chaveado pelo id interno do chefe
+interface BossGameData {
+  id: string;
+  hp?: number;
+  runes?: number;
+  phases?: number;
+  weaknesses: string[];       // tipos de dano/status, em ids internos
+  resistances: string[];
+  drops: string[];
+  externalIds: Record<string, string>;   // { "<fonte>": "<id na fonte>" }, só para reimportar
+  // Fontes divergem (ex.: equilíbrio da Malenia: 80 numa wiki, 125 na outra): todo registro diz de onde veio
+  provenance: {
+    source: string;           // ex.: "eldenpedia"
+    url: string;              // página consultada
+    revision: string;         // revisão da página no momento da importação
+    importedAt: string;
+  };
+}
+
+interface LoreArticle {
+  id: string;                 // = slug
+  title: string;
+  category: "concept" | "character" | "event" | "faction" | "place";
+  aliases: string[];
+  summary: string;
+  gate: SpoilerGate | "open"; // padrão das seções: decisão obrigatória do autor
+  sections: CompendiumSection[];
+  related: CompendiumRef[];
+}
+```
+
+**Por que o gate de lore é obrigatório.** Regiões e chefes têm um padrão natural (a região alcançada). Um artigo de lore não pertence a uma região. Deixar "sem gate = liberado" vazaria spoilers por omissão, então o tipo obriga o autor a decidir (`"open"` ou um gate), e o `content:check` recusa seção de lore sem `certainty`.
+
+**Chefes no checklist.** O chefe continua sendo um objetivo do guia da sua região (ex.: Godrick, `limgrave-boss-1`). O `BossGuide` aponta para esse objetivo por `objectiveId`, em vez de criar outro checkbox. Isso dá o "Ver no mapa" da página, a marcação de concluído e gates como "lore liberada depois de derrotar Godrick".
+
+## 11.1.5. A lore que já existe vira os primeiros artigos
+
+A região **"Geral"** (`src/data/regionSections.ts`) já tem conteúdo de lore escrito pelo autor: Maculados e Graça, Ordem Áurea, Marika e o Elden Ring, a Noite das Facas Negras, a Ruptura, Empírios e as filosofias (Lua Sombria, Aqueles que Vivem na Morte...). São tópicos sem checklist e sem pins.
+
+Para não ter o mesmo texto em dois lugares:
+
+1. esses tópicos são migrados **sem alterar o texto** para artigos de lore (um por tópico, seções pelo parágrafo), com `certainty` sugerida pelo agente e **revisada pelo autor** (ex.: "ao que tudo indica, escolhidos pela Grande Vontade" é `inferred`);
+2. a página "Geral" do guia passa a montar esses tópicos a partir dos artigos (um item de conteúdo que referencia o artigo), com link "Ler no Compêndio";
+3. o índice deixa de gerar os chunks `region:geral:*` duplicados: o assunto passa a ser citado pelo artigo de lore, cuja fonte abre `/lore/:id`.
+
+Assim o Lore Hub já nasce com conteúdo real do autor, e a migração é a primeira prova do formato.
+
+## 11.1.6. Rotas, páginas e navegação
+
+Rotas próprias e permanentes:
+
+```text
+/bosses                      hub de chefes, agrupado por região
+/bosses/:bossId              página genérica de chefe   (?section= para âncora)
+/lore                        hub de lore: conceitos, personagens, eventos, facções, lugares
+/lore/:articleId             página genérica de artigo  (?section= para âncora)
+```
+
+- **Uma página por tipo**, nunca um componente por chefe ou artigo. Slug inexistente cai no `NotFound` atual;
+- as páginas são carregadas sob demanda (`lazy` do React Router), para o conteúdo do Compêndio não pesar no bundle inicial;
+- o parâmetro `?section=` generaliza o `MECHANIC_SECTION_PARAM` atual, com os mesmos helpers de `src/routes/`.
+
+**Página de chefe:** cabeçalho (nome, região, importância, nível recomendado se o guia tiver); combate (dados objetivos do `gameData` + dicas editoriais); estratégia; lore em seções curtas (origem, importância, relações, eventos, consequências); "Ver no mapa" quando houver `objectiveId`; "Relacionados" com links para chefes e artigos. Imagens só quando houver direito de uso (ver 11.1.11).
+
+**Página de lore:** resumo; seções curtas com selo discreto de certeza ("Afirmado pelo jogo", "Fortemente sugerido", "Interpretação"); relacionados.
+
+**Descoberta, sem sobrecarregar a Home:**
+
+- **um** novo card na Home, "Compêndio", que abre `/select/compendium` com dois itens (Chefes e Lore), no mesmo padrão `MAIN_CATEGORIES` → `SELECTIONS` → página que já existe;
+- link "Compêndio" no menu do `Header`, ao lado de Guia Básico e Mecânicas;
+- **ligações cruzadas**: o tópico de chefe no guia da região ganha "Ver página do chefe"; a página do chefe ganha "Ver no mapa"; artigos e chefes se ligam por `related`; o Gideon cita e abre essas páginas.
+
+## 11.1.7. Política única de conhecimento: página e Gideon
+
+Uma única regra decide quando uma informação passa a fazer parte do que o jogador pode saber.
+
+| Conteúdo | Padrão | Exceções |
+|---|---|---|
+| Região (já existe) | região alcançada (visitada ou aberta na tela), ou `spoilerFree` | `spoilerGate` por item |
+| Chefe | região do chefe alcançada | `gate` por seção (ex.: lore liberada depois de derrotá-lo: `afterObjectiveId`) |
+| Lore | decisão obrigatória do autor por artigo (`"open"` ou gate) | `gate` por seção |
+| Mecânica (já existe) | sempre liberada | — |
+
+**Progresso considerado.** As páginas do Compêndio não pertencem a uma build. Elas usam a união do progresso de todas as builds, a mesma regra que o Gideon já usa quando a pergunta não define build (`toPlayerProgress` sem build). Um hook de leitura (`useKnowledgeProgress`) entrega esse progresso às páginas.
+
+**Abrir uma página do Compêndio não libera conhecimento.** No guia, a região aberta na tela continua liberando a própria região (regra atual). Já uma página de chefe ou de lore aberta só serve de **contexto** (prioriza aquele assunto na busca); ela não abre gates.
+
+**Na página:**
+
+- seção liberada → aparece normalmente;
+- seção bloqueada → tarja de spoiler no lugar do conteúdo ("Este trecho está além do seu progresso atual"), com o motivo legível ("liberado ao visitar Liurnia") e o botão **"Mostrar mesmo assim"**;
+- o bloqueio é **por seção**: o que é seguro continua visível. Se todas as seções estão bloqueadas, a página mostra só o nome e a tarja geral;
+- nos hubs, chefes e artigos bloqueados aparecem como "Conteúdo à frente na sua jornada", sem nome, com a mesma opção de revelar.
+
+**"Mostrar mesmo assim" é consentimento só para a interface.** A revelação vale para aquela visualização (estado do componente). Ela **não** grava progresso, **não** entra no `ScreenContext` e **não** muda o que o Gideon pode usar. Visitar ou revelar uma página nunca faz o Gideon soltar spoiler em outra conversa. Pedir spoiler ao Gideon de forma explícita é a evolução "spoilers sob confirmação" (seção 49.2).
+
+**No Gideon:** gate aberto → o chunk pode entrar na busca; gate fechado → o chunk é removido **antes** do LLM. O modelo nunca recebe conteúdo bloqueado com a instrução de não contar: ele simplesmente não o conhece naquela chamada.
+
+```text
+Ranni — encontro inicial      gate aberto   → pode ir ao modelo
+Ranni — Caria                 região não alcançada → removido
+Ranni — Nokron                região não alcançada → removido
+```
+
+**Limite de confidencialidade (inalterado, 14.4):** o conteúdo está no bundle; a política protege a experiência, não é sigilo.
+
+## 11.1.8. Integração com o índice do Gideon
+
+O Compêndio entra no **mesmo** `buildGuideIndex()`:
+
+```ts
+interface GuideSources {
+  regions; sections; pins; mechanics;   // como hoje
+  bosses: readonly BossGuide[];
+  bossGameData: Record<string, BossGameData>;
+  lore: readonly LoreArticle[];
+}
+
+type GuideChunkKind = "region" | "mechanic" | "boss" | "lore";
+```
+
+- **Um chunk por seção:** `boss:godrick-the-grafted:overview`, `boss:godrick-the-grafted:combat`, `boss:godrick-the-grafted:lore-origin`, `lore:night-of-black-knives:summary`... Seções pequenas melhoram a busca ("fraqueza" acha o combate, "por que enxertos" acha a lore);
+- **Chunk de combate gerado dos dados objetivos**, em texto ("Fraquezas: ...; resistências: ...; HP: ..."), junto das dicas editoriais;
+- **Entidade:** chunks ganham `entityId` (`boss:godrick-the-grafted`). O tópico do chefe no guia da região recebe a mesma entidade, via `objectiveId`. A interpretação do Gideon (1.2.12) passa a escolher **entidades** (uma lista curta de nomes) em vez de títulos de chunk, e o código busca o chunk certo da entidade para a pergunta (combate, lore, localização);
+- **Relações:** `related` vira candidato explícito em `findRelatedChunks` (antes da relação por nome que existe hoje), sempre filtrado pelo Progress Guard. Pergunta de relação ("Ranni e a Noite das Facas Negras") reúne as duas entidades e os trechos que as ligam;
+- **Certeza no prompt:** cada trecho de lore vai com a certeza ("certeza: fortemente sugerido"). Regra nova da redação: `explicit` pode ser afirmado; `inferred` sai como "ao que tudo indica..."; `interpretation` sai como "uma leitura possível é...". Isso antecipa, de forma determinística, parte do "Gideon narrador" (49.2);
+- **Fontes clicáveis:** `OPEN_ROUTE` para `/bosses/:id?section=` e `/lore/:id?section=`; o tópico de chefe com pin continua com "Ver no mapa";
+- **Contexto da tela:** `ScreenRouteType` ganha `boss` e `lore`, e o `ScreenContext` ganha `entityId`, que só prioriza a busca;
+- **Fallback local:** funciona igual; o Compêndio é conteúdo, não depende da IA;
+- **Custo e tamanho:** o índice cresce, mas a busca lexical continua barata (12.5). A lista de nomes enviada à interpretação usa entidades, não seções, para o prompt não crescer com o conteúdo. Medir o tamanho do Worker e do chunk do motor a cada lote de conteúdo;
+- **Versão do índice:** conteúdo novo muda o hash; publicar site e Worker juntos (como hoje, 7.4 do guia técnico).
+
+## 11.1.9. Autoria e importação
+
+Ferramentas pequenas, sem CMS, sem banco e sem painel:
+
+```text
+npm run content:new -- boss godrick-the-grafted     cria o arquivo editorial a partir de um template tipado
+npm run content:new -- lore night-of-black-knives
+npm run content:import -- bosses [--only <id>]      atualiza gameData/bosses.json a partir da fonte configurada
+npm run content:check                               valida ids, relações, gates, certezas, fontes e atribuições
+```
+
+```text
+scripts/content/
+├── new.ts                  templates de chefe e de artigo
+├── import.ts               escolhe o importador e grava o gameData
+├── check.ts                mesma validação dos testes, para uso manual
+└── importers/
+    ├── types.ts            interface BossDataImporter: (externalId) → BossGameData
+    └── <fonte>/            adapter + mapper (formato externo → BossGameData)
+```
+
+- **Adapters substituíveis:** o domínio interno só conhece `BossGameData`. O formato de cada fonte fica dentro do adapter dela; trocar de fonte é escrever outro adapter;
+- **Gravação segura:** o importador só grava depois de buscar e validar tudo; falha de rede ou de formato sai com erro **sem** alterar o arquivo existente. Entradas que não foram reimportadas são preservadas;
+- **Execução:** scripts em TypeScript, rodados com `vite-node` (já vem com o Vitest; entra como devDependency explícita), para reaproveitar os tipos do domínio;
+- **Testes sem rede:** cada mapper é testado com uma resposta gravada da fonte (fixture), nunca com chamada real;
+- **Cache local fora do Git:** respostas brutas das fontes e eventuais dumps de texto do jogo ficam em `scripts/content/.cache/` (ignorado); no repositório entram só os dados convertidos.
+
+## 11.1.10. Fontes externas avaliadas
+
+Pesquisa feita em 08/10/2026. Conferir de novo antes da Etapa 17: licenças, termos e manutenção mudam.
+
+**Conclusão:** nenhuma fonte é, ao mesmo tempo, aberta, precisa, completa, com a DLC e com os nomes oficiais em português. Por isso cada tipo de dado tem a sua fonte:
+
+- **números dos chefes:** fatos da Eldenpedia;
+- **nomes oficiais em pt-BR:** os textos do próprio jogo;
+- **textos do jogo:** só referência, com citações curtas.
+
+| Fonte | Para quê | Importação ou referência | Manutenção | Licença | Riscos |
+|---|---|---|---|---|---|
+| **Eldenpedia** (eldenring.wiki.gg) | Fatos de chefes: HP por fase, runas, drops, resistências e negações (tabela Cargo `Enemy`), local, fases | **Importação de fatos** (primeiro adapter), com URL e revisão por registro; nunca texto | Ativa (6,8 mil páginas, ~25 editores ativos) | Texto em CC BY-SA 4.0 | Bloqueia acesso automatizado simples: usar a API do MediaWiki com poucas requisições e intervalo; erros pontuais; copiar texto obrigaria share-alike |
+| **Arquivos do próprio jogo** (cópia do autor, extraídos com WitchyBND/Smithbox, IDs pelo Paramdex) | Valores reais de parâmetros, IDs, DLC, **nomes oficiais em pt-BR** (`msg/porbr`), localizar descrições | Importação de fatos e nomes; textos ficam em cache local fora do Git | Ferramentas ativas (2026) | Ferramentas MIT/GPL (só o código); dados © FromSoftware; Paramdex sem licença | Exige cópia legítima do jogo; EULA sobre extração não verificada; mapear parâmetro → chefe dá trabalho. **Opcional**, como conferência e para nomes da DLC |
+| **elden-ring-playground/elden-ring-data** | Nomes oficiais em pt-BR do jogo base (NpcName, PlaceName, itens), ex.: "Godrick, o Enxertado", "Margit, o Agouro Caído", "Flagelo Estelar Radahn" | Referência / consulta pontual; não commitar o dump | Textos de 2022, sem DLC | Sem licença | Redistribui texto do jogo; sem DLC; strings podem estar desatualizadas |
+| **Impaler's Archive / Carian Archive** | Encontrar a descrição ou o diálogo que sustenta uma afirmação de lore (proveniência) | Só referência; commitar id + citação curta | 2024 / 2022 | Sem licença; texto © FromSoftware | Só inglês/japonês; cópia em massa é infração |
+| **Fextralife** | Conferência manual (HP em NG+, parry, postura) | Só referência, à mão | Ativa (Valnet) | Proprietária; os termos **proíbem raspar ou minerar** o conteúdo | Violação contratual se automatizado; texto não reutilizável |
+| **Fandom** (eldenring.fandom.com) | Infobox antigo, como reserva | Referência / reserva de fatos | Praticamente abandonada desde a migração da comunidade (2024) | CC BY-SA (versão não confirmada) | Dados desatualizados |
+| Elden Ring Fan API (deliton) | — | **Não usar** | Commits parados em 2022 | Sem licença | HP errado ou ausente (31 de 106 chefes com "???"), duplicatas, sem DLC, sem resistências |
+| ERDB | — (só itens, em inglês) | **Não usar** para chefes | Parado em 2023; API fora do ar | MIT (código) | Sem chefes, sem DLC, sem pt-BR |
+| Datasets do Kaggle rotulados CC0 | — | **Não usar** | 2022–2025 | Rótulo CC0 inválido (raspados da Fextralife ou da Fan API) | Licença falsa; dados incompletos |
+
+**Consequências no desenho:**
+
+- o primeiro adapter de `content:import` é o da Eldenpedia. O mapper converte a tabela `Enemy` e o infobox do chefe em `BossGameData` e grava a proveniência por registro;
+- o nome oficial em pt-BR é **editorial** (campo `name` do `BossGuide`), conferido nos textos do jogo; o `englishName` serve para casar o chefe com a fonte;
+- quando duas fontes divergem, vale a de maior autoridade (arquivos do jogo > Eldenpedia > Fandom), e a escolha fica registrada na proveniência;
+- os dumps de texto, quando usados, ficam em `scripts/content/.cache/` (fora do Git).
+
+## 11.1.11. Direitos autorais e atribuição
+
+Orientação de projeto, não parecer jurídico.
+
+- **Dados numéricos e nomes curtos são fatos.** Eles não são protegidos por direito autoral: a Lei 9.610/98, art. 7º §2º, protege a seleção e a organização de uma base, não "os dados ou materiais em si", e o mesmo vale nos EUA (Feist v. Rural, 1991). Podem ser importados. Os riscos reais são contratuais (termos que proíbem raspagem, como os da Fextralife) e copiar o **arranjo** de uma wiki. Por isso usamos esquema próprio e só fontes que permitem o acesso;
+- **Textos do jogo** (descrições de itens, diálogos, inclusive as traduções oficiais) são © FromSoftware/Bandai Namco. A lei permite citação curta com indicação de autor e origem, para estudo ou crítica (art. 46, III e VIII). Regras do Compêndio:
+  - só citações curtas, dentro de explicação escrita por nós, com crédito no formato "ELDEN RING, FromSoftware — descrição de <item>";
+  - nunca commitar dumps de texto; no repositório ficam só o id do texto e a citação usada;
+  - o Gideon trata a citação como qualquer trecho, curto e com fonte;
+- **Texto de wiki CC BY-SA** não é copiado nem traduzido. A tradução é adaptação e obrigaria a liberar a página sob BY-SA 4.0, com atribuição completa. Além disso, wikis embutem citações do jogo que elas mesmas não podem licenciar. Todo texto editorial é escrito por nós; da wiki vêm só fatos;
+- **Atribuição:** fatos não exigem atribuição, mas o Compêndio dá crédito por cortesia. Cada registro de `gameData` guarda URL e revisão, e uma página "Fontes e créditos" lista as fontes usadas. Se algum dia entrar material BY-SA de fato (texto ou imagem), a atribuição completa passa a ser obrigatória (título, autores, URL, licença, indicação de alterações), e o `content:check` recusa material desse tipo sem ela;
+- **Imagens:** nada de imagens copiadas de wikis. A primeira versão sai sem imagens de chefes, ou com capturas próprias, por decisão do autor;
+- **Aviso de fan project** (seção 50) continua valendo para todo o Compêndio.
+
+## 11.1.12. Fora do escopo desta expansão
+
+- cadastrar todos os chefes do jogo de uma vez (começa pelos de progressão principal e Remembrance; os menores podem ter só dados objetivos depois);
+- CMS, banco de dados, painel administrativo, login de editor ou backend editorial;
+- consulta a API ou wiki externa em tempo de execução, no site ou no Worker;
+- tradução automática de textos do jogo;
+- imagens copiadas de wikis;
+- grafo de conhecimento ou banco de grafos (relações tipadas bastam).
+
+---
+
 # 12. Busca / retrieval
 
 ## 12.1. Primeira versão: sem embeddings
@@ -1491,6 +1838,8 @@ A regra comum deve funcionar por região.
 Metadados extras só para exceções reais, definidos por revisão editorial. Eles são necessários quando o próprio conteúdo de uma região permitida menciona uma revelação, personagem ou consequência que ainda não deve ser resumida pelo assistente.
 
 Não tentar detectar spoilers automaticamente por palavras-chave ou por inferência do modelo. A fonte do guia pode continuar mostrando o texto em seu contexto editorial; Gideon, por sua vez, só recebe e resume os chunks liberados pela política.
+
+**Uso pelo Compêndio (seção 11.1.7):** o mesmo `SpoilerGate` passa a valer também para as páginas de Chefes e Lore. A decisão sai para uma função pura (`isGateOpen`), usada pelo Progress Guard e pelas páginas, para que a regra nunca seja duplicada. Na página, o gate fechado vira tarja com "Mostrar mesmo assim"; no Gideon, o chunk sai antes do LLM. Revelar na página não libera o conhecimento para o Gideon.
 
 ### Limite de confidencialidade
 
@@ -2642,6 +2991,30 @@ zero IDs inventados
 zero citações bloqueadas
 ```
 
+## 34.9. Compêndio (Chefes e Lore)
+
+Casos de busca e resposta, com as fontes esperadas:
+
+| Pergunta | Esperado |
+|---|---|
+| "Quem é Godrick?" | lore de Godrick (artigo ou seção de lore do chefe) |
+| "Por que Godrick usa enxertos?" | seção de lore do chefe sobre o Enxerto |
+| "Qual a fraqueza de Godrick?" | seção de combate do chefe (dados objetivos) |
+| "O que é a Ordem Áurea?" | artigo `golden-order` |
+| "Qual a relação de Ranni com a Noite das Facas Negras?" | os dois artigos, ou a seção que os liga |
+| "e qual a fraqueza dele?" (depois de falar de Godrick) | combate de Godrick (interpretação por entidade) |
+| Jogador em Limgrave pergunta "Qual a fraqueza do Radahn?" | `spoiler_blocked`, sem texto de Radahn no prompt |
+
+Spoiler e consentimento:
+
+- chunk bloqueado não chega ao modelo, e fonte bloqueada nunca volta na resposta;
+- seção revelada com "Mostrar mesmo assim" continua bloqueada para o Gideon;
+- abrir a página de um chefe de região não alcançada não libera nada.
+
+Certeza:
+
+- seção `inferred` aparece com linguagem de suposição ("ao que tudo indica"); seção `interpretation` nunca é afirmada como fato (revisão manual de amostra).
+
 ---
 
 # 35. Testes unitários
@@ -2663,6 +3036,11 @@ Prioridades:
 - validação de response;
 - resolução de ações;
 - serialização do estado conversacional.
+- `isGateOpen` (mesma decisão para página e chunk);
+- validação do Compêndio (`content:check`): ids únicos, relações apontando para entradas existentes, gates com regiões e objetivos existentes, lore com gate e certeza, `gameData` coerente com os chefes, atribuição para fontes que exigem;
+- mappers dos importadores com fixtures gravadas; falha de fonte sem alterar dados; id interno estável;
+- páginas `/bosses/:bossId` e `/lore/:articleId`: slug válido, inexistente, seção liberada, bloqueada e revelada;
+- migração da região "Geral" preservando o texto.
 
 A ferramenta de teste poderá ser Vitest, alinhada ao roadmap existente, se essa ainda for a melhor escolha.
 
@@ -2764,6 +3142,25 @@ worker/
 ```
 
 Não há script de geração de índice nem JSON público de índice (decisão 1.2.2).
+
+Expansão Compêndio (seção 11.1):
+
+```text
+src/data/
+├── contentBlocks.ts            blocos de texto comuns (mecânicas, chefes, lore)
+└── compendium/
+    ├── types.ts                BossGuide, LoreArticle, CompendiumSection, Certainty, ContentSource
+    ├── bosses/                 editorial, um arquivo por chefe + index.ts
+    ├── lore/                   editorial, um arquivo por artigo + index.ts
+    └── gameData/
+        └── bosses.json         dados objetivos, escritos só pelos importadores
+
+src/pages/
+├── Bosses/                     hub + página genérica de chefe
+└── Lore/                       hub + página genérica de artigo
+
+scripts/content/                new.ts, import.ts, check.ts, importers/<fonte>/
+```
 
 Se uma estrutura mais simples resolver melhor, prefira a mais simples.
 
@@ -2954,6 +3351,69 @@ Isso permite validar a infraestrutura sem gastar cota.
 - deploy automático do Worker por GitHub Actions quando a CI do roadmap existir;
 - atualizar README/guia técnico/roadmap quando necessário.
 
+## Etapas 13 a 18 — Compêndio: Chefes e Lore (seção 11.1)
+
+As etapas 1 a 12 estão concluídas e em produção (08/10/2026). O Compêndio vem **antes** das evoluções 49.1 (etapas de missão) e 49.2 (Gideon narrador), porque:
+
+- a regra única de conhecimento (Etapa 13) também é a base para os gates de etapas de missão e para os spoilers sob confirmação;
+- os artigos de lore com `certainty` (Etapa 15) dão ao "Gideon narrador" fatos e inferências curados pelo autor, em vez de deixar o modelo inferir sozinho;
+- nada do Compêndio depende de 49.1 ou 49.2.
+
+Páginas vêm antes da integração com o Gideon: o formato dos dados é provado por uma interface real e só depois indexado, em uma passagem só. Importadores vêm depois das páginas: o mapper passa a mirar um formato já validado pelo uso.
+
+## Etapa 13 — Contratos do Compêndio e regra única de conhecimento
+
+- extrair os blocos de texto de `src/data/mechanics/types.ts` para `src/data/contentBlocks.ts` (mecânicas reexportam) e generalizar `MechanicGuideContent` em `ContentBlocks`, sem mudança visual nas Mecânicas;
+- tipos `BossGuide`, `BossGameData`, `LoreArticle`, `CompendiumSection`, `Certainty`, `ContentSource`, `CompendiumRef` (11.1.4), dados puros sem imports de UI;
+- extrair `isGateOpen(gate, progress)` do Progress Guard, que passa a usá-la; hook `useKnowledgeProgress` (união das builds) para as páginas;
+- teste de regra: o mesmo gate dá a mesma decisão para página e chunk;
+- sem rota nem conteúdo novo nesta etapa.
+
+## Etapa 14 — Chefes: dados e páginas
+
+- `src/data/compendium/bosses/` (editorial) e `gameData/bosses.json` (objetivo), registro `BOSSES`;
+- prova com **Godrick** (região já disponível e com objetivo no guia) e **Radahn** (região "Em breve": todas as seções bloqueadas, caso real de spoiler); dados objetivos digitados à mão nesta etapa a partir da Eldenpedia, já com `provenance` (URL e revisão), e nomes oficiais conferidos nos textos `porbr` do jogo;
+- rotas `/bosses` e `/bosses/:bossId` com `lazy`; hub agrupado por região; página genérica; `NotFound` para slug inexistente;
+- seção bloqueada com tarja e "Mostrar mesmo assim" (estado da visualização), bloqueio por seção, nomes ocultos no hub;
+- "Ver no mapa" pelo `objectiveId`; "Ver página do chefe" no tópico do guia da região;
+- card "Compêndio" na Home (`/select/compendium`) e link no `Header`;
+- testes: rota válida e inexistente, seção liberada e bloqueada, revelar, revelação não altera progresso.
+
+## Etapa 15 — Lore: dados, migração da região "Geral" e páginas
+
+- `src/data/compendium/lore/`, registro `LORE`, gate obrigatório por artigo e `certainty` por seção;
+- **migração** dos tópicos de lore da região "Geral" para artigos, com o texto inalterado; a página "Geral" do guia passa a montar esses tópicos a partir dos artigos (11.1.5). A `certainty` proposta pelo agente é **revisada pelo autor** (ação manual);
+- rotas `/lore` e `/lore/:articleId` com `lazy`; hub por categoria; selos de certeza; relacionados;
+- mesma tarja e "Mostrar mesmo assim" da Etapa 14 (componente compartilhado);
+- testes: artigo sem gate falha na validação, seção sem certeza falha, migração preserva o texto (comparação palavra a palavra, como foi feito com as Mecânicas).
+
+## Etapa 16 — Compêndio no índice do Gideon
+
+- `GuideSources` com `bosses`, `bossGameData` e `lore`; `GuideChunkKind` com `boss` e `lore`; um chunk por seção; chunk de combate gerado do `gameData`;
+- `entityId` nos chunks (chefe do guia da região ligado à página do chefe pelo `objectiveId`); a interpretação passa a escolher entidades;
+- `related` como candidato explícito em `findRelatedChunks`, filtrado pelo Progress Guard;
+- certeza no prompt de redação, com a forma de dizer cada nível (11.1.8);
+- fontes `OPEN_ROUTE` para chefe e lore; `ScreenRouteType` com `boss`/`lore` e `entityId` no contexto (só prioriza a busca);
+- remoção dos chunks `region:geral:*` substituídos pelos artigos;
+- evals da seção 34.9; medir tamanho do Worker, do motor e da lista de nomes da interpretação.
+
+## Etapa 17 — Autoria e importação
+
+- `content:new` (templates), `content:check` (o mesmo validador dos testes) e `content:import`;
+- interface `BossDataImporter`; primeiro adapter + mapper da **Eldenpedia** (API do MediaWiki: tabela Cargo `Enemy` e infobox do chefe), com poucas requisições e intervalo entre elas, proveniência por registro, gravação segura e preservação das entradas existentes;
+- `scripts/content/.cache/` no `.gitignore`, para respostas brutas e dumps locais;
+- testes de mapper com fixture gravada; teste de que falha da fonte não altera o `gameData`; teste de que o id interno não muda ao reimportar;
+- página "Fontes e créditos" com as fontes usadas, e `content:check` recusando material BY-SA sem atribuição (11.1.11);
+- documentação do fluxo no guia técnico.
+
+## Etapa 18 — Conteúdo inicial, revisão e publicação
+
+- chefes: Margit, Godrick, Rennala e Radahn (Margit e Godrick com conteúdo completo; Rennala e Radahn podem nascer só com dados objetivos e seções bloqueadas, porque Liurnia e Caelid ainda estão "Em breve");
+- lore: Graça, Ordem Áurea, Elden Ring, Marika, Runa da Morte, Noite das Facas Negras, Ruptura e Ranni (a maior parte vem da migração da Etapa 15);
+- **texto editorial escrito ou revisado pelo autor** (ação manual); o agente pode propor rascunhos sempre marcados para revisão;
+- evals completas, revisão manual em desktop e celular, deploy de site e Worker juntos, verificação em produção;
+- atualizar README, guia técnico e roadmap.
+
 ---
 
 # 40. Scripts esperados
@@ -2979,6 +3439,20 @@ Possível resultado:
 Não quebrar os scripts existentes.
 
 Não há etapa de geração de índice: frontend e Worker derivam o índice em tempo de execução a partir dos mesmos dados (decisão 1.2.2).
+
+Compêndio (Etapa 17):
+
+```json
+{
+  "scripts": {
+    "content:new": "vite-node scripts/content/new.ts",
+    "content:import": "vite-node scripts/content/import.ts",
+    "content:check": "vite-node scripts/content/check.ts"
+  }
+}
+```
+
+O `content:check` roda as mesmas validações do teste do Compêndio; o `npm test` continua sendo a garantia na CI.
 
 ---
 
@@ -3088,6 +3562,18 @@ A feature só pode ser considerada completa quando:
 - [ ] nenhuma chave secreta aparece no bundle frontend;
 - [ ] deploy de produção não depende de computador local.
 
+### Compêndio (Etapas 13 a 18)
+
+- [ ] `/bosses`, `/bosses/:bossId`, `/lore` e `/lore/:articleId` funcionam, com uma página genérica por tipo;
+- [ ] slug inexistente cai no `NotFound`;
+- [ ] seções bloqueadas mostram tarja e "Mostrar mesmo assim"; o que é seguro continua visível;
+- [ ] revelar uma seção não muda progresso nem o que o Gideon pode usar;
+- [ ] hubs não mostram nomes de conteúdo bloqueado;
+- [ ] o Compêndio é encontrado pela Home e pelo menu, e as páginas se ligam ao guia das regiões e entre si;
+- [ ] o Gideon responde "quem é", "qual a fraqueza" e perguntas de relação com fontes que abrem as páginas;
+- [ ] lore inferida ou interpretativa não é dita como fato;
+- [ ] a lore da região "Geral" existe em um só lugar.
+
 ---
 
 # 44. Critérios de aceite técnicos
@@ -3118,6 +3604,16 @@ A feature só pode ser considerada completa quando:
 - [ ] nenhum banco criado sem necessidade comprovada;
 - [ ] estratégia de deploy efetivamente usada está documentada;
 - [ ] documentação atualizada.
+
+### Compêndio (Etapas 13 a 18)
+
+- [ ] nenhuma chamada a fonte externa no build, no site ou no Worker;
+- [ ] importadores só escrevem `gameData` e preservam o que já existe quando falham;
+- [ ] domínio interno não conhece o formato de nenhuma fonte externa;
+- [ ] página e Gideon usam a mesma função de gate;
+- [ ] chefes e lore entram pelo mesmo `buildGuideIndex()`;
+- [ ] páginas do Compêndio carregadas sob demanda;
+- [ ] atribuição presente para toda fonte cuja licença exige.
 
 ---
 
@@ -3161,6 +3657,10 @@ Não implementar por padrão:
 - streaming;
 - múltiplos personagens;
 - app mobile nativo.
+- CMS, banco de dados, painel ou login de editor para o Compêndio;
+- consulta a API ou wiki externa em tempo de execução;
+- importação em massa de textos do jogo (descrições, diálogos) ou de textos de wiki;
+- imagens copiadas de wikis;
 
 Podem ser considerados no futuro.
 
@@ -3229,7 +3729,7 @@ Proposta:
 - **Spoiler:** etapas em regiões não visitadas continuam fora do contexto da IA; no máximo, Gideon diz que "a linha de missão continua numa região à frente", sem detalhar;
 - **Autoria:** o formato e o código são do projeto; **o conteúdo das etapas é escrito pelo autor do guia**.
 
-Pré-requisito: MVP publicado (etapas 11 e 12).
+Pré-requisito: MVP publicado (etapas 11 e 12) e a regra única de conhecimento (Etapa 13), usada também para os gates das etapas. As etapas podem apontar para chefes e artigos do Compêndio (ex.: Blaidd → artigo de Ranni) pelo mesmo `CompendiumRef`.
 
 ## 49.2. Evolução pós-MVP: Gideon narrador (suposições marcadas e spoilers sob confirmação)
 
@@ -3238,6 +3738,8 @@ Pré-requisito: MVP publicado (etapas 11 e 12).
 **Objetivo da v2:** Gideon ajudar a explicar a história fazendo conexões entre fatos do guia, **deixando visível quando está supondo**, e acessar conteúdo marcado como spoiler só com consentimento.
 
 ### Suposições marcadas
+
+**Antecipado pelo Compêndio (Etapa 16):** quando a fonte é um artigo de lore com `certainty` `inferred` ou `interpretation`, a suposição já é **do autor**, curada e marcada nos dados. O Gideon a diz com linguagem de suposição, sem delimitador nem validação extra. O rótulo "Gideon está supondo" desta seção pode começar por esse caso, acionado pela certeza dos trechos citados. O protocolo `⟦...⟧` abaixo fica para as inferências **feitas pelo modelo** entre fatos.
 
 - **Protocolo:** a IA continua citando fatos com `[n]`; quando inferir algo a partir de fatos, marca o trecho com um delimitador próprio (ex.: `⟦...⟧`) e cita os trechos de que a inferência deriva. Ela admite a suposição de forma discreta no próprio texto ("ao que tudo indica...");
 - **Validação (código):** a resposta é dividida em segmentos `fato` e `suposição`; toda suposição precisa citar ao menos um trecho; texto fora de `⟦...⟧` continua sujeito às verificações atuais (citações válidas, nomes presentes nos trechos citados). Ligação entre assuntos sem marcação continua sendo descartada;
@@ -3250,6 +3752,7 @@ Pré-requisito: MVP publicado (etapas 11 e 12).
 - Se a melhor resposta depender de uma passagem marcada, Gideon responde "Essa resposta pode conter informações que você ainda não sabe. Deseja que eu continue?", com as escolhas "Sim, pode continuar" / "Não";
 - O consentimento vale para aquele assunto na sessão; o Worker recebe quais passagens foram liberadas e só então as inclui; a parte da resposta baseada nelas aparece dentro do componente de spoiler (clique para revelar);
 - Regiões não visitadas continuam bloqueadas **independentemente** do consentimento: a confirmação vale apenas para os spoilers marcados pelo próprio guia em regiões já alcançadas.
+- **Com o Compêndio:** o consentimento vale também para seções do Compêndio com gate `afterObjectiveId` em regiões já alcançadas. O "Mostrar mesmo assim" das páginas **não** conta como consentimento para o Gideon: o pedido precisa ser feito na conversa.
 
 ### Avaliação antes de liberar
 
@@ -3257,7 +3760,7 @@ Pré-requisito: MVP publicado (etapas 11 e 12).
 - Revisão manual de uma amostra: nenhuma inferência sem marcação, nenhuma suposição sem fonte;
 - Comparar modelos (Qwen3 30B × Llama 3.3 70B) nesse conjunto, já que inferência exige mais leitura do que o MVP.
 
-Pré-requisito: MVP publicado (etapas 11 e 12) e, de preferência, as etapas de missão (49.1), que dão fatos mais precisos para as conexões.
+Pré-requisito: MVP publicado (etapas 11 e 12), o Compêndio com lore e certeza (Etapas 15 e 16) e, de preferência, as etapas de missão (49.1), que dão fatos mais precisos para as conexões.
 
 ---
 
@@ -3272,6 +3775,7 @@ Ao usar Sir Gideon Ofnir:
 - não alegar que a experiência é oficial;
 - manter aviso existente de fan project;
 - preferir personalidade inspirada ao invés de reprodução textual.
+- no Compêndio, seguir as regras de direitos autorais e atribuição da seção 11.1.11: dados objetivos podem ser importados; textos do jogo, só em citações curtas e com fonte; textos de wiki não são copiados.
 
 ---
 
@@ -3522,6 +4026,7 @@ Porém, parte do trabalho poderá antecipar itens futuros:
 - estruturação de conteúdo;
 - métricas;
 - melhoria de autoria.
+- validação de conteúdo e autoria (o `content:check` e os templates do Compêndio);
 
 Quando houver sobreposição:
 
@@ -3589,6 +4094,18 @@ A implementação só está concluída quando:
 14. documentação reflete a arquitetura real
 ```
 
+Para o Compêndio (Etapas 13 a 18), além dos itens acima:
+
+```text
+15. páginas de chefe e de lore publicadas e navegáveis pela Home e pelo menu
+16. gate validado na página (tarja + "Mostrar mesmo assim") e no Gideon (chunk fora do prompt)
+17. revelar na página comprovadamente não libera o Gideon
+18. evals da seção 34.9 passam
+19. build sem rede; importador falhando não altera dados
+20. atribuições exigidas publicadas
+21. texto editorial revisado pelo autor
+```
+
 Além disso, realizar uma revisão manual em desktop e mobile.
 
 ---
@@ -3649,6 +4166,20 @@ https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
 
 Avaliar se é a melhor solução disponível no momento da implementação.
 
+## Compêndio — fontes de dados e licenças (verificadas em 08/10/2026)
+
+- Eldenpedia, licença: https://eldenring.wiki.gg/wiki/Elden_Ring_Wiki:Copyrights
+- Eldenpedia, tabela de inimigos: https://eldenring.wiki.gg/wiki/Special:CargoTables/Enemy
+- Termos da Valnet (Fextralife): https://www.valnetinc.com/en/terms-of-use
+- elden-ring-data (textos do jogo, inclui `porbr`): https://github.com/elden-ring-playground/elden-ring-data
+- Paramdex: https://github.com/soulsmods/Paramdex
+- Smithbox: https://github.com/vawser/Smithbox
+- WitchyBND: https://github.com/ividyon/WitchyBND
+- Impaler's Archive: https://github.com/ividyon/Impalers-Archive
+- Carian Archive: https://github.com/AsteriskAmpersand/Carian-Archive
+- Avaliadas e descartadas: https://github.com/deliton/eldenring-api, https://github.com/EldenRingDatabase/erdb
+- Lei 9.610/98: https://www.planalto.gov.br/ccivil_03/leis/l9610.htm
+
 ---
 
 # 57. Resumo executivo para o agente
@@ -3708,3 +4239,5 @@ O projeto deve continuar **gratuito, estático na maior parte, simples de manter
 O objetivo final não é “adicionar IA ao site”.
 
 O objetivo é fazer o Guiding Grace parecer possuir **um personagem que acompanha o usuário pelo site inteiro, sabe em que contexto ele está, conhece o guia, conhece sua jornada e consegue conduzi-lo pelas Terras Intermédias sem destruir a descoberta do jogo**.
+
+**Expansão Compêndio (seção 11.1, Etapas 13 a 18):** Chefes e Lore viram páginas reais do site e, pelos mesmos dados, conhecimento do Gideon. Fontes externas só alimentam importadores em desenvolvimento; a regra de spoiler é uma só para página e IA; o que a página revela por escolha do usuário não é liberado para o Gideon.
