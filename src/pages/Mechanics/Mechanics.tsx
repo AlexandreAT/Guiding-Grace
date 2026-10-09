@@ -1,27 +1,19 @@
-import { useEffect } from "react";
-import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Footer } from "../../components/Footer";
 import { Header } from "../../components/Header";
 import { HeroSection } from "../../components/HeroSection";
 import MechanicGuideContent from "../../components/MechanicGuideContent";
 import { getMechanicGuide } from "../../data/mechanics";
-import { MECHANIC_SECTION_PARAM } from "../../routes/guideRoute";
+import { useScrollToSection } from "../../hooks/useScrollToSection";
 import { HomePageContainer, PageContent } from "../Home/styles";
 import NotFound from "../NotFound/NotFound";
 
 export default function Mechanics() {
   const { mechanicId } = useParams<{ mechanicId: string }>();
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const location = useLocation();
   const mechanic = mechanicId ? getMechanicGuide(mechanicId) : undefined;
-  const sectionId = searchParams.get(MECHANIC_SECTION_PARAM);
 
-  // ?section= leva direto a uma seção (usado pelas fontes citadas pelo Gideon); a key refaz o scroll a cada navegação
-  useEffect(() => {
-    if (!sectionId || !mechanic?.sections.some((section) => section.id === sectionId)) return;
-    document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [mechanic, sectionId, location.key]);
+  useScrollToSection(mechanic?.sections.map((section) => section.id) ?? []);
 
   if (!mechanic) {
     return (

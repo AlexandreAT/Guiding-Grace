@@ -1,7 +1,19 @@
 import { ASK_LIMITS, type GideonAskRequest } from "../../shared/gideon/askContract";
+import type { CompendiumKind, CompendiumRef } from "../../src/data/compendium/types";
 import type { BuildProgress, GideonTurn, ScreenContext, ScreenRouteType } from "../../shared/gideon/types";
 
-const ROUTE_TYPES: readonly ScreenRouteType[] = ["home", "select", "guide", "mechanics", "info", "not-found", "other"];
+const ROUTE_TYPES: readonly ScreenRouteType[] = [
+  "home",
+  "select",
+  "guide",
+  "mechanics",
+  "info",
+  "boss",
+  "lore",
+  "not-found",
+  "other",
+];
+const COMPENDIUM_KINDS: readonly CompendiumKind[] = ["boss", "lore"];
 // Ids do guia e de trechos: letras minúsculas, números, hífen e dois-pontos
 const ID_PATTERN = /^[a-z0-9:-]+$/;
 const MAX_PATH_LENGTH = 200;
@@ -46,6 +58,14 @@ const toBuilds = (value: unknown): BuildProgress[] =>
         .slice(0, ASK_LIMITS.builds)
     : [];
 
+// Entrada do Compêndio aberta na tela: só serve de prioridade na busca
+const toEntity = (value: unknown): CompendiumRef | undefined => {
+  if (!isRecord(value)) return undefined;
+  const kind = COMPENDIUM_KINDS.find((compendiumKind) => compendiumKind === value.kind);
+  const id = toId(value.id);
+  return kind && id ? { kind, id } : undefined;
+};
+
 const toContext = (value: Record<string, unknown>): ScreenContext => ({
   routeType: ROUTE_TYPES.find((routeType) => routeType === value.routeType) ?? "other",
   pathname: toText(value.pathname, MAX_PATH_LENGTH) ?? "/",
@@ -53,6 +73,7 @@ const toContext = (value: Record<string, unknown>): ScreenContext => ({
   lastBuildId: toId(value.lastBuildId),
   currentRegionId: toId(value.currentRegionId),
   mechanicId: toId(value.mechanicId),
+  entity: toEntity(value.entity),
   builds: toBuilds(value.builds),
 });
 

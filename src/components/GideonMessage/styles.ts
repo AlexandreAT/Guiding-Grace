@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 import { THEME } from "../../../shared/const";
 
 export const MessageRoot = styled.li<{ $fromGideon: boolean }>`
@@ -34,6 +34,8 @@ export const MessageBubble = styled.p<{ $fromGideon: boolean }>`
   line-height: 1.55;
   color: ${THEME.colors.foreground};
   overflow-wrap: anywhere;
+  /* Respostas completas vêm em parágrafos separados por linha em branco */
+  white-space: pre-line;
 `;
 
 export const MessageNote = styled.p`
@@ -44,7 +46,39 @@ export const MessageNote = styled.p`
   color: ${THEME.colors.textSecondary};
 `;
 
-export const SourceList = styled.ul`
+// Depois da fala do Gideon, as fontes chegam uma de cada vez
+const appearIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const SOURCE_STAGGER_MS = 140;
+const MAX_STAGGERED_ITEMS = 6;
+
+const staggeredAppear = css`
+  > * {
+    animation: ${appearIn} 420ms ease-out both;
+  }
+
+  ${Array.from(
+    { length: MAX_STAGGERED_ITEMS },
+    (_, index) => `> :nth-child(${index + 1}) { animation-delay: ${index * SOURCE_STAGGER_MS}ms; }`,
+  ).join(" ")}
+
+  @media (prefers-reduced-motion: reduce) {
+    > * {
+      animation: none;
+    }
+  }
+`;
+
+export const SourceList = styled.ul<{ $appear?: boolean }>`
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -52,6 +86,8 @@ export const SourceList = styled.ul`
   margin: 0;
   padding: 0;
   list-style: none;
+
+  ${({ $appear }) => $appear && staggeredAppear}
 `;
 
 export const SourceCard = styled.li<{ $compact: boolean }>`
@@ -102,8 +138,10 @@ export const SourceSnippet = styled.p`
   color: ${THEME.colors.textSecondary};
 `;
 
-export const MessageChoices = styled.div`
+export const MessageChoices = styled.div<{ $appear?: boolean }>`
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+
+  ${({ $appear }) => $appear && staggeredAppear}
 `;

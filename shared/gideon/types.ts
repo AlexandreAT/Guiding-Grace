@@ -1,8 +1,9 @@
+import type { Certainty, CompendiumRef } from "../../src/data/compendium/types";
 import type { SpoilerGate } from "../../src/data/regionSections";
 
-export type GuideChunkKind = "region" | "mechanic";
+export type GuideChunkKind = "region" | "mechanic" | "boss" | "lore";
 
-// Menor trecho citável do guia: um tópico da região ou uma seção de mecânica
+// Menor trecho citável do guia: um tópico da região, uma seção de mecânica ou uma seção do Compêndio
 export interface GuideChunk {
   chunkId: string;
   kind: GuideChunkKind;
@@ -24,7 +25,12 @@ export interface GuideChunk {
   anchor?: string;
   pinId?: string;
   objectiveId?: string;
-  spoilerGate?: SpoilerGate;
+  // Todos precisam estar abertos para o trecho chegar ao Gideon (mesma regra das páginas do Compêndio)
+  gates: SpoilerGate[];
+  // Entrada do Compêndio de que o trecho trata; o tópico de um chefe no guia da região aponta para a página dele
+  entity?: CompendiumRef;
+  entityName?: string;
+  certainty?: Certainty;
   titleTokens: string[];
   tokens: string[];
 }
@@ -37,10 +43,21 @@ export interface GuideIndexRegion {
   names: string[];
 }
 
+// Entrada do Compêndio (chefe ou artigo) vista pelo Gideon: nome para a interpretação e relações para a busca
+export interface GuideEntity {
+  ref: CompendiumRef;
+  name: string;
+  aliases: string[];
+  related: CompendiumRef[];
+  // Nome próprio (chefe, personagem): entra na verificação de nomes das respostas
+  isProperName: boolean;
+}
+
 export interface GuideIndex {
   version: string;
   regions: GuideIndexRegion[];
   chunks: GuideChunk[];
+  entities: GuideEntity[];
 }
 
 export type ScreenRouteType =
@@ -49,6 +66,8 @@ export type ScreenRouteType =
   | "guide"
   | "mechanics"
   | "info"
+  | "boss"
+  | "lore"
   | "not-found"
   | "other";
 
@@ -70,6 +89,8 @@ export interface ScreenContext {
   lastBuildId?: string;
   currentRegionId?: string;
   mechanicId?: string;
+  // Página do Compêndio aberta: só prioriza o assunto na busca, nunca libera conhecimento
+  entity?: CompendiumRef;
   // Progresso de todas as builds disponíveis, para o Gideon saber de qual jornada a pergunta fala
   builds: BuildProgress[];
 }
@@ -129,10 +150,15 @@ export type InterpretedRequestType =
   | "next_step"
   | "after_last"
   | "skip"
-  | "relation";
+  | "relation"
+  | "strategy";
+
+// "full": o jogador pediu mais ("me explica melhor", "fala mais", "quero a história completa")
+export type AnswerDetail = "normal" | "full";
 
 export interface QuestionInterpretation {
   type?: InterpretedRequestType;
+  detail?: AnswerDetail;
   // Títulos de trechos do guia de que a pergunta trata, na ordem dada pela IA
   subjects: string[];
 }

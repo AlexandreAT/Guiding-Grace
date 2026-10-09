@@ -1,5 +1,6 @@
 // Perguntas como um jogador faria, sem copiar o texto do guia.
-// expected: fim do chunkId aceito (id do conteúdo ou da seção de mecânica); vazio = o guia não cobre
+// expected: fim do chunkId aceito (id do conteúdo, da seção de mecânica ou "entrada:seção" do Compêndio);
+// vazio = o guia não cobre
 export interface SearchCase {
   question: string;
   expected: string[];
@@ -41,10 +42,22 @@ export const SEARCH_CASES: SearchCase[] = [
   { question: "o que é afinidade?", expected: ["weapons-affinity"] },
   { question: "o que são whetblades?", expected: ["weapons-whetblades"] },
   { question: "quanto posso upar uma arma especial?", expected: ["weapons-upgrade", "weapons-special"] },
-  { question: "o que é um maculado?", expected: ["s1i0"] },
-  { question: "o que é a ordem áurea?", expected: ["s1i3"] },
-  { question: "o que é o anel prístino?", expected: ["s1i7"] },
-  { question: "o que são empírios?", expected: ["s1i15"] },
+  // Lore: os tópicos da região "Geral" vivem nos artigos do Compêndio
+  { question: "o que é um maculado?", expected: ["tarnished:summary", "tarnished:who-they-are"] },
+  { question: "o que é a ordem áurea?", expected: ["golden-order:summary", "golden-order:what-it-defines"] },
+  { question: "o que é o anel prístino?", expected: ["elden-ring:summary", "elden-ring:what-it-is"] },
+  { question: "o que são empírios?", expected: ["empyreans:summary", "empyreans:who-they-are"] },
+  { question: "o que aconteceu na noite das facas negras?", expected: ["night-of-black-knives:what-happened", "night-of-black-knives:summary"] },
+  { question: "o que é a graça?", expected: ["grace:summary", "grace:what-it-is"] },
+  { question: "quem é a marika?", expected: ["marika:summary", "marika:who-she-is"] },
+  { question: "o que é a runa da morte?", expected: ["destined-death:summary", "destined-death:what-it-is"] },
+  { question: "quem é a ranni?", expected: ["ranni:summary", "ranni:who-she-is"] },
+  // Chefes: cada pergunta acha a seção certa da página do chefe
+  { question: "quem é godrick?", expected: ["godrick-the-grafted:summary", "godrick-the-grafted:origin", "limgrave-boss-1"] },
+  { question: "por que godrick usa enxertos?", expected: ["godrick-the-grafted:origin", "limgrave-boss-1"] },
+  { question: "qual a fraqueza de godrick?", expected: ["godrick-the-grafted:game-data"] },
+  { question: "quanto de hp o godrick tem?", expected: ["godrick-the-grafted:game-data"] },
+  { question: "como vencer o margit?", expected: ["margit-the-fell-omen:strategy", "margit-the-fell-omen:summary"] },
   // Como as pessoas digitam no chat: abreviações, gírias, palavras incompletas e erros de digitação
   { question: "kd o blaidd?", expected: ["limgrave-bottom-npc-1"] },
   { question: "vc sabe onde ta a roderika?", expected: ["limgrave-npc-3"] },
@@ -58,7 +71,7 @@ export const SEARCH_CASES: SearchCase[] = [
   { question: "minha arma tem escala boa de dex?", expected: ["weapons-scaling"] },
   { question: "como subo de lvl?", expected: ["limgrave-grace-1"] },
   { question: "oq é afinidade?", expected: ["weapons-affinity"] },
-  { question: "onde encontro o margit?", expected: [] },
+  { question: "onde encontro o morgott?", expected: [] },
   { question: "como chego ao castelo de morne?", expected: [] },
   { question: "como derrotar o mohg?", expected: [] },
   { question: "onde fica a cidade de nokron?", expected: [] },

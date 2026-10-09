@@ -12,6 +12,8 @@ import type {
 } from "../../shared/gideon/types";
 import {
   buildInterpretPrompt,
+  DETAIL_PREFIX,
+  FULL_DETAIL,
   NO_SUBJECT,
   QUESTION_PREFIX,
   SUBJECT_PREFIX,
@@ -31,6 +33,7 @@ const REQUEST_TYPES: Record<string, InterpretedRequestType> = {
   depois: "after_last",
   pular: "skip",
   relacao: "relation",
+  estrategia: "strategy",
 };
 
 export interface Interpretation extends QuestionInterpretation {
@@ -46,11 +49,14 @@ interface InterpretInput {
   index: GuideIndex;
 }
 
-// Só nomes que o jogador pode ver: um nome bloqueado pelo Progress Guard nunca entra pela interpretação
+// Só nomes que o jogador pode ver: um nome bloqueado pelo Progress Guard nunca entra pela interpretação.
+// Seções do Compêndio entram pelo nome da entrada ("Godrick, o Enxertado"), não pelo título ("Dados de combate")
 const getAllowedNames = (index: GuideIndex, progress: PlayerProgress): string[] => [
   ...new Set([
     ...index.regions.map((region) => region.name),
-    ...index.chunks.filter((chunk) => isChunkAllowed(chunk, progress)).map((chunk) => chunk.title),
+    ...index.chunks
+      .filter((chunk) => isChunkAllowed(chunk, progress))
+      .map((chunk) => (chunk.kind === "boss" || chunk.kind === "lore" ? (chunk.entityName ?? chunk.title) : chunk.title)),
   ]),
 ];
 
@@ -111,7 +117,8 @@ const parseInterpretation = (rawText: string): Omit<Interpretation, "rewritten">
     .split(";")
     .map((subject) => subject.trim())
     .filter((subject) => subject && normalizeText(subject) !== NO_SUBJECT);
-  return { question, type: REQUEST_TYPES[typeWord], subjects };
+  const detail = normalizeText(readLine(lines, DETAIL_PREFIX) ?? "") === FULL_DETAIL ? "full" : "normal";
+  return { question, type: REQUEST_TYPES[typeWord], subjects, detail };
 };
 
 // A IA lê a conversa e diz o que o jogador quer: a pergunta completa ("e eu já encontrei ele?" → "Eu já encontrei

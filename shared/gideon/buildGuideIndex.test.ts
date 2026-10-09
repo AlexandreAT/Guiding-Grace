@@ -4,6 +4,7 @@ import { REGIONS } from "../../src/data/regions";
 import { getTrackableIdsForRegion, regionSections } from "../../src/data/regionSections";
 import { buildGuideIndex } from "./buildGuideIndex";
 import { getGuideIndex } from "./guideIndex";
+import { isChunkAllowed, toKnowledgeProgress } from "./progressGuard";
 
 describe("buildGuideIndex", () => {
   const index = getGuideIndex();
@@ -13,9 +14,26 @@ describe("buildGuideIndex", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("deixa regiões \"Em breve\" fora do índice", () => {
+  it("deixa o texto das regiões \"Em breve\" fora do índice", () => {
     const lockedIds = new Set(REGIONS.filter((region) => region.disabled).map((region) => region.id));
-    expect(index.chunks.some((chunk) => chunk.regionId && lockedIds.has(chunk.regionId))).toBe(false);
+    expect(
+      index.chunks.some((chunk) => chunk.kind === "region" && chunk.regionId && lockedIds.has(chunk.regionId)),
+    ).toBe(false);
+  });
+
+  it("mantém chefes de regiões \"Em breve\" no índice, mas bloqueados para quem ainda não chegou lá", () => {
+    const radahn = index.chunks.filter((chunk) => chunk.entity?.id === "starscourge-radahn");
+    const everyAvailableRegion = toKnowledgeProgress([
+      {
+        buildId: "quality-build",
+        buildName: "Build de Qualidade",
+        visitedRegionIds: REGIONS.filter((region) => !region.disabled).map((region) => region.id),
+        completedIds: [],
+      },
+    ]);
+
+    expect(radahn.length).toBeGreaterThan(0);
+    expect(radahn.some((chunk) => isChunkAllowed(chunk, everyAvailableRegion))).toBe(false);
   });
 
   it("só aponta pins que existem na região do trecho", () => {

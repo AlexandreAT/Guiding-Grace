@@ -1,3 +1,4 @@
+import { buildCompendiumPath } from "../../src/routes/compendiumRoute";
 import { buildGuidePath, buildMechanicPath } from "../../src/routes/guideRoute";
 import { getBestPassage } from "./search";
 import type { GideonSource, GuideChunk } from "./types";
@@ -16,11 +17,22 @@ const getAction = (chunk: GuideChunk, buildId: string): GideonSource["action"] =
     return { type: "OPEN_ROUTE", label: "Abrir no guia", path: buildMechanicPath(chunk.mechanicId, chunk.sectionId) };
   }
 
+  if ((chunk.kind === "boss" || chunk.kind === "lore") && chunk.entity) {
+    return { type: "OPEN_ROUTE", label: "Abrir no Compêndio", path: buildCompendiumPath(chunk.entity, chunk.sectionId) };
+  }
+
   if (chunk.pinId) {
     return { type: "OPEN_MAP", label: "Ver no mapa", path: buildGuidePath(buildId, chunk.regionId, chunk.anchor) };
   }
 
   return { type: "OPEN_CONTENT", label: "Ver no guia", path: buildGuidePath(buildId, chunk.regionId, chunk.anchor) };
+};
+
+// Onde o trecho está: a região no guia, o guia de mecânica ou a entrada do Compêndio
+export const getChunkLocation = (chunk: GuideChunk): string => {
+  if (chunk.kind === "region") return chunk.regionName ?? "";
+  if (chunk.kind === "mechanic") return chunk.mechanicTitle ?? "";
+  return chunk.entityName ?? "";
 };
 
 export const toSource = (
@@ -30,7 +42,7 @@ export const toSource = (
 ): GideonSource => ({
   chunkId: chunk.chunkId,
   title: chunk.title,
-  location: chunk.regionName ?? chunk.mechanicTitle ?? "",
+  location: getChunkLocation(chunk),
   snippet: toSnippet(getBestPassage(chunk, queryTokens)),
   action: getAction(chunk, buildId),
 });

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import type { MouseEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { IoIosArrowDown } from "react-icons/io";
-import { IoLocationSharp } from "react-icons/io5";
+import { IoBookOutline, IoLocationSharp } from "react-icons/io5";
 import {
   ContentContainerStyled,
   ExpandIcon,
@@ -22,7 +23,9 @@ import {
   TopicCheckbox,
   TrackableTopic,
 } from "./styles";
+import { getBossByObjective } from "../../data/compendium/bosses";
 import { isTrackableItem, type ContentItem, type RegionSection } from "../../data/regionSections";
+import { buildBossPath } from "../../routes/compendiumRoute";
 import ImageModal from "../ImageModal";
 import { PillButton } from "../PillButton";
 import ProgressBar from "../ProgressBar";
@@ -64,6 +67,7 @@ export default function RegionContent({
   onResetProgress,
   onLocateOnMap,
 }: RegionContentProps) {
+  const navigate = useNavigate();
   const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set());
   const [highlighted, setHighlighted] = useState<{ s: number; i: number } | null>(null);
   const [imageModal, setImageModal] = useState<{ isOpen: boolean; src: string } | null>(null);
@@ -151,6 +155,10 @@ export default function RegionContent({
         return (
           <a key={pi} href={p.href} target="_blank" rel="noreferrer">{p.text}</a>
         );
+      } else if (p.type === 'route' && p.href) {
+        return (
+          <Link key={pi} to={p.href}>{p.text}</Link>
+        );
       } else if (p.type === 'image' && p.src) {
         const src = p.src;
         const handleImageHover = (e: MouseEvent<HTMLButtonElement>) => {
@@ -195,6 +203,8 @@ export default function RegionContent({
 
   const renderTrackableTopic = (item: ContentItem & { id: string }) => {
     const isCompleted = completedIds.has(item.id);
+    // Chefe com página no Compêndio: estratégia, dados de combate e lore ficam a um clique
+    const boss = getBossByObjective(item.id);
 
     return (
       <TrackableTopic $completed={isCompleted}>
@@ -214,6 +224,16 @@ export default function RegionContent({
           >
             <IoLocationSharp aria-hidden="true" />
             <span>Ver no mapa</span>
+          </PillButton>
+        )}
+        {boss && (
+          <PillButton
+            type="button"
+            onClick={() => navigate(buildBossPath(boss.id))}
+            aria-label={`Abrir a página de ${boss.name} no Compêndio`}
+          >
+            <IoBookOutline aria-hidden="true" />
+            <span>Página do chefe</span>
           </PillButton>
         )}
       </TrackableTopic>

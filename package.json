@@ -14,6 +14,9 @@
     "worker:dev": "npm --prefix worker run dev",
     "worker:deploy": "npm --prefix worker run deploy",
     "worker:typecheck": "npm --prefix worker run typecheck",
+    "content:new": "vite-node scripts/content/new.ts",
+    "content:import": "vite-node scripts/content/import.ts",
+    "content:check": "vite-node scripts/content/check.ts",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -39,6 +42,7 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4",
+    "vite-node": "^3.2.4",
     "vitest": "^3.2.7"
   }
 }

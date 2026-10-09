@@ -1,31 +1,10 @@
-export type MechanicIcon =
-  | "sword"
-  | "chart"
-  | "hammer"
-  | "coins"
-  | "diamond"
-  | "sparkles"
-  | "feather"
-  | "lock"
-  | "tool"
-  | "checklist";
+import type { ContentBlock, ContentComparisonCard, ContentIcon, ContentTextPart } from "../contentBlocks";
 
-export interface MechanicTextPart {
-  type: "text" | "highlight";
-  text: string;
-}
-
-export interface MechanicComparisonCard {
-  title: string;
-  icon: MechanicIcon;
-  paragraphs: MechanicTextPart[][];
-}
-
-export type MechanicBlock =
-  | { type: "paragraph"; parts: MechanicTextPart[] }
-  | { type: "list"; items: MechanicTextPart[][] }
-  | { type: "callout"; title: string; text: string }
-  | { type: "comparison"; cards: MechanicComparisonCard[] };
+// Os guias de mecânicas usam o formato de texto comum (contentBlocks.ts); os nomes antigos continuam valendo
+export type MechanicIcon = ContentIcon;
+export type MechanicTextPart = ContentTextPart;
+export type MechanicComparisonCard = ContentComparisonCard;
+export type MechanicBlock = ContentBlock;
 
 export interface MechanicSection {
   // Estável: usado como âncora na página e como fonte citável pelo Gideon

@@ -44,7 +44,8 @@ export const ASK_LIMITS = {
   questionLength: 300,
   // 4 trocas: a IA precisa da conversa para saber de quem "ele" ou "aquele" fala
   historyTurns: 8,
-  historyTextLength: 400,
+  // Respostas do Gideon entram inteiras o bastante para a IA não repetir o que já disse
+  historyTextLength: 600,
   previousSources: 5,
   progressIds: 200,
   builds: 10,

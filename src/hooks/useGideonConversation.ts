@@ -77,6 +77,8 @@ export function useGideonConversation(context: ScreenContext) {
   const [conversation, setConversation] = useState(readConversation);
   const [engine, setEngine] = useState<GideonEngine>();
   const [isThinking, setIsThinking] = useState(false);
+  // Resposta da IA que acabou de chegar: anima uma vez (não ao reabrir o painel nem ao recarregar a página)
+  const [revealingMessageId, setRevealingMessageId] = useState<string>();
   const rest = useGideonRest();
   const { isOpen, messages } = conversation;
   const turnstile = useTurnstile(isOpen && USES_AI);
@@ -164,7 +166,9 @@ export function useGideonConversation(context: ScreenContext) {
       }
     }
 
-    appendMessage({ id: createMessageId(), role: "gideon", text: response.message, response, answeredByAi });
+    const answerId = createMessageId();
+    appendMessage({ id: answerId, role: "gideon", text: response.message, response, answeredByAi });
+    if (answeredByAi) setRevealingMessageId(answerId);
     setIsThinking(false);
   };
 
@@ -189,6 +193,8 @@ export function useGideonConversation(context: ScreenContext) {
     usesAi: USES_AI,
     restingLabel: engine && rest ? engine.formatReturnTime(rest.until, new Date()) : undefined,
     turnstileRef: turnstile.containerRef,
+    revealingMessageId,
+    finishReveal: () => setRevealingMessageId(undefined),
     setOpen,
     ask,
     clearConversation,

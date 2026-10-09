@@ -1,7 +1,10 @@
 import { GUIDE_ALIASES } from "../../src/data/guideAliases";
-import { getEntityTokens } from "./entities";
+import { getCorrectableNames } from "./entities";
 import { containsPhrase, normalizeQuestion, normalizeText, tokenize } from "./normalize";
+import type { CompendiumRef } from "../../src/data/compendium/types";
 import type { GuideChunk, GuideIndex } from "./types";
+
+export const isSameEntity = (a: CompendiumRef, b: CompendiumRef): boolean => a.kind === b.kind && a.id === b.id;
 
 export interface SearchQuery {
   tokens: string[];
@@ -14,6 +17,8 @@ export interface SearchQuery {
 export interface SearchBoosts {
   regionIds?: readonly string[];
   mechanicId?: string;
+  // Página do Compêndio aberta: os trechos daquela entrada vêm primeiro
+  entity?: CompendiumRef;
   chunkIds?: ReadonlySet<string>;
 }
 
@@ -33,6 +38,8 @@ const CONTEXT_WEIGHT = 0.5;
 const REGION_BOOST = 1.3;
 const MECHANIC_BOOST = 1.5;
 const CHUNK_BOOST = 1.3;
+// Parte da pontuação que depende de cobrir a pergunta inteira: "pedras sombrias" no texto vale mais que "pedras" no título
+const COVERAGE_WEIGHT = 0.75;
 const MIN_PREFIX_LENGTH = 5;
 // Correção de digitação: só para palavras que o guia não conhece
 const MIN_COMPLETION_LENGTH = 4;
@@ -129,7 +136,8 @@ export const buildSearchQuery = (question: string, index: GuideIndex): SearchQue
   const tokens = [...new Set(tokenize(normalized))];
   const synonyms: Record<string, string[]> = {};
   const vocabulary = getIdf(index);
-  const entityTokens = getEntityTokens(index);
+  // Correção de digitação só para nomes ("godrik" → "godrick", "godwin" → "godwyn"), nunca para palavras comuns
+  const correctableNames = getCorrectableNames(index);
 
   const addSynonyms = (token: string, alternatives: string[]) => {
     synonyms[token] = [...new Set([...(synonyms[token] ?? []), ...alternatives])];
@@ -144,7 +152,7 @@ export const buildSearchQuery = (question: string, index: GuideIndex): SearchQue
   });
 
   tokens.forEach((token) => {
-    const corrections = findCorrections(token, vocabulary, entityTokens);
+    const corrections = findCorrections(token, vocabulary, correctableNames);
     if (corrections.length > 0) addSynonyms(token, corrections);
   });
 
@@ -194,6 +202,7 @@ const getBoost = (chunk: GuideChunk, boosts: SearchBoosts): number => {
   let boost = 1;
   if (chunk.regionId && boosts.regionIds?.includes(chunk.regionId)) boost *= REGION_BOOST;
   if (chunk.mechanicId && chunk.mechanicId === boosts.mechanicId) boost *= MECHANIC_BOOST;
+  if (chunk.entity && boosts.entity && isSameEntity(chunk.entity, boosts.entity)) boost *= MECHANIC_BOOST;
   if (boosts.chunkIds?.has(chunk.chunkId)) boost *= CHUNK_BOOST;
   return boost;
 };
@@ -220,10 +229,13 @@ export const searchGuide = (
         (sum, token) => sum + matchToken(token, chunk, index).score * CONTEXT_WEIGHT,
         0,
       );
+      const coverage = totalWeight > 0 ? coveredWeight / totalWeight : 0;
       const score =
-        (matches.reduce((sum, match) => sum + match.score, 0) + contextScore) * getBoost(chunk, boosts);
+        (matches.reduce((sum, match) => sum + match.score, 0) + contextScore) *
+        getBoost(chunk, boosts) *
+        (1 - COVERAGE_WEIGHT + COVERAGE_WEIGHT * coverage);
 
-      return { chunk, score, coverage: totalWeight > 0 ? coveredWeight / totalWeight : 0 };
+      return { chunk, score, coverage };
     })
     .filter((result) => result.score > 0)
     .sort((a, b) => b.score - a.score || a.chunk.order - b.chunk.order);

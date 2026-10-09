@@ -99,8 +99,19 @@ describe("interpretQuestion", () => {
       question: "Eu já encontrei o Ferreiro Hewg?",
       type: "progress_check",
       subjects: ["Ferreiro Hewg"],
+      detail: "normal",
       rewritten: true,
     });
+  });
+
+  it("reconhece quando o jogador pede uma resposta mais completa", async () => {
+    const { provider } = fakeProvider(
+      "PERGUNTA: Me explique a história completa do Ferreiro Hewg.\nTIPO: continuacao\nASSUNTO: Ferreiro Hewg\nDETALHE: completo",
+    );
+    const result = await interpret("me explica melhor a história dele", provider);
+
+    expect(result.detail).toBe("full");
+    expect(result.type).toBe("follow_up");
   });
 
   it("mostra à IA os nomes citados só no texto das respostas", async () => {

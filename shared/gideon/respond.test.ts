@@ -110,13 +110,13 @@ describe("conversa", () => {
     );
   });
 
-  it("responde perguntas de relação com os dois assuntos, sem pedir que a IA suponha", () => {
+  it("responde perguntas de relação com os dois assuntos; elo indireto só como suposição", () => {
     const response = ask("qual a ligação entre blaidd e kalé?", contextWith());
     expect(response.status).toBe("answered");
     expect(response.sources.map((source) => source.chunkId)).toEqual(
       expect.arrayContaining(["region:limgrave-bottom:limgrave-bottom-npc-1", "region:limgrave-top:limgrave-npc-2"]),
     );
-    expect(response.guidance).toContain("apenas o que os trechos ligam explicitamente");
+    expect(response.guidance).toContain("o que os trechos ligam explicitamente");
 
     const reversed = ask("o que o kale tem a ver com o blaid?", contextWith());
     expect(reversed.sources[0].chunkId).toBe("region:limgrave-top:limgrave-npc-2");

@@ -230,7 +230,8 @@ Site (Vite/Netlify)  ──VITE_GIDEON_API_URL──▶  Worker do Gideon (Cloud
 ```
 
 - **Site:** frontend estático. Sem `VITE_GIDEON_API_URL` e `VITE_TURNSTILE_SITE_KEY`, o Gideon funciona só no **modo local** (busca no próprio guia, sem IA), que também é o fallback quando a IA falha;
-- **Worker** (`worker/`): recebe a pergunta, confere o Turnstile e o limite por IP e faz duas chamadas ao Workers AI: a primeira **interpreta** a pergunta pela conversa (pergunta completa, tipo de pedido e assunto); o código então busca e filtra spoilers com essa interpretação; a segunda **redige** a resposta, cujas citações são validadas;
+- **Worker** (`worker/`): recebe a pergunta, confere o Turnstile e o limite por IP e faz duas chamadas ao Workers AI: a primeira **interpreta** a pergunta pela conversa (pergunta completa, tipo de pedido, assunto e se o jogador quer uma resposta completa); o código então busca e filtra spoilers com essa interpretação; a segunda **redige** a resposta, cujas citações, nomes e números são validados contra os trechos enviados;
+- **Resposta completa:** quando o jogador pede mais ("me explica melhor", "só isso?", "continua"), a IA recebe as outras seções liberadas do mesmo assunto e pode escrever até 10 frases. As frases claras são reconhecidas também pelo código (`wantsFullAnswer`, em `shared/gideon/intents.ts`), para não depender só da interpretação. Ao incluir uma forma nova de pedir, acrescente-a ali e no prompt de interpretação (`worker/src/prompts/interpret.ts`);
 - **Proteção da cota:** cada pergunta à IA leva um token do Turnstile (widget invisível no painel do chat), validado pelo Worker na Cloudflare; o Worker aceita até 15 perguntas por minuto por IP (Rate Limiting binding) e, ao estourar, o site pausa a IA por um minuto. Sem a secret do Turnstile o Worker não chama a IA (o site segue no modo local);
 - **Workers AI não usa chave de API.** O Worker roda dentro da conta Cloudflare e acessa a IA por um *binding* (`env.AI`, configurado em `worker/wrangler.jsonc`). Localmente, o `wrangler dev` usa o login feito com `npx wrangler login`. Por isso não existe chave para copiar nem guardar no `.env`.
 
@@ -592,6 +593,36 @@ Os arquivos de `src/data/` são lidos tanto pela interface quanto pelo motor do 
 - Um item pode receber `spoilerGate` (`afterObjectiveId` ou `regionId`) apenas como exceção editorial revisada; nunca inferir spoiler automaticamente;
 - Trechos com `type: 'spoiler'` nunca entram no índice do Gideon.
 
+## 13.4. Compêndio (chefes e lore)
+
+Páginas `/bosses`, `/bosses/:id`, `/lore`, `/lore/:id` e `/credits` (Fontes e créditos, link no rodapé). Os mesmos dados alimentam as páginas e o Gideon (`buildGuideIndex`).
+
+| Onde | O quê | Quem escreve |
+|---|---|---|
+| `src/data/compendium/bosses/<id>.ts` | Texto editorial do chefe: resumo, recompensas em português, seções, relações | Autor |
+| `src/data/compendium/lore/<id>.ts` | Artigo de lore: resumo, seções com **certeza**, gate obrigatório, relações | Autor |
+| `src/data/compendium/gameData/bosses.ts` | Dados objetivos (HP, runas, absorções, resistências, drops) com proveniência | Só o `content:import` |
+| `src/data/compendium/credits.ts` | Fontes externas (nome, URL, licença, uso) e aviso de direitos do jogo, exibidos em `/credits` | Autor |
+
+Fluxo para um chefe novo:
+
+```bash
+npm run content:new -- boss nome-do-chefe        # cria o arquivo a partir do template
+# registrar a constante em src/data/compendium/bosses/index.ts e preencher o texto
+npm run content:import -- bosses --only nome-do-chefe   # dados objetivos da Eldenpedia
+npm run content:check                            # valida ids, relações, gates, certezas; lista o que falta revisar
+```
+
+Regras:
+
+- **Gate (regra única de spoiler):** chefe herda o gate da região dele (regiões `spoilerFree` não bloqueiam); seção pode ter `gate` próprio (ex.: lore liberada só depois de derrotá-lo). Lore exige `gate: "open"` ou um gate em todo artigo. Página e Gideon usam a mesma função (`isGateOpen`); "Mostrar mesmo assim" na página vale só para aquela visualização e nunca libera o Gideon;
+- **Certeza** em toda seção de lore: `explicit` (o jogo afirma), `inferred` (fortemente sugerido) ou `interpretation`. O Gideon diz as duas últimas como suposição;
+- **`pendingReview`** marca o que ainda precisa da revisão do autor (o `content:check` lista);
+- **Textos de terceiros:** da Eldenpedia vêm só fatos (números e nomes), nunca texto; textos do jogo, só em citação curta com fonte. Respostas brutas dos importadores ficam em `scripts/content/.cache/` (fora do Git);
+- **Créditos:** toda fonte externa com licença (ex.: CC BY-SA) precisa de uma entrada em `credits.ts`. O `content:check` recusa fonte de seção ou proveniência de dados de combate sem crédito. Uma fonte nova entra em `credits.ts` antes de ser usada;
+- A lore da região "Geral" vive nos artigos (`guideTopic` diz o título do tópico no guia); o guia monta a seção a partir deles;
+- Conteúdo novo muda a versão do índice: publique o site **e** o Worker (7.4).
+
 ---
 
 # 14. Roteamento
@@ -615,6 +646,17 @@ Exemplo conceitual:
 /builds                 → Seleção de build
 /guide/:buildId         → Guia da build
 /guide/:buildId/:region → Região selecionada
+```
+
+Rotas do Compêndio (constantes e helpers em `src/routes/compendiumRoute.ts`, páginas carregadas com `lazy`):
+
+```text
+/select/compendium → Escolha entre Chefes e Lore (mesma página de seleção dos outros guias)
+/bosses            → Hub de chefes
+/bosses/:bossId    → Página do chefe
+/lore              → Hub de lore, por categoria
+/lore/:articleId   → Artigo de lore
+/credits           → Fontes e créditos
 ```
 
 Os caminhos acima são apenas referência. A implementação deve preservar as rotas reais do projeto.

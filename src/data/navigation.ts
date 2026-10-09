@@ -1,4 +1,5 @@
 import blockedCrownIcon from "../assets/crown-icon-block-transparent.png";
+import crownIcon from "../assets/crown-icon-transparent.png";
 import daggerIcon from "../assets/dagger-icon-transparent.png";
 import gearIcon from "../assets/gear-icon-transparent.png";
 import swordIcon from "../assets/sword-icon-transparent.png";
@@ -33,6 +34,13 @@ export const MAIN_CATEGORIES: NavigationOption[] = [
     description: "Entenda os sistemas do jogo",
     icon: gearIcon,
     route: "/select/mechanics-guide",
+  },
+  {
+    id: "compendium",
+    title: "Compêndio",
+    description: "Chefes e lore das Terras Intermédias",
+    icon: crownIcon,
+    route: "/select/compendium",
   },
   {
     id: "platinum-guide",
@@ -77,6 +85,26 @@ export const SELECTIONS: Record<string, SelectionCategory> = {
         description: "Progressão, tipos e aprimoramentos",
         icon: daggerIcon,
         route: "/mechanics/weapons",
+      },
+    ],
+  },
+  compendium: {
+    title: "Compêndio",
+    subtitle: "Chefes e lore em textos curtos, sem spoilers além do seu progresso",
+    items: [
+      {
+        id: "bosses",
+        title: "Chefes",
+        description: "Estratégia, dados de combate e história",
+        icon: swordIcon,
+        route: "/bosses",
+      },
+      {
+        id: "lore",
+        title: "Lore",
+        description: "Conceitos, eventos e personagens",
+        icon: crownIcon,
+        route: "/lore",
       },
     ],
   },

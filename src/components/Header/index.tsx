@@ -60,6 +60,9 @@ function HeaderContentWithMenu({ onLogoClick }: HeaderProps) {
           <Link to="/select/mechanics-guide" onClick={closeMenu}>
             Mecânicas
           </Link>
+          <Link to="/select/compendium" onClick={closeMenu}>
+            Compêndio
+          </Link>
         </HeaderNavigation>
       </HeaderContent>
     </HeaderStyled>

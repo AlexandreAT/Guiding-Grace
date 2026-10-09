@@ -2,8 +2,12 @@ import { useMemo } from "react";
 import { matchPath, useLocation } from "react-router-dom";
 import { CAN_OPEN_LOCKED_REGIONS } from "../../shared/const";
 import type { ScreenContext, ScreenRouteType } from "../../shared/gideon/types";
+import { getBoss } from "../data/compendium/bosses";
+import { getLoreArticle } from "../data/compendium/lore";
+import type { CompendiumRef } from "../data/compendium/types";
 import { getMechanicGuide } from "../data/mechanics";
 import { getAvailableBuild, getAvailableBuilds } from "../data/navigation";
+import { BOSSES_PATH, LORE_PATH } from "../routes/compendiumRoute";
 import { GUIDE_REGION_PARAM, resolveGuideRegion } from "../routes/guideRoute";
 import { useAllGuideProgress } from "./useGuideProgress";
 import { useLastGuideVisit } from "./useLastGuideVisit";
@@ -25,6 +29,8 @@ export function useGideonScreenContext(): ScreenContext {
   const routeBuildId = matchPath("/guide/:buildId", pathname)?.params.buildId;
   const routeMechanicId = matchPath("/mechanics/:mechanicId", pathname)?.params.mechanicId;
   const infoPageId = matchPath("/info/:pageId", pathname)?.params.pageId;
+  const routeBossId = matchPath("/bosses/:bossId", pathname)?.params.bossId;
+  const routeArticleId = matchPath("/lore/:articleId", pathname)?.params.articleId;
   const routeBuild = getAvailableBuild(routeBuildId);
   const lastBuildId = getAvailableBuild(lastVisit.buildId)?.id;
 
@@ -33,12 +39,20 @@ export function useGideonScreenContext(): ScreenContext {
     const mechanicId =
       routeMechanicId && getMechanicGuide(routeMechanicId) ? routeMechanicId : infoMechanicId;
 
+    // Página do Compêndio aberta: o assunto vira prioridade na busca, mas não libera nenhum conhecimento
+    let entity: CompendiumRef | undefined;
+    if (routeBossId && getBoss(routeBossId)) entity = { kind: "boss", id: routeBossId };
+    if (routeArticleId && getLoreArticle(routeArticleId)) entity = { kind: "lore", id: routeArticleId };
+
     let routeType: ScreenRouteType = "not-found";
     if (pathname === "/") routeType = "home";
     else if (matchPath("/select/:categoryId", pathname)) routeType = "select";
     else if (routeBuild) routeType = "guide";
     else if (mechanicId && routeMechanicId) routeType = "mechanics";
     else if (infoPageId) routeType = "info";
+    else if (entity) routeType = entity.kind;
+    else if (pathname === BOSSES_PATH) routeType = "boss";
+    else if (pathname === LORE_PATH) routeType = "lore";
 
     const currentRegionId = routeBuild
       ? resolveGuideRegion(new URLSearchParams(search).get(GUIDE_REGION_PARAM), CAN_OPEN_LOCKED_REGIONS).id
@@ -51,6 +65,7 @@ export function useGideonScreenContext(): ScreenContext {
       lastBuildId,
       currentRegionId,
       mechanicId,
+      entity,
       builds: AVAILABLE_BUILDS.map((build) => ({
         buildId: build.id,
         buildName: build.title,
@@ -58,5 +73,5 @@ export function useGideonScreenContext(): ScreenContext {
         completedIds: [...progressByBuild[build.id].completedIds],
       })),
     };
-  }, [pathname, search, routeBuild, lastBuildId, routeMechanicId, infoPageId, progressByBuild]);
+  }, [pathname, search, routeBuild, lastBuildId, routeMechanicId, infoPageId, routeBossId, routeArticleId, progressByBuild]);
 }

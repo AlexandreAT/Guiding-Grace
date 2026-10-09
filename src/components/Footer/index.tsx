@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+import { CREDITS_PATH } from "../../routes/compendiumRoute";
 import { FooterStyled, FooterText } from "./styles";
 
 const REPOSITORY_URL = "https://github.com/AlexandreAT/Guiding-Grace";
@@ -14,6 +16,8 @@ export function Footer() {
         <a href={REPOSITORY_URL} target="_blank" rel="noreferrer">
           Código-fonte no GitHub
         </a>
+        {" · "}
+        <Link to={CREDITS_PATH}>Fontes e créditos</Link>
       </FooterText>
     </FooterStyled>
   );

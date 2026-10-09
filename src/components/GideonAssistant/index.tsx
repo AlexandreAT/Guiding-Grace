@@ -41,8 +41,20 @@ export default function GideonAssistant() {
   const navigate = useNavigate();
   const context = useGideonScreenContext();
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const { isOpen, messages, isThinking, intro, usesAi, restingLabel, turnstileRef, setOpen, ask, clearConversation } =
-    useGideonConversation(context);
+  const {
+    isOpen,
+    messages,
+    isThinking,
+    intro,
+    usesAi,
+    restingLabel,
+    turnstileRef,
+    revealingMessageId,
+    finishReveal,
+    setOpen,
+    ask,
+    clearConversation,
+  } = useGideonConversation(context);
   const [question, setQuestion] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const launcherRef = useRef<HTMLButtonElement>(null);
@@ -53,8 +65,10 @@ export default function GideonAssistant() {
   }, [isOpen]);
 
   useEffect(() => {
+    // A resposta que está se formando cuida da própria rolagem (mostra o começo dela, não o fim da lista)
+    if (revealingMessageId && messages.at(-1)?.id === revealingMessageId) return;
     listEndRef.current?.scrollIntoView({ block: "end" });
-  }, [messages, isThinking, isOpen]);
+  }, [messages, isThinking, isOpen, revealingMessageId]);
 
   const close = () => {
     setOpen(false);
@@ -152,6 +166,8 @@ export default function GideonAssistant() {
                 <GideonMessage
                   key={message.id}
                   message={message}
+                  revealing={message.id === revealingMessageId}
+                  onRevealed={finishReveal}
                   onOpenSource={handleOpenSource}
                   onChoose={handleChoose}
                 />

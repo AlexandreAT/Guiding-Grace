@@ -109,7 +109,16 @@ export const CardsGrid = styled.div<{ $selection?: boolean }>`
   ${({ $selection }) =>
     !$selection &&
     `
+      /* Com 4 cards em 3 colunas, o último fica centralizado na segunda linha */
+      > :last-child:nth-child(3n + 1) {
+        grid-column: 2;
+      }
+
       @media (max-width: 1050px) {
+        > :last-child:nth-child(3n + 1) {
+          grid-column: auto;
+        }
+
         grid-template-columns: repeat(2, minmax(0, 1fr));
 
         > :last-child:nth-child(odd) {

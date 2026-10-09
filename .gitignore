@@ -27,3 +27,6 @@ dist-ssr
 worker/node_modules
 worker/.wrangler
 worker/.dev.vars
+
+# Respostas brutas dos importadores do Compêndio (só para conferência local)
+scripts/content/.cache/

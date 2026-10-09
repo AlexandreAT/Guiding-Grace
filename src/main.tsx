@@ -37,6 +37,27 @@ const router = createBrowserRouter([
         path: '/info/:pageId',
         element: <Info />
       },
+      // Compêndio: carregado sob demanda, para o conteúdo de chefes e lore não pesar no carregamento inicial
+      {
+        path: '/bosses',
+        lazy: () => import('./pages/Bosses/Bosses.tsx').then((module) => ({ Component: module.default }))
+      },
+      {
+        path: '/bosses/:bossId',
+        lazy: () => import('./pages/Bosses/Boss.tsx').then((module) => ({ Component: module.default }))
+      },
+      {
+        path: '/lore',
+        lazy: () => import('./pages/Lore/Lore.tsx').then((module) => ({ Component: module.default }))
+      },
+      {
+        path: '/lore/:articleId',
+        lazy: () => import('./pages/Lore/LoreArticle.tsx').then((module) => ({ Component: module.default }))
+      },
+      {
+        path: '/credits',
+        lazy: () => import('./pages/Credits/Credits.tsx').then((module) => ({ Component: module.default }))
+      },
       {
         path: '*',
         element: <NotFound />

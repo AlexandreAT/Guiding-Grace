@@ -8,6 +8,7 @@ export type GideonIntent =
   | { type: "progress_check" }
   | { type: "relation" }
   | { type: "skip" }
+  | { type: "strategy" }
   | { type: "follow_up" }
   | { type: "search" };
 
@@ -50,10 +51,38 @@ const RELATION_PATTERN = /\b(ligacao|relacao|conexao|ligad[oa]s?|relacionad[oa]s
 const SKIP_PATTERN =
   /\b(pular|pulo|pulando|sem (matar|derrotar|enfrentar|fazer)|em vez d|ao inves d|alternativa|outra coisa|deixar (ele|ela|isso) (pra|para) depois)/;
 
+// Modo sem IA: "como vencer o Godrick?", "melhor forma de matar o Margit", "dicas contra o Radahn"
+// (com IA, quem decide é a interpretação)
+const STRATEGY_PATTERNS = [
+  /\bcomo (eu )?(derroto|derrotar|venco|vencer|mato|matar|passo|passar|enfrento|enfrentar)\b/,
+  /\b(melhor|qual) (forma|jeito|maneira) (de|pra|para)\b/,
+  /\b(estrategia|dicas? (contra|para|pra))\b/,
+];
+
 const AFTER_LAST_PHRASES = new Set(["e depois", "depois", "e agora", "e entao", "e o proximo", "proximo"]);
 
 // Pronomes e retomadas que só fazem sentido com o assunto anterior
 const FOLLOW_UP_PATTERN = /\b(ele|ela|dele|dela|nele|nela|isso|esse|essa|esses|essas|la|normais|outra|outro)\b|^e /;
+
+// Pedido de resposta maior: explícito ("me explica melhor", "quero saber tudo") ou implícito, retomando a última
+// resposta ("e mais?", "só isso?", "continua"). A IA também decide isso; as frases garantem os casos claros
+const FULL_ANSWER_PATTERNS = [
+  /\b(explica|explique|explicar|explicaria|conta|conte|contar|fala|fale|falar|descreve|descreva|diz|diga)( isso| ele| ela| dele| dela| sobre (isso|ele|ela)| pra mim)? (melhor|mais|direito|tudo|a fundo|com calma|completo)\b/,
+  /\b(detalha|detalhe|detalhar|detalhando|aprofunda|aprofunde|aprofundar|elabora|elabore|desenvolve|desenvolva)\b/,
+  /\b(quero|queria|gostaria de) (saber|entender|ler|ouvir) (tudo|mais|melhor|a fundo|em detalhes?|com detalhes?)\b/,
+  /\b(historia|explicacao|resposta|versao) (completa|inteira|detalhada|longa|maior)\b/,
+  /\b(em|com|mais) detalhes?\b|\bpasso a passo\b|\btudo (sobre|o que (voce|vc) sabe)\b/,
+  /\b(nao entendi|nao ficou claro|ficou confuso|resumiu demais|muito (curto|curta|resumido|resumida|pouco))\b/,
+];
+const FULL_ANSWER_PHRASES = new Set([
+  "e mais", "mais", "tem mais", "so isso", "e so isso", "continua", "continue", "pode continuar", "quero mais",
+  "e o resto", "o que mais", "algo mais", "mais alguma coisa",
+]);
+
+export const wantsFullAnswer = (normalizedQuestion: string): boolean => {
+  const phrase = removeAddress(normalizedQuestion);
+  return FULL_ANSWER_PHRASES.has(phrase) || FULL_ANSWER_PATTERNS.some((pattern) => pattern.test(phrase));
+};
 
 const ADDRESS_WORDS = new Set(["gideon", "sir", "ofnir", "onisciente"]);
 
@@ -83,7 +112,12 @@ export const detectIntent = (normalizedQuestion: string, hasPreviousSources: boo
 
   if (RELATION_PATTERN.test(phrase)) return { type: "relation" };
 
+  if (STRATEGY_PATTERNS.some((pattern) => pattern.test(phrase))) return { type: "strategy" };
+
   if (hasPreviousSources && SKIP_PATTERN.test(phrase)) return { type: "skip" };
+
+  // "Só isso?", "continua": quer mais do mesmo assunto
+  if (hasPreviousSources && wantsFullAnswer(phrase)) return { type: "follow_up" };
 
   // Pronome ou "e ..." retoma o assunto anterior, seja qual for o tamanho da pergunta;
   // se ela trouxer um nome novo, a própria busca troca de assunto

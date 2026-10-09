@@ -3,6 +3,8 @@
  * Define seções de conteúdo (expandíveis) para cada região.
  */
 
+import { buildLoreGuideSection } from "./compendium/loreGuide";
+
 export type ContentStyle = 'normal' | 'title' | 'topic' | 'highlight';
 
 // Exceção editorial: o Gideon só fala do trecho depois do objetivo concluído ou da região visitada
@@ -15,13 +17,16 @@ export interface ContentItem {
   style: ContentStyle;
   text?: string;
   id?: string;
-  parts?: Array<{ type: 'text' | 'link' | 'image' | 'spoiler'; text: string; href?: string; src?: string }>;
+  // route: link interno do site (ex.: artigo do Compêndio); link: site externo, em nova aba
+  parts?: Array<{ type: 'text' | 'link' | 'route' | 'image' | 'spoiler'; text: string; href?: string; src?: string }>;
   spoilerGate?: SpoilerGate;
 }
 
 export interface RegionSection {
   title: string;
   content: ContentItem[];
+  // Montada a partir dos artigos de lore do Compêndio: o texto vive lá, não aqui
+  fromLore?: boolean;
 }
 
 export const regionSections: Record<string, RegionSection[]> = {
@@ -59,103 +64,8 @@ export const regionSections: Record<string, RegionSection[]> = {
         }
       ],
     },
-    {
-      title: "Contexto Geral do Jogo",
-      content: [
-        {
-          style: "topic",
-          text: "O que é o maculado (Tarnished)."
-        },
-        {
-          style: "normal",
-          text: "Os Maculados são guerreiros que foram expulsos das Terras Intermédias (local onde se passa o jogo) quando perderam a Graça da Erdtree, no passado, eles serviam a Ordem Áurea, quando deixaram de ser úteis, perderam a Graça."
-        },
-        {
-          style: "normal",
-          text: "Ao que tudo indica foi a grande vontade (Deus exterior) que tirou a graça deles, após perderem a graça, eles foram condenados, o jogador é um maculado, ele recebeu a graça novamente, a cena inicial do jogo mostra a graça voltando para ele (a purpurina dourada)."
-        },
-        {
-          style: "topic",
-          text: "O que é a Ordem Áurea."
-        },
-        {
-          style: "normal",
-          text: "A Ordem Áurea é o sistema religioso, político e cósmico que governa o mundo, ela define: O que é vida; O que é morte; Quem governa; Quem pode existir"
-        },
-        {
-          style: "normal",
-          text: "A Ordem Áurea promete estabilidade, mas exige controle absoluto. Tudo gira em torno de: A Erdtree; O Anel Prístino; A Grande Vontade"
-        },
-        {
-          style: "normal",
-          text: "Quem faz parte da Ordem Áurea: Marika (a Deusa receptáculo do Anel Prístino); Radagon (campeão e consorte de Marika); Os Dois Dedos (intérpretes da Grande Vontade, eles conseguem se comunicar direto com ela); Donzelas dos Dedos (guia dos maculados para seguir a Grande Vontade); Os Semideuses (filhos/herdeiros de Marika e Radagon, os principais desafios do jogo, hoje nem todos eles seguem a Grande Vontade)."
-        },
-        {
-          style: "topic",
-          text: "O anel prístino(Elden Ring)."
-        },
-        {
-          style: "normal",
-          text: "O Anel Prístino não é um anel físico de fato, ele se assemelha a runas mágicas, ele é um conjunto de leis da realidade, ele que define como o mundo funciona, como vida, morte, ordem, alguns personagens buscam o anel prístino para impor sua própria visão de mundo, e mudar as regras do mundo, como deixar aqueles que morreram viver em morte."
-        },
-        {
-          style: "normal",
-          text: "A Marika por ser a Deusa do mundo, tem em sua posse o Elden Ring, e com isso, ela muda as leis do mundo, porém o Elden Ring não vem da Grande Vontade, outros representantes de outros Deuses exteriores ou de outras filosofias podem adquirir o Elden Ring e modificalo."
-        },
-        {
-          style: "highlight",
-          text: "A Marika quebrou o Elden Ring, indo contra a própria Grande Vontade que ela representava sendo Deusa, com isso as leis do mundo se fragmentaram, e o mundo entrou em colapso, isso deu inicio a Ruptura, evento que antecede o momento atual do jogo, agora, vários tentam buscar os fragmentos do Elden Ring para conseguir seu poder, e tentar se tornar o Elden Lord restaurando o Elden Ring com os fragmentos."
-        },
-        {
-          style: "topic",
-          text: "A noite das facas negras."
-        },
-        {
-          style: "normal",
-          text: "É um dos eventos centrais da história,  nessa noite, Ranni (uma das Semideusas) rouba parte do poder da runa da morte (runa que da ao portador o poder de matar um Deus, pertence ao Maliketh, o guarda costa da rainha Marika), com parte do poder dessa runa, ela cria as armas facas negras e entrega a assassinos, com isso, Ranni inicia seu plano de derrubar a Ordem Áurea, assassinando Marika e vários outros membros da Ordem Áurea, e manda os assassinos matarem Godwyn, o filho favorito de Marika (é dito que ele morre apenas em espirito), nesse mesmo momento, Ranni mata seu próprio corpo (por motivos até o momento desconhecidos), esse evento abala Marika que, cansada da Grande Vontade, quebra o Elden Ring, iniciando o fim da Ordem Áurea e a Ruptura."
-        },
-        {
-          style: "topic",
-          text: "A ruptura e estado atual do mundo."
-        },
-        {
-          style: "normal",
-          text: "Após a quebra do Elden Ring, a Marika desapareceu, deixando um vacuo no poder, a Erdtree (Tervore, uma arvore gigante que é o centro do mundo, ela é como um simbolo que representa a Grande Vontade) se fecha para ninguem entrar nela, com isso os Semideuses entram em guerra entre si, a guerra se chama Ruptura, porém, nenhum dos Semideuses venceu, e o mundo ficou congelado nesse estado atual de decadencia pós guerra, sem um vitorioso, e sem líderes de fato, o maior exemplo negativo da guerra é a própria região de Caelid, que ficou totalmente devastada após a guerra entre Malenia e Radahn, dois dos Semideuses mais fortes."
-        },
-        {
-          style: "topic",
-          text: "O que são empírios."
-        },
-        {
-          style: "normal",
-          text: "Empírios são seres candidatos a se tornarem Deuses (ao que tudo indica, escolhidos pela Grande Vontade), os principais são Marika (que de fato se tornou Deusa), Ranni (filha de Radagon com Renala), Malenia e Miquella (irmãos, filhos de Marika e Radagon), como pode ver, a familia de Semideuses tem várias ramificações, Marika teve filhos com Godfrey e Radagon, já Radagon (após se tornar consorte de Marika, seus filhos foram elevados ao estado de Semideuses também, mesmo aqueles que não são filhos de Marika também) teve filhos com Marika e Rennala. Os empírios tem duas escolhas, servir a Ordem Áurea ou rejeitar ela como a Ranni fez."
-        },
-        {
-          style: "topic",
-          text: "Outras religiões e entidades."
-        },
-        {
-          style: "highlight",
-          text: "As filosofias e religiões aqui, são muito complexas, e tem diferentes interpretações quanto a elas, vou focar nas que considero principal, e na maior parte do conteúdo que eu encontrei/sei, porém, lembre-se que elas podem não ser o que parecem a primeira vista."
-        },
-        {
-          style: "normal",
-          text: "Lua Sombria: Religião que diz querer destino livre para todos, um mundo sem Deuses, mantendo um ciclo natural de vida e morte, eles são contra a Ordem Áurea, e acreditam que a morte é necessária para o ciclo da vida. Principal seguidor: Ranni e seu grupo."
-        },
-        {
-          style: "normal",
-          text: "Chama Frenética: Segue uma filosofia de caos absoluto, querendo dar um fim a toda a ordem, para destruir e recomeçar o mundo. Principal seguidor: Shabriri."
-        },
-        {
-          style: "normal",
-          text: "Mãe Sem Forma: Cultua sangue e sacríficios, e normalmente é associada a morte e dominação por violência, alguns seguidores da Mãe Sem Forma são os assassinos que caçam os outros maculados. Principais seguidores: Varré e Mogh."
-        },
-        {
-          style: "normal",
-          text: "Aqueles Que Vivem na Morte: Diferente das filosofias que veem a morte como fim ou transição natural, essa é como uma distorção do próprio conceito de morte. Basicamente após a corrupção da Raiz da Morte e a morte incompleta de Godwyn (morto apenas em espirito), alguns seres passaram a existir em um estado nem vivos e nem verdadeiramente mortos, eles não seguem uma religião no sentido tradicional, mas representam as consequências de um mundo onde o conceito da morte foi quebrada, esse seres são perseguidos pela Ordem Áurea por desafiarem as leis naturais impostas pelos Deuses anteriormente. Principais seguidores: Fia."
-        }
-      ],
-    },
+    // Lore: o texto vive nos artigos do Compêndio (src/data/compendium/lore)
+    buildLoreGuideSection("Contexto Geral do Jogo"),
   ],
   "limgrave-top": [
     {
@@ -1132,3 +1042,9 @@ export const getTrackableIdsForRegion = (regionId: string): string[] =>
     .flatMap((section) => section.content)
     .filter(isTrackableItem)
     .map((item) => item.id);
+
+// Nome do objetivo marcável (ex.: "Godrick, o Enxertado"), para explicar um gate de conhecimento
+export const getObjectiveTitle = (objectiveId: string): string | undefined =>
+  Object.values(regionSections)
+    .flatMap((sections) => sections.flatMap((section) => section.content))
+    .find((item) => isTrackableItem(item) && item.id === objectiveId)?.text;

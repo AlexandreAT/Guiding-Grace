@@ -53,7 +53,8 @@ export function MechanicSection({
 export function GuideCallout({ title, children }: GuideCalloutProps) {
   return (
     <Callout>
-      <CalloutTitle>{title}:</CalloutTitle> {children}
+      {title ? <CalloutTitle>{title}: </CalloutTitle> : null}
+      {children}
     </Callout>
   );
 }

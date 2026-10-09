@@ -200,6 +200,32 @@ Nova expansão, detalhada na **seção 11.1** e implementada nas **Etapas 13 a 1
 - **a lore da região "Geral" vira os primeiros artigos**, sem duplicar texto;
 - **navegação:** um card "Compêndio" na Home e no menu, com hubs `/bosses` e `/lore`.
 
+### 1.2.14. Ajustes feitos na implementação do Compêndio (Etapas 13 a 17, 08/10/2026)
+
+**Estado:** Etapas 13 a 17 implementadas na branch `feat/compendium`, e da Etapa 18 já estão prontos os rascunhos de todo o conteúdo inicial e a documentação. Falta: revisão dos textos pelo autor, imagens, revisão manual em desktop e celular, deploy de site e Worker juntos, verificação em produção e roadmap.
+
+- **Importador adiantado:** a Eldenpedia respondeu bem pela API do MediaWiki, então a Etapa 17 entrou junto. Os dados objetivos dos 4 chefes vieram do importador (com URL e revisão de cada página), não digitados à mão;
+- **`gameData/bosses.ts` em vez de `bosses.json`:** arquivo TypeScript gerado pelo importador. Fica tipado e não exige habilitar importação de JSON nos tsconfigs;
+- **Gate padrão de chefe respeita `spoilerFree`:** chefes de Limgrave são liberados desde o início, igual ao tópico deles no guia;
+- **Chefes de regiões "Em breve" entram no índice, bloqueados:** permitem `spoiler_blocked` ("ainda não é hora") em vez de "não sei";
+- **Pergunta que cita uma entrada bloqueada → `spoiler_blocked`:** antes, "fraqueza do Radahn" era respondida com os dados de outro chefe;
+- **Certeza também na orientação:** além da regra no prompt, o código avisa quais trechos não são fato confirmado. Só a regra não bastava (a IA afirmava lore "fortemente sugerida");
+- **Busca:** só o resumo de cada entrada leva o nome dela no título; as demais seções levam o nome no texto. Assim "onde fica o Godrick?" continua achando o pin do mapa. Recall@1 92,6% e Recall@3 100% em 54 perguntas (antes, 48);
+- **Interpretação por entidade:** a IA escolhe o nome da entrada ("Godrick, o Enxertado"), e o código escolhe a seção pela pergunta (dados de combate, origem, mapa);
+- **`pendingReview`:** campo que marca o que o autor ainda precisa revisar; o `content:check` lista;
+- **"Como vencer um chefe" tem tipo próprio (`strategy`):** a interpretação (ou, sem IA, uma regra de palavras) identifica o pedido; o código envia só a estratégia, os dados de combate e o resumo do chefe, sem relacionados. Os dados de combate passaram a listar também as resistências. Corrige uma resposta real que trouxe "esgote os diálogos" (do Kale, tirado da conversa) como dica contra Godrick;
+- **Respostas mais completas quando a pergunta pede explicação:** até 5 frases (fato direto continua em até 3), com os detalhes úteis dos trechos; na estratégia, os números de HP, fraquezas e resistências vão prontos na orientação. **Número na resposta que não está nos trechos nem na orientação derruba a resposta** (mesma lógica da verificação de nomes);
+- **Resposta completa a pedido:** a interpretação marca `DETALHE: completo` quando o jogador pede mais, de forma direta ("me explica melhor", "fala mais", "detalha", "passo a passo") ou implícita, retomando a última resposta ("e mais?", "só isso?", "continua", "não entendi"). Como a IA às vezes não percebe, frases claras garantem o modo completo pelo código (`wantsFullAnswer`, em `intents.ts`), também no modo local, onde viram continuação do assunto anterior. Aí vão à IA as outras seções liberadas do mesmo assunto, ela pode usar até 10 frases em parágrafos curtos e retoma o que já foi dito só em uma frase, com outras palavras. Parágrafos sem citação ou de análise ("isso reflete a decadência...") são removidos, porque o modelo insistia em fechar com uma "moral da história";
+- **Nunca copiar uma resposta anterior:** a mesma informação pode voltar, mas reescrita (regra 12 do prompt);
+- **A conversa nunca é fonte de fatos** (regra 1 do prompt) e **instrução de um trecho vale só para o assunto dele** (regra 6);
+- **Relação com elo calculado pelo código:** os assuntos podem ser entradas, tópicos ou nomes que só aparecem nos textos (Godwyn); de cada lado vai o trecho que mais compartilha nomes raros com o outro; o nome em comum (ex.: Marika) é entregue à IA, que o diz como suposição ("Ao que tudo indica"). Antecipa um caso do "Gideon narrador" (49.2), com o elo decidido pelo código;
+- **Nomes próprios dos textos** (palavras quase sempre com maiúscula no meio da frase) entram na correção de digitação ("godwin" → "godwyn"), mas não na verificação de nomes das respostas;
+- **Texto da IA "escrito ao vento":** a resposta redigida pela IA se forma palavra por palavra (fumaça dourada que se solidifica; cada palavra leva 0,9 s e a resposta inteira até ~4 s), uma vez só e sem nenhum deslocamento no fim; as fontes e as escolhas aparecem depois do texto, em sequência; respeita "reduzir movimento";
+- **Página "Fontes e créditos" (`/credits`, link no rodapé):** lista o conteúdo editorial, cada fonte de `credits.ts` (uso, licença, quantas páginas foram consultadas) e o aviso de direitos de Elden Ring, sem citar nomes de chefes (spoiler). O `content:check` recusa fonte externa com licença sem entrada em `credits.ts` e dados de combate cuja proveniência não tenha crédito;
+- **Busca após o conteúdo novo:** quatro artigos a mais mudaram a raridade das palavras e derrubaram casos antigos. Ajustes: a pontuação passa a pesar a cobertura da pergunta ("pedras sombrias" no texto vale mais que "pedras" no título); a entrada citada pelo nome na pergunta vira assunto mesmo sem IA, e pergunta que é só o nome ("quem é a Marika?") traz o resumo primeiro, a não ser que o nome faça parte de um título mais longo citado ("Terceira Igreja de Marika"); palavra que abre nomes diferentes ("Grande Runa", "Grande Vontade") deixa de ser nome próprio; o limite de nome "comum demais" para elo de relação passou a ser proporcional ao guia (25% dos trechos). Recall@1 89,7% e Recall@3 100% em 58 perguntas;
+- **Tamanho do Worker:** 189 KiB (48 KiB gzip), dentro do plano gratuito;
+- **Conteúdo desta rodada:** Margit, Godrick, Rennala e Radahn (texto do agente, marcado para revisão), os 7 artigos migrados da região "Geral" (texto do autor, intacto) e os rascunhos de Graça, Marika, Runa da Morte e Ranni (Etapa 18), escritos só com fatos que o guia já mostra, com `gate: "open"` e marcados para revisão. O artigo da Ranni não cobre a linha de missão dela, para não adiantar spoilers.
+
 ## 1.3. Etapas manuais do autor (obrigatório parar e pedir)
 
 Algumas ações dependem de conta, painel ou segredo do autor e **não podem ser feitas pelo agente**.

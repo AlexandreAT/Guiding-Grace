@@ -65,6 +65,25 @@ describe("answerQuestion", () => {
     expect(prompts[0].prompt).toContain("Entendida, pela conversa, como: Eu já encontrei o Blaidd antes?");
   });
 
+  it.each(["só isso?", "me explica melhor", "continua", "quero saber em detalhes"])(
+    "entende \"%s\" como pedido de resposta completa, mesmo quando a interpretação não percebe",
+    async (question) => {
+      const { provider, prompts } = fakeProvider("Blaidd foi visto em Limgrave Inferior [1].", "Onde encontro o Blaidd?");
+      await answerQuestion(
+        requestFor(question, {
+          previousSourceIds: ["region:limgrave-bottom:limgrave-bottom-npc-1"],
+          history: [
+            { role: "user", text: "onde encontro blaidd?" },
+            { role: "gideon", text: "Blaidd está nas ruínas.", sourceIds: ["region:limgrave-bottom:limgrave-bottom-npc-1"] },
+          ],
+        }),
+        { index, provider },
+      );
+
+      expect(prompts[0].prompt).toContain("O jogador pediu uma resposta mais completa");
+    },
+  );
+
   it("segue com a pergunta original quando a interpretação falha", async () => {
     let calls = 0;
     const provider: GideonLlmProvider = {
@@ -78,6 +97,20 @@ describe("answerQuestion", () => {
 
     expect(calls).toBe(2);
     expect(result.status === 200 && result.body.mode).toBe("ai");
+  });
+
+  it("não envia ao modelo conteúdo bloqueado, mesmo com a página do chefe aberta", async () => {
+    const { provider, prompts } = fakeProvider("Radahn é fraco a fogo [1].");
+    const result = await answerQuestion(
+      requestFor("qual a fraqueza do radahn?", {
+        context: createTestContext({ routeType: "boss", entity: { kind: "boss", id: "starscourge-radahn" } }),
+      }),
+      { index, provider },
+    );
+
+    expect(prompts).toHaveLength(0);
+    expect(result.status === 200 && result.body.status).toBe("spoiler_blocked");
+    expect(result.status === 200 && result.body.sources).toEqual([]);
   });
 
   it("não chama o modelo quando o guia não cobre o assunto", async () => {

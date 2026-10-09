@@ -9,7 +9,8 @@ export interface MechanicSectionProps {
 }
 
 export interface GuideCalloutProps {
-  title: string;
+  // Sem título: destaque simples
+  title?: string;
   children: ReactNode;
 }
 
